@@ -3,9 +3,11 @@ import type {
   PaginatedResponse,
   ApiResponse as ApiResponseType,
 } from '@kamf/interface/types/common.js';
-import type { User, CreateUserDto, UpdateUserDto } from '@kamf/interface/types/user.js';
+import type { CreateUserDto, UpdateUserDto } from '@kamf/interface/types/user.js';
 import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiQuery } from '@nestjs/swagger';
+
+import { User } from '../../entities/user.entity.js';
 
 import { UsersService } from './users.service.js';
 
@@ -28,7 +30,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Get user by ID' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async findOne(@Param('id') id: string): Promise<ApiResponseType<User>> {
-    return this.usersService.findOne(id);
+    return this.usersService.findOne(+id);
   }
 
   @Post()
@@ -45,13 +47,13 @@ export class UsersController {
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto
   ): Promise<ApiResponseType<User>> {
-    return this.usersService.update(id, updateUserDto);
+    return this.usersService.update(+id, updateUserDto);
   }
 
   @Delete(':id')
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async remove(@Param('id') id: string): Promise<ApiResponseType<void>> {
-    return this.usersService.remove(id);
+    return this.usersService.remove(+id);
   }
 }
