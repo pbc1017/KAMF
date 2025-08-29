@@ -11,17 +11,6 @@ const urlToZone = (urlParam: string): Zone | null => {
   return mapping[urlParam] || null;
 };
 
-// Zone enum(카멜케이스) → URL 파라미터(케밥케이스) 변환
-const zoneToUrl = (zone: Zone): string => {
-  const mapping: Record<Zone, string> = {
-    [Zone.BOOTH]: 'booth',
-    [Zone.INFO]: 'info',
-    [Zone.FOOD_TRUCK]: 'food-truck',
-    [Zone.HOF]: 'hof',
-  };
-  return mapping[zone];
-};
-
 // Zone 정보 매핑
 const zoneInfo = {
   [Zone.BOOTH]: {
