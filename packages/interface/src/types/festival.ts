@@ -13,6 +13,14 @@ export enum Zone {
 }
 
 /**
+ * 축제 날짜
+ */
+export enum FestivalDay {
+  SATURDAY = 'SAT',
+  SUNDAY = 'SUN',
+}
+
+/**
  * XX:XX 형태의 시간 문자열
  */
 export type Time = string;
@@ -38,4 +46,11 @@ export interface Stage {
   startTime: Time;
   endTime: Time;
   description: string; // 공연 소개
+}
+
+/**
+ * 날짜가 포함된 공연 정보
+ */
+export interface StageWithDay extends Stage {
+  day: FestivalDay;
 }
