@@ -2,6 +2,28 @@
  * API related types and interfaces
  */
 
+import { Booth, Stage, Zone } from './festival';
+
+// Festival API types
+export interface GetBoothsResponse {
+  data: Booth[];
+}
+
+export interface GetBoothsByZoneRequest {
+  zone: Zone;
+}
+
+export interface GetBoothsByZoneResponse {
+  data: Booth[];
+}
+
+export interface GetStagesResponse {
+  data: {
+    sat: Stage[];
+    sun: Stage[];
+  };
+}
+
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
