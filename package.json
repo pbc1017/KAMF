@@ -22,7 +22,8 @@
     "clean": "pnpm -r clean && rm -rf node_modules",
     "web": "pnpm --filter @kamf/web",
     "api": "pnpm --filter @kamf/api",
-    "interface": "pnpm --filter @kamf/interface"
+    "interface": "pnpm --filter @kamf/interface",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.21.0",
@@ -35,11 +36,19 @@
     "eslint-plugin-jsx-a11y": "^6.8.0",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.5",
     "prettier": "^3.2.5",
     "typescript": "^5.3.3"
   },
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  }
 }
