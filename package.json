@@ -23,6 +23,14 @@
     "web": "pnpm --filter @kamf/web",
     "api": "pnpm --filter @kamf/api",
     "interface": "pnpm --filter @kamf/interface",
+    "db:up": "pnpm --filter @kamf/api db:up",
+    "db:down": "pnpm --filter @kamf/api db:down",
+    "db:restart": "pnpm --filter @kamf/api db:restart",
+    "db:logs": "pnpm --filter @kamf/api db:logs",
+    "db:reset": "pnpm --filter @kamf/api db:reset",
+    "db:cli": "pnpm --filter @kamf/api db:cli",
+    "db:status": "pnpm --filter @kamf/api db:status",
+    "db": "pnpm db:up",
     "prepare": "husky"
   },
   "devDependencies": {
