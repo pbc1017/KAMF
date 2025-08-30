@@ -21,11 +21,12 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    // Phase 1: 기본 구조만 정의, 실제 인증은 Phase 2에서 구현
+    // JWT 인증 가드를 통해 사용자 정보가 request에 설정되어야 함
     if (!user) {
       return false;
     }
 
+    // 사용자의 역할 중 하나라도 요구되는 역할과 일치하면 허용
     return requiredRoles.some(role => user.roles?.map(r => r.name).includes(role));
   }
 }
