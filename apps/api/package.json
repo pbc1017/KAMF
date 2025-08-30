@@ -27,7 +27,12 @@
     "db:logs": "cd ../../ && docker-compose logs -f mysql",
     "db:reset": "cd ../../ && docker-compose down -v && docker-compose up mysql -d",
     "db:cli": "cd ../../ && docker exec -it kamf-mysql mysql -u kamf_user -pkamf_password kamf_dev",
-    "db:status": "cd ../../ && docker-compose ps"
+    "db:status": "cd ../../ && docker-compose ps",
+    "migration:generate": "dotenv -e ../../.env -- typeorm migration:generate -d dist/config/typeorm.config.js",
+    "migration:create": "dotenv -e ../../.env -- typeorm migration:create",
+    "migration:run": "dotenv -e ../../.env -- typeorm migration:run -d dist/config/typeorm.config.js",
+    "migration:revert": "dotenv -e ../../.env -- typeorm migration:revert -d dist/config/typeorm.config.js",
+    "migration:show": "dotenv -e ../../.env -- typeorm migration:show -d dist/config/typeorm.config.js"
   },
   "dependencies": {
     "@kamf/interface": "workspace:*",

@@ -31,6 +31,11 @@
     "db:cli": "pnpm --filter @kamf/api db:cli",
     "db:status": "pnpm --filter @kamf/api db:status",
     "db": "pnpm db:up",
+    "migration:generate": "pnpm --filter @kamf/api migration:generate",
+    "migration:create": "pnpm --filter @kamf/api migration:create",
+    "migration:run": "pnpm --filter @kamf/api migration:run",
+    "migration:revert": "pnpm --filter @kamf/api migration:revert",
+    "migration:show": "pnpm --filter @kamf/api migration:show",
     "prepare": "husky"
   },
   "devDependencies": {

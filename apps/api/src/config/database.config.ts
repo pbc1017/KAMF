@@ -16,7 +16,7 @@ export default registerAs(
     password: process.env.DB_PASSWORD || 'kamf_password',
     database: process.env.DB_NAME || 'kamf_dev',
     autoLoadEntities: true,
-    synchronize: process.env.NODE_ENV !== 'production',
+    synchronize: false,
     logging: process.env.NODE_ENV === 'development',
     entities: [join(__dirname, '/../entities/**/*.entity{.ts,.js}')],
     migrations: [join(__dirname, '/../migrations/**/*{.ts,.js}')],
