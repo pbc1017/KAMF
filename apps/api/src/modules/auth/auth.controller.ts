@@ -1,11 +1,11 @@
 import type {
-  ApiResponse,
   AuthResponse,
   RequestCodeResponse,
   AuthRequest,
   VerifyCodeRequest,
   RefreshTokenRequest,
 } from '@kamf/interface/types/api.js';
+import { ApiResponse } from '@kamf/interface/types/common.js';
 import { UserRole } from '@kamf/interface/types/user.js';
 import { Controller, Post, Body, UnauthorizedException, BadRequestException } from '@nestjs/common';
 

@@ -5,17 +5,6 @@
 import { Booth, Stage, Zone } from './festival';
 import { User } from './user';
 
-// 공통 API 응답 형식
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: {
-    message: string;
-    statusCode?: number;
-    timestamp?: string;
-  };
-}
-
 // Festival API types
 export interface GetBoothsResponse {
   data: Booth[];

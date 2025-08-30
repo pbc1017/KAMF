@@ -1,9 +1,9 @@
 import type {
-  ApiResponse,
   GetUserResponse,
   GetUsersResponse,
   UpdateUserResponse,
 } from '@kamf/interface/types/api.js';
+import { ApiResponse } from '@kamf/interface/types/common.js';
 import { UserRole } from '@kamf/interface/types/user.js';
 import { Controller, Get, Patch, Param, Body, UseGuards, ForbiddenException } from '@nestjs/common';
 
