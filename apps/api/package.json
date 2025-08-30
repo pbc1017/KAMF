@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "dev": "NODE_ENV=development dotenv -e ../../.env -- nest start --watch",
-    "build": "dotenv -e ../../.env -- nest build",
+    "build": "NODE_ENV=production dotenv -e ../../.env -- nest build",
     "start": "NODE_ENV=production dotenv -e ../../.env -- node dist/main.js",
     "clean": "rm -rf dist node_modules",
     "lint": "dotenv -e ../../.env -- eslint . --ext .ts",
