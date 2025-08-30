@@ -19,8 +19,8 @@ export interface GetBoothsByZoneResponse {
 
 export interface GetStagesResponse {
   data: {
+    fri: Stage[];
     sat: Stage[];
-    sun: Stage[];
   };
 }
 
