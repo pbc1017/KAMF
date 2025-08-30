@@ -30,10 +30,11 @@ export type Time = string;
  */
 export interface Booth {
   id: number;
-  titleKr: string;
+  titleKo: string;
   titleEn: string;
   zone: Zone;
-  description: string; // 부스 소개
+  descriptionKo: string; // 부스 소개 (한국어)
+  descriptionEn: string; // 부스 소개 (영어)
 }
 
 /**
@@ -41,11 +42,12 @@ export interface Booth {
  */
 export interface Stage {
   id: number;
-  titleKr: string;
+  titleKo: string;
   titleEn: string;
   startTime: Time;
   endTime: Time;
-  description: string; // 공연 소개
+  descriptionKo: string; // 공연 소개 (한국어)
+  descriptionEn: string; // 공연 소개 (영어)
 }
 
 /**
