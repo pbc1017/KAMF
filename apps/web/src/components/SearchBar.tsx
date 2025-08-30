@@ -24,17 +24,17 @@ export function SearchBar({
   onZoneChange,
 }: SearchBarProps) {
   return (
-    <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-      <div className="flex flex-col md:flex-row gap-4">
+    <div className="card-purple p-8 rounded-3xl shadow-2xl">
+      <div className="flex flex-col md:flex-row gap-6">
         {/* 검색창 */}
         <div className="flex-1">
-          <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="search" className="block text-lg font-medium text-white mb-3">
             부스 검색
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <svg
-                className="h-5 w-5 text-gray-400"
+                className="h-6 w-6 text-purple-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -50,7 +50,7 @@ export function SearchBar({
             <input
               type="text"
               id="search"
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full pl-12 pr-4 py-4 bg-gradient-to-r from-purple-800/20 to-indigo-800/20 backdrop-blur-sm border border-purple-500/20 rounded-2xl text-black placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400/50 focus:border-purple-400/50 transition-all duration-300 text-lg"
               placeholder="부스명이나 설명으로 검색하세요..."
               value={searchQuery}
               onChange={e => onSearchChange(e.target.value)}
@@ -59,18 +59,18 @@ export function SearchBar({
         </div>
 
         {/* Zone 필터 */}
-        <div className="md:w-48">
-          <label htmlFor="zone" className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="md:w-56">
+          <label htmlFor="zone" className="block text-lg font-medium text-white mb-3">
             구역 필터
           </label>
           <select
             id="zone"
-            className="block w-full py-3 px-3 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            className="block w-full py-4 px-4 bg-gradient-to-r from-purple-800/20 to-indigo-800/20 backdrop-blur-sm border border-purple-500/20 text-black rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-400/50 focus:border-purple-400/50 transition-all duration-300 text-lg"
             value={selectedZone}
             onChange={e => onZoneChange(e.target.value as Zone | 'all')}
           >
             {zoneOptions.map(option => (
-              <option key={option.value} value={option.value}>
+              <option key={option.value} value={option.value} className="bg-purple-900 text-black">
                 {option.label}
               </option>
             ))}

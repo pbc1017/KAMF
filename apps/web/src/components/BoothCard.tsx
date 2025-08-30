@@ -8,10 +8,10 @@ interface BoothCardProps {
 }
 
 const zoneColors = {
-  [Zone.BOOTH]: 'bg-blue-100 text-blue-800',
-  [Zone.INFO]: 'bg-green-100 text-green-800',
-  [Zone.FOOD_TRUCK]: 'bg-orange-100 text-orange-800',
-  [Zone.HOF]: 'bg-purple-100 text-purple-800',
+  [Zone.BOOTH]: 'from-purple-600 to-indigo-600',
+  [Zone.INFO]: 'from-purple-500 to-violet-600',
+  [Zone.FOOD_TRUCK]: 'from-purple-500 to-pink-500',
+  [Zone.HOF]: 'from-violet-600 to-purple-600',
 };
 
 const zoneLabels = {
@@ -29,7 +29,10 @@ function highlightText(text: string, query: string) {
 
   return parts.map((part, index) =>
     regex.test(part) ? (
-      <mark key={index} className="bg-yellow-200 text-yellow-900">
+      <mark
+        key={index}
+        className="bg-gradient-to-r from-yellow-400/30 to-orange-400/30 text-violet-600 px-1 rounded"
+      >
         {part}
       </mark>
     ) : (
@@ -40,26 +43,30 @@ function highlightText(text: string, query: string) {
 
 export function BoothCard({ booth, searchQuery = '' }: BoothCardProps) {
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
+    <div className="card-purple card-purple-hover p-8 group">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <h3 className="text-2xl font-semibold text-white mb-3 group-hover:text-purple-gradient transition-all duration-300">
+            {highlightText(booth.titleKo, searchQuery)}
+          </h3>
+
+          <p className="text-lg text-purple-300 mb-4 font-medium">
+            {highlightText(booth.titleEn, searchQuery)}
+          </p>
+
+          <p className="text-purple-100 leading-relaxed text-lg">
+            {highlightText(booth.descriptionKo, searchQuery)}
+          </p>
+        </div>
+
+        <div className="ml-6 flex-shrink-0 flex flex-col items-end space-y-2">
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${zoneColors[booth.zone]}`}
+            className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r ${zoneColors[booth.zone]} text-white shadow-lg`}
           >
             {zoneLabels[booth.zone]}
           </span>
-          <span className="text-sm text-gray-500">#{booth.id}</span>
+          <span className="text-purple-300 text-sm font-medium">#{booth.id}</span>
         </div>
-
-        <h3 className="text-xl font-bold text-gray-900 mb-2">
-          {highlightText(booth.titleKo, searchQuery)}
-        </h3>
-
-        <p className="text-sm text-gray-600 mb-3">{highlightText(booth.titleEn, searchQuery)}</p>
-
-        <p className="text-gray-700 text-sm leading-relaxed">
-          {highlightText(booth.descriptionKo, searchQuery)}
-        </p>
       </div>
     </div>
   );

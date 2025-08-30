@@ -121,35 +121,45 @@ export default function StagesPage() {
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
   return (
-    <main className="min-h-screen bg-gray-50 py-8">
+    <main className="min-h-screen bg-purple-organic organic-overlay py-12">
       <div className="max-w-4xl mx-auto px-4">
         {/* 헤더 */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">무대 프로그램</h1>
-          <p className="text-gray-600">KAMF 2025의 다양한 공연 일정을 확인해보세요</p>
+        <div className="text-center mb-12">
+          <div className="animate-float">
+            <h1 className="text-6xl font-bold text-white mb-6">
+              <span className="text-purple-gradient">무대</span> 프로그램
+            </h1>
+            <p className="text-2xl text-purple-200 font-medium">
+              KAMF 2025의 다양한 공연 일정을 확인해보세요
+            </p>
+          </div>
         </div>
 
         {/* 날짜 선택 */}
-        <div className="mb-8">
+        <div className="mb-12">
           <SegmentControl selectedDay={selectedDay} onDayChange={setSelectedDay} />
         </div>
 
         {/* 공연 목록 */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           {filteredStages.length > 0 ? (
             filteredStages.map(stage => <StageCard key={stage.id} stage={stage} />)
           ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">해당 날짜에 예정된 공연이 없습니다.</p>
+            <div className="text-center py-16">
+              <div className="card-purple p-12 rounded-3xl max-w-md mx-auto">
+                <div className="text-6xl mb-6">🎭</div>
+                <h3 className="text-2xl font-bold text-white mb-3">예정된 공연이 없습니다</h3>
+                <p className="text-purple-200 text-lg">해당 날짜에 예정된 공연이 없습니다.</p>
+              </div>
             </div>
           )}
         </div>
 
         {/* 하단 정보 */}
-        <div className="mt-12 text-center">
-          <div className="bg-blue-50 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">공연 안내</h3>
-            <p className="text-blue-700 text-sm">
+        <div className="mt-16 text-center">
+          <div className="card-purple p-8 rounded-3xl">
+            <h3 className="text-2xl font-bold text-white mb-4">🎪 공연 안내</h3>
+            <p className="text-purple-100 leading-relaxed text-lg">
               모든 공연은 날씨나 현장 상황에 따라 변경될 수 있습니다.
               <br />
               최신 정보는 현장 안내데스크에서 확인해주세요.

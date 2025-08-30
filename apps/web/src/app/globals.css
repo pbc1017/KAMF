@@ -3,21 +3,133 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 15, 15, 35;
+  --background-end-rgb: 30, 27, 75;
+  --primary-purple: 99, 102, 241;
+  --secondary-purple: 168, 85, 247;
+  --accent-pink: 236, 72, 153;
+  --purple-dark: 67, 56, 202;
+  --purple-light: 196, 181, 253;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+    --foreground-rgb: 15, 15, 35;
+    --background-start-rgb: 240, 242, 255;
+    --background-end-rgb: 255, 255, 255;
   }
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb)))
-    rgb(var(--background-start-rgb));
+  background: linear-gradient(135deg, 
+    rgb(var(--background-start-rgb)) 0%, 
+    rgb(var(--background-end-rgb)) 100%);
+  min-height: 100vh;
+}
+
+/* Flowing gradient backgrounds */
+.bg-purple-flow {
+  background: linear-gradient(135deg, 
+    #0f0f23 0%, 
+    #1e1b4b 25%, 
+    #4c1d95 50%, 
+    #7c3aed 75%, 
+    #a855f7 100%);
+}
+
+.bg-purple-card {
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.1) 0%, 
+    rgba(168, 85, 247, 0.1) 50%, 
+    rgba(236, 72, 153, 0.1) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.bg-purple-organic {
+  background: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.3) 0%, transparent 50%),
+              radial-gradient(circle at 70% 80%, rgba(168, 85, 247, 0.3) 0%, transparent 50%),
+              radial-gradient(circle at 20% 80%, rgba(236, 72, 153, 0.2) 0%, transparent 50%),
+              linear-gradient(135deg, #0f0f23 0%, #1e1b4b 100%);
+}
+
+/* Organic shape overlay */
+.organic-overlay {
+  position: relative;
+  overflow: hidden;
+}
+
+.organic-overlay::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 25%),
+              radial-gradient(circle at 70% 80%, rgba(168, 85, 247, 0.1) 0%, transparent 25%),
+              radial-gradient(circle at 20% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 25%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.organic-overlay > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Purple button variants */
+.btn-purple-primary {
+  @apply bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl;
+}
+
+.btn-purple-secondary {
+  @apply bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 px-6 rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl;
+}
+
+/* Card styles */
+.card-purple {
+  @apply bg-gradient-to-br from-purple-900/20 to-indigo-900/20 backdrop-blur-sm border border-purple-500/20 rounded-2xl shadow-xl;
+}
+
+.card-purple-hover {
+  @apply hover:shadow-2xl hover:border-purple-400/30 transition-all duration-300 hover:scale-[1.02];
+}
+
+/* Text gradients */
+.text-purple-gradient {
+  background: linear-gradient(135deg, #a855f7, #ec4899, #f472b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Flowing animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 15, 35, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #9333ea, #db2777);
 }
