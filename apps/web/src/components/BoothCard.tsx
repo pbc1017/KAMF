@@ -52,13 +52,13 @@ export function BoothCard({ booth, searchQuery = '' }: BoothCardProps) {
         </div>
 
         <h3 className="text-xl font-bold text-gray-900 mb-2">
-          {highlightText(booth.titleKr, searchQuery)}
+          {highlightText(booth.titleKo, searchQuery)}
         </h3>
 
         <p className="text-sm text-gray-600 mb-3">{highlightText(booth.titleEn, searchQuery)}</p>
 
         <p className="text-gray-700 text-sm leading-relaxed">
-          {highlightText(booth.description, searchQuery)}
+          {highlightText(booth.descriptionKo, searchQuery)}
         </p>
       </div>
     </div>

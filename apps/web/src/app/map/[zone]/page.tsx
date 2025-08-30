@@ -40,79 +40,90 @@ const mockBooths: Record<Zone, Booth[]> = {
   [Zone.BOOTH]: [
     {
       id: 1,
-      titleKr: '컴퓨터공학과 부스',
+      titleKo: '컴퓨터공학과 부스',
       titleEn: 'Computer Science Booth',
       zone: Zone.BOOTH,
-      description: '컴퓨터공학과에서 준비한 재미있는 프로그래밍 체험 부스입니다.',
+      descriptionKo: '컴퓨터공학과에서 준비한 재미있는 프로그래밍 체험 부스입니다.',
+      descriptionEn:
+        'A booth with interesting programming experiences prepared by the Computer Science Department.',
     },
     {
       id: 2,
-      titleKr: '경영학과 부스',
+      titleKo: '경영학과 부스',
       titleEn: 'Business Administration Booth',
       zone: Zone.BOOTH,
-      description: '경영 시뮬레이션 게임을 체험해보세요!',
+      descriptionKo: '경영 시뮬레이션 게임을 체험해보세요!',
+      descriptionEn: 'Experience the business simulation game!',
     },
     {
       id: 3,
-      titleKr: '디자인학과 부스',
+      titleKo: '디자인학과 부스',
       titleEn: 'Design Department Booth',
       zone: Zone.BOOTH,
-      description: '창의적인 디자인 작품을 감상하고 체험할 수 있습니다.',
+      descriptionKo: '창의적인 디자인 작품을 감상하고 체험할 수 있습니다.',
+      descriptionEn: 'Enjoy the creative design works and experience them.',
     },
   ],
   [Zone.INFO]: [
     {
       id: 4,
-      titleKr: '종합 안내소',
+      titleKo: '종합 안내소',
       titleEn: 'General Information',
       zone: Zone.INFO,
-      description: '축제 전반에 대한 안내를 받을 수 있습니다.',
+      descriptionKo: '축제 전반에 대한 안내를 받을 수 있습니다.',
+      descriptionEn: 'You can get information about the entire festival.',
     },
     {
       id: 5,
-      titleKr: '분실물 센터',
+      titleKo: '분실물 센터',
       titleEn: 'Lost & Found',
       zone: Zone.INFO,
-      description: '분실물 신고 및 찾기 서비스를 제공합니다.',
+      descriptionKo: '분실물 신고 및 찾기 서비스를 제공합니다.',
+      descriptionEn: 'We provide lost and found services.',
     },
   ],
   [Zone.FOOD_TRUCK]: [
     {
       id: 6,
-      titleKr: '한식 푸드트럭',
+      titleKo: '한식 푸드트럭',
       titleEn: 'Korean Food Truck',
       zone: Zone.FOOD_TRUCK,
-      description: '맛있는 한식 요리를 판매합니다.',
+      descriptionKo: '맛있는 한식 요리를 판매합니다.',
+      descriptionEn: 'We sell delicious Korean food.',
     },
     {
       id: 7,
-      titleKr: '양식 푸드트럭',
+      titleKo: '양식 푸드트럭',
       titleEn: 'Western Food Truck',
       zone: Zone.FOOD_TRUCK,
-      description: '버거, 파스타 등 양식 메뉴를 제공합니다.',
+      descriptionKo: '버거, 파스타 등 양식 메뉴를 제공합니다.',
+      descriptionEn: 'We provide Western food menus like burgers and pasta.',
     },
     {
       id: 8,
-      titleKr: '디저트 푸드트럭',
+      titleKo: '디저트 푸드트럭',
       titleEn: 'Dessert Truck',
       zone: Zone.FOOD_TRUCK,
-      description: '달콤한 디저트와 음료를 판매합니다.',
+      descriptionKo: '달콤한 디저트와 음료를 판매합니다.',
+      descriptionEn: 'We sell delicious desserts and drinks.',
     },
   ],
   [Zone.HOF]: [
     {
       id: 9,
-      titleKr: '대학생 호프',
+      titleKo: '대학생 호프',
       titleEn: 'Student Pub',
       zone: Zone.HOF,
-      description: '대학생들을 위한 호프 및 안주를 판매합니다.',
+      descriptionKo: '대학생들을 위한 호프 및 안주를 판매합니다.',
+      descriptionEn: 'We sell Hof and snacks for university students.',
     },
     {
       id: 10,
-      titleKr: '치킨&맥주',
+      titleKo: '치킨&맥주',
       titleEn: 'Chicken & Beer',
       zone: Zone.HOF,
-      description: '바삭한 치킨과 시원한 맥주의 조합!',
+      descriptionKo: '바삭한 치킨과 시원한 맥주의 조합!',
+      descriptionEn: 'The combination of crispy chicken and refreshing beer!',
     },
   ],
 };
@@ -176,11 +187,11 @@ export default function ZonePage({ params }: { params: { zone: string } }) {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                    {booth.titleKr}
+                    {booth.titleKo}
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{booth.titleEn}</p>
                   <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                    {booth.description}
+                    {booth.descriptionKo}
                   </p>
                 </div>
                 <div className="ml-4 flex-shrink-0">

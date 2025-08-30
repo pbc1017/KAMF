@@ -20,11 +20,11 @@ export function StageCard({ stage }: StageCardProps) {
         </div>
       </div>
 
-      <h3 className="text-lg font-bold text-gray-900 mb-2">{stage.titleKr}</h3>
+      <h3 className="text-lg font-bold text-gray-900 mb-2">{stage.titleKo}</h3>
 
       {stage.titleEn && <p className="text-gray-500 text-sm mb-3 italic">{stage.titleEn}</p>}
 
-      <p className="text-gray-600 text-sm leading-relaxed">{stage.description}</p>
+      <p className="text-gray-600 text-sm leading-relaxed">{stage.descriptionKo}</p>
     </div>
   );
 }
