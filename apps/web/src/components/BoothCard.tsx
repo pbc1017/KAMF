@@ -11,14 +11,14 @@ const zoneColors = {
   [Zone.BOOTH]: 'from-purple-600 to-indigo-600',
   [Zone.INFO]: 'from-purple-500 to-violet-600',
   [Zone.FOOD_TRUCK]: 'from-purple-500 to-pink-500',
-  [Zone.HOF]: 'from-violet-600 to-purple-600',
+  [Zone.NIGHT_MARKET]: 'from-violet-600 to-purple-600',
 };
 
 const zoneLabels = {
   [Zone.BOOTH]: '부스',
   [Zone.INFO]: '안내소',
   [Zone.FOOD_TRUCK]: '푸드트럭',
-  [Zone.HOF]: 'HOF',
+  [Zone.NIGHT_MARKET]: '야시장',
 };
 
 function highlightText(text: string, query: string) {

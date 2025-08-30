@@ -9,7 +9,7 @@ export enum Zone {
   BOOTH = 'booth',
   INFO = 'info',
   FOOD_TRUCK = 'foodTruck',
-  HOF = 'hof',
+  NIGHT_MARKET = 'nightMarket',
 }
 
 /**

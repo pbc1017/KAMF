@@ -6,7 +6,7 @@ const urlToZone = (urlParam: string): Zone | null => {
     booth: Zone.BOOTH,
     info: Zone.INFO,
     'food-truck': Zone.FOOD_TRUCK,
-    hof: Zone.HOF,
+    'night-market': Zone.NIGHT_MARKET,
   };
   return mapping[urlParam] || null;
 };
@@ -31,9 +31,9 @@ const zoneInfo = {
     image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=800&h=400&fit=crop',
     bgGradient: 'from-purple-500 to-pink-500',
   },
-  [Zone.HOF]: {
-    nameKr: '호프존',
-    nameEn: 'Hof Zone',
+  [Zone.NIGHT_MARKET]: {
+    nameKr: '야시장',
+    nameEn: 'Night Market Zone',
     image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=800&h=400&fit=crop',
     bgGradient: 'from-violet-600 to-purple-600',
   },
@@ -112,20 +112,20 @@ const mockBooths: Record<Zone, Booth[]> = {
       descriptionEn: 'We sell delicious desserts and drinks.',
     },
   ],
-  [Zone.HOF]: [
+  [Zone.NIGHT_MARKET]: [
     {
       id: 9,
-      titleKo: '대학생 호프',
-      titleEn: 'Student Pub',
-      zone: Zone.HOF,
-      descriptionKo: '대학생들을 위한 호프 및 안주를 판매합니다.',
-      descriptionEn: 'We sell Hof and snacks for university students.',
+      titleKo: '대학생 야시장',
+      titleEn: 'Student Night Market',
+      zone: Zone.NIGHT_MARKET,
+      descriptionKo: '대학생들을 위한 야시장 및 안주를 판매합니다.',
+      descriptionEn: 'We sell night market food and snacks for university students.',
     },
     {
       id: 10,
       titleKo: '치킨&맥주',
       titleEn: 'Chicken & Beer',
-      zone: Zone.HOF,
+      zone: Zone.NIGHT_MARKET,
       descriptionKo: '바삭한 치킨과 시원한 맥주의 조합!',
       descriptionEn: 'The combination of crispy chicken and refreshing beer!',
     },
@@ -140,7 +140,7 @@ export default function ZonePage({ params }: { params: { zone: string } }) {
       <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-purple-organic organic-overlay">
         <div className="card-purple p-12 text-center rounded-3xl">
           <h1 className="text-4xl font-bold text-red-400 mb-4">잘못된 Zone입니다</h1>
-          <p className="text-purple-200">유효한 zone: booth, info, food-truck, hof</p>
+          <p className="text-purple-200">유효한 zone: booth, info, food-truck, night-market</p>
         </div>
       </main>
     );

@@ -14,7 +14,7 @@ const zoneOptions = [
   { value: Zone.BOOTH, label: '부스' },
   { value: Zone.INFO, label: '안내소' },
   { value: Zone.FOOD_TRUCK, label: '푸드트럭' },
-  { value: Zone.HOF, label: 'HOF' },
+  { value: Zone.NIGHT_MARKET, label: '야시장' },
 ];
 
 export function SearchBar({

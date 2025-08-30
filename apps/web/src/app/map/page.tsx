@@ -42,10 +42,10 @@ const mapAreas = [
     color: 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600',
   },
   {
-    id: 'hof',
-    nameKr: '호프',
-    nameEn: 'Hof',
-    url: '/map/hof',
+    id: 'nightMarket',
+    nameKr: '야시장',
+    nameEn: 'Night Market',
+    url: '/map/night-market',
     available: true,
     position: 'bottom-8 left-1/2 transform -translate-x-1/2',
     color:
@@ -74,7 +74,7 @@ const operatingHours = [
     status: 'open',
   },
   {
-    zone: '호프존',
+    zone: '야시장',
     hours: '17:00 - 24:00',
     description: '주류 및 안주 판매',
     status: 'open',

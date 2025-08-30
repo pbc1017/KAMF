@@ -66,9 +66,9 @@ const sampleBooths: Booth[] = [
   },
   {
     id: 7,
-    titleKo: 'HOF 라운지',
-    titleEn: 'HOF Lounge',
-    zone: Zone.HOF,
+    titleKo: '야시장 라운지',
+    titleEn: 'Night Market Lounge',
+    zone: Zone.NIGHT_MARKET,
     descriptionKo: '축제의 하이라이트! 시원한 맥주와 치킨으로 친구들과 즐거운 시간을 보내세요.',
     descriptionEn:
       'The highlight of the festival! Enjoy refreshing beer and chicken with your friends.',
