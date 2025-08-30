@@ -1,38 +1,33 @@
-import { UserRole } from '@kamf/interface/types/user.js';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
+
+import { Role } from './role.entity.js';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ unique: true })
-  email: string;
+  phoneNumber: string;
 
-  @Column({ unique: true })
-  username: string;
+  @Column()
+  displayName: string;
 
-  @Column({ nullable: true })
-  firstName?: string;
-
-  @Column({ nullable: true })
-  lastName?: string;
-
-  @Column({ default: true })
-  isActive: boolean;
-
-  @Column({
-    type: 'enum',
-    enum: UserRole,
-    default: UserRole.USER,
+  @ManyToMany(() => Role, role => role.users)
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: { name: 'userId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'roleId', referencedColumnName: 'id' },
   })
-  role: UserRole;
+  roles: Role[];
 
   @CreateDateColumn()
   createdAt: Date;

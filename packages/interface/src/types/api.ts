@@ -3,6 +3,7 @@
  */
 
 import { Booth, Stage, Zone } from './festival';
+import { User } from './user';
 
 // Festival API types
 export interface GetBoothsResponse {
@@ -30,6 +31,27 @@ export interface AuthTokens {
   expiresIn: number;
 }
 
+// Auth related types
+export interface AuthRequest {
+  phoneNumber: string;
+}
+
+export interface VerifyCodeRequest {
+  phoneNumber: string;
+  code: string;
+}
+
+export interface AuthResponse {
+  user: {
+    id: string;
+    phoneNumber: string;
+    displayName: string;
+    roles: string[];
+  };
+  tokens: AuthTokens;
+}
+
+// Legacy types (keeping for compatibility)
 export interface LoginRequest {
   email: string;
   password: string;
@@ -47,6 +69,23 @@ export interface LoginResponse {
 
 export interface RefreshTokenRequest {
   refreshToken: string;
+}
+
+// User related API responses
+export interface GetUserResponse {
+  user: User;
+}
+
+export interface GetUsersResponse {
+  users: User[];
+}
+
+export interface UpdateUserResponse {
+  user: User;
+}
+
+export interface RequestCodeResponse {
+  message: string;
 }
 
 export interface ApiError {

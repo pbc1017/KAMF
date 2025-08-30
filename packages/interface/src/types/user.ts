@@ -4,42 +4,33 @@ import { BaseEntity } from './common';
  * User related types and interfaces
  */
 
-export interface User extends BaseEntity {
-  email: string;
-  username: string;
-  firstName?: string;
-  lastName?: string;
-  isActive: boolean;
-  role: UserRole;
-}
-
 export enum UserRole {
-  ADMIN = 'admin',
   USER = 'user',
-  MODERATOR = 'moderator',
+  BOOTH = 'booth',
+  SAFETY = 'safety',
+  ADMIN = 'admin',
 }
 
-export interface CreateUserDto {
-  email: string;
-  username: string;
-  password: string;
-  firstName?: string;
-  lastName?: string;
-  role?: UserRole;
+export interface User extends BaseEntity {
+  phoneNumber: string;
+  displayName: string;
+  roles: UserRole[];
 }
 
-export interface UpdateUserDto {
-  email?: string;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
-  isActive?: boolean;
-  role?: UserRole;
+export interface CreateUserRequest {
+  phoneNumber: string;
+  displayName?: string;
+  roles?: UserRole[];
+}
+
+export interface UpdateUserRequest {
+  displayName?: string;
+  roles?: UserRole[];
 }
 
 export interface UserSession {
   userId: string;
-  email: string;
-  role: UserRole;
+  phoneNumber: string;
+  roles: UserRole[];
   expiresAt: Date;
 }
