@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm';
 
-import { BaseEntity } from '../common/entities/base.entity.js';
+import { ModifiableEntity } from '../common/entities/base.entity.js';
 
 import { Role } from './role.entity.js';
 
 @Entity('users')
-export class User extends BaseEntity {
+export class User extends ModifiableEntity {
   @PrimaryGeneratedColumn('uuid')
   @ApiProperty({ description: '사용자 ID' })
   id: string;
