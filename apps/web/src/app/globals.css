@@ -23,36 +23,43 @@
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(135deg, 
-    rgb(var(--background-start-rgb)) 0%, 
-    rgb(var(--background-end-rgb)) 100%);
+  background: linear-gradient(
+    135deg,
+    rgb(var(--background-start-rgb)) 0%,
+    rgb(var(--background-end-rgb)) 100%
+  );
   min-height: 100vh;
 }
 
 /* Flowing gradient backgrounds */
 .bg-purple-flow {
-  background: linear-gradient(135deg, 
-    #0f0f23 0%, 
-    #1e1b4b 25%, 
-    #4c1d95 50%, 
-    #7c3aed 75%, 
-    #a855f7 100%);
+  background: linear-gradient(
+    135deg,
+    #0f0f23 0%,
+    #1e1b4b 25%,
+    #4c1d95 50%,
+    #7c3aed 75%,
+    #a855f7 100%
+  );
 }
 
 .bg-purple-card {
-  background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 0.1) 0%, 
-    rgba(168, 85, 247, 0.1) 50%, 
-    rgba(236, 72, 153, 0.1) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.1) 0%,
+    rgba(168, 85, 247, 0.1) 50%,
+    rgba(236, 72, 153, 0.1) 100%
+  );
   backdrop-filter: blur(10px);
   border: 1px solid rgba(168, 85, 247, 0.2);
 }
 
 .bg-purple-organic {
-  background: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.3) 0%, transparent 50%),
-              radial-gradient(circle at 70% 80%, rgba(168, 85, 247, 0.3) 0%, transparent 50%),
-              radial-gradient(circle at 20% 80%, rgba(236, 72, 153, 0.2) 0%, transparent 50%),
-              linear-gradient(135deg, #0f0f23 0%, #1e1b4b 100%);
+  background:
+    radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(168, 85, 247, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba(236, 72, 153, 0.2) 0%, transparent 50%),
+    linear-gradient(135deg, #0f0f23 0%, #1e1b4b 100%);
 }
 
 /* Organic shape overlay */
@@ -68,9 +75,10 @@ body {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 25%),
-              radial-gradient(circle at 70% 80%, rgba(168, 85, 247, 0.1) 0%, transparent 25%),
-              radial-gradient(circle at 20% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 25%);
+  background:
+    radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 25%),
+    radial-gradient(circle at 70% 80%, rgba(168, 85, 247, 0.1) 0%, transparent 25%),
+    radial-gradient(circle at 20% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 25%);
   pointer-events: none;
   z-index: 0;
 }
@@ -108,8 +116,13 @@ body {
 
 /* Flowing animation */
 @keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(2deg); }
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(2deg);
+  }
 }
 
 .animate-float {
