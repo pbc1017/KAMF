@@ -123,7 +123,7 @@ export default function Home() {
           <h1 className="text-7xl font-bold text-white mb-6">
             KAMF <span className="text-purple-gradient">2025</span>
           </h1>
-          <p className="text-2xl text-purple-200 mb-4 font-medium">Korea Arts & Music Festival</p>
+          <p className="text-2xl text-purple-200 mb-4 font-medium">KAIST Art & Music Festival</p>
           <p className="text-lg text-purple-100 mb-6">
             📅 2025년 5월 17일(토) - 18일(일) | 📍 대학교 캠퍼스
           </p>
