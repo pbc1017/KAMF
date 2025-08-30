@@ -1,4 +1,9 @@
-import { Zone, Booth } from '@kamf/interface';
+'use client';
+
+import { Zone } from '@kamf/interface';
+import { Suspense } from 'react';
+
+import { useBoothsByZone } from '@/hooks/useBoothsByZone';
 
 // URL 파라미터(케밥케이스) → Zone enum(카멜케이스) 변환
 const urlToZone = (urlParam: string): Zone | null => {
@@ -39,115 +44,46 @@ const zoneInfo = {
   },
 };
 
-// 임시 부스 데이터
-const mockBooths: Record<Zone, Booth[]> = {
-  [Zone.BOOTH]: [
-    {
-      id: 1,
-      titleKo: '컴퓨터공학과 부스',
-      titleEn: 'Computer Science Booth',
-      zone: Zone.BOOTH,
-      descriptionKo: '컴퓨터공학과에서 준비한 재미있는 프로그래밍 체험 부스입니다.',
-      descriptionEn:
-        'A booth with interesting programming experiences prepared by the Computer Science Department.',
-    },
-    {
-      id: 2,
-      titleKo: '경영학과 부스',
-      titleEn: 'Business Administration Booth',
-      zone: Zone.BOOTH,
-      descriptionKo: '경영 시뮬레이션 게임을 체험해보세요!',
-      descriptionEn: 'Experience the business simulation game!',
-    },
-    {
-      id: 3,
-      titleKo: '디자인학과 부스',
-      titleEn: 'Design Department Booth',
-      zone: Zone.BOOTH,
-      descriptionKo: '창의적인 디자인 작품을 감상하고 체험할 수 있습니다.',
-      descriptionEn: 'Enjoy the creative design works and experience them.',
-    },
-  ],
-  [Zone.INFO]: [
-    {
-      id: 4,
-      titleKo: '종합 안내소',
-      titleEn: 'General Information',
-      zone: Zone.INFO,
-      descriptionKo: '축제 전반에 대한 안내를 받을 수 있습니다.',
-      descriptionEn: 'You can get information about the entire festival.',
-    },
-    {
-      id: 5,
-      titleKo: '분실물 센터',
-      titleEn: 'Lost & Found',
-      zone: Zone.INFO,
-      descriptionKo: '분실물 신고 및 찾기 서비스를 제공합니다.',
-      descriptionEn: 'We provide lost and found services.',
-    },
-  ],
-  [Zone.FOOD_TRUCK]: [
-    {
-      id: 6,
-      titleKo: '한식 푸드트럭',
-      titleEn: 'Korean Food Truck',
-      zone: Zone.FOOD_TRUCK,
-      descriptionKo: '맛있는 한식 요리를 판매합니다.',
-      descriptionEn: 'We sell delicious Korean food.',
-    },
-    {
-      id: 7,
-      titleKo: '양식 푸드트럭',
-      titleEn: 'Western Food Truck',
-      zone: Zone.FOOD_TRUCK,
-      descriptionKo: '버거, 파스타 등 양식 메뉴를 제공합니다.',
-      descriptionEn: 'We provide Western food menus like burgers and pasta.',
-    },
-    {
-      id: 8,
-      titleKo: '디저트 푸드트럭',
-      titleEn: 'Dessert Truck',
-      zone: Zone.FOOD_TRUCK,
-      descriptionKo: '달콤한 디저트와 음료를 판매합니다.',
-      descriptionEn: 'We sell delicious desserts and drinks.',
-    },
-  ],
-  [Zone.NIGHT_MARKET]: [
-    {
-      id: 9,
-      titleKo: '대학생 야시장',
-      titleEn: 'Student Night Market',
-      zone: Zone.NIGHT_MARKET,
-      descriptionKo: '대학생들을 위한 야시장 및 안주를 판매합니다.',
-      descriptionEn: 'We sell night market food and snacks for university students.',
-    },
-    {
-      id: 10,
-      titleKo: '치킨&맥주',
-      titleEn: 'Chicken & Beer',
-      zone: Zone.NIGHT_MARKET,
-      descriptionKo: '바삭한 치킨과 시원한 맥주의 조합!',
-      descriptionEn: 'The combination of crispy chicken and refreshing beer!',
-    },
-  ],
-};
-
-export default function ZonePage({ params }: { params: { zone: string } }) {
-  const zone = urlToZone(params.zone);
-
-  if (!zone) {
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-purple-organic organic-overlay">
-        <div className="card-purple p-12 text-center rounded-3xl">
-          <h1 className="text-4xl font-bold text-red-400 mb-4">잘못된 Zone입니다</h1>
-          <p className="text-purple-200">유효한 zone: booth, info, food-truck, night-market</p>
+// 로딩 컴포넌트
+function ZonePageSkeleton() {
+  return (
+    <main className="min-h-screen bg-purple-organic organic-overlay">
+      {/* Zone 제목 섹션 스켈레톤 */}
+      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 shadow-xl">
+        <div className="max-w-4xl mx-auto px-6 py-16">
+          <div className="text-center animate-pulse">
+            <div className="h-16 bg-white/20 rounded-lg mb-6 mx-auto max-w-md"></div>
+            <div className="h-8 bg-white/20 rounded-lg mx-auto max-w-lg"></div>
+          </div>
         </div>
-      </main>
-    );
-  }
+      </div>
 
+      {/* Zone 이미지 섹션 스켈레톤 */}
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        <div className="relative w-full h-64 md:h-80 rounded-3xl overflow-hidden shadow-2xl animate-pulse bg-purple-400/20"></div>
+      </div>
+
+      {/* 부스 목록 섹션 스켈레톤 */}
+      <div className="max-w-4xl mx-auto px-6 pb-16">
+        <div className="text-center mb-12 animate-pulse">
+          <div className="h-10 bg-purple-400/20 rounded-lg mb-4 mx-auto max-w-xs"></div>
+          <div className="h-6 bg-purple-300/20 rounded-lg mx-auto max-w-md"></div>
+        </div>
+
+        <div className="space-y-6">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-32 bg-purple-400/20 rounded-2xl animate-pulse"></div>
+          ))}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function ZonePageContent({ zone }: { zone: Zone }) {
+  const { data: boothsResponse } = useBoothsByZone(zone);
+  const currentBooths = boothsResponse.data;
   const currentZoneInfo = zoneInfo[zone];
-  const currentBooths = mockBooths[zone] || [];
 
   return (
     <main className="min-h-screen bg-purple-organic organic-overlay">
@@ -224,5 +160,26 @@ export default function ZonePage({ params }: { params: { zone: string } }) {
         )}
       </div>
     </main>
+  );
+}
+
+export default function ZonePage({ params }: { params: { zone: string } }) {
+  const zone = urlToZone(params.zone);
+
+  if (!zone) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-purple-organic organic-overlay">
+        <div className="card-purple p-12 text-center rounded-3xl">
+          <h1 className="text-4xl font-bold text-red-400 mb-4">잘못된 Zone입니다</h1>
+          <p className="text-purple-200">유효한 zone: booth, info, food-truck, night-market</p>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <Suspense fallback={<ZonePageSkeleton />}>
+      <ZonePageContent zone={zone} />
+    </Suspense>
   );
 }
