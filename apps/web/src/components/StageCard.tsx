@@ -6,14 +6,14 @@ interface StageCardProps {
   stage: StageWithDay;
 }
 
-const dayColors = {
-  [FestivalDay.SATURDAY]: 'from-purple-600 to-indigo-600',
-  [FestivalDay.SUNDAY]: 'from-indigo-600 to-purple-600',
+const gradientClasses = {
+  [FestivalDay.FRIDAY]: 'from-purple-600 to-indigo-600',
+  [FestivalDay.SATURDAY]: 'from-indigo-600 to-purple-600',
 };
 
 const dayLabels = {
+  [FestivalDay.FRIDAY]: '금요일',
   [FestivalDay.SATURDAY]: '토요일',
-  [FestivalDay.SUNDAY]: '일요일',
 };
 
 export function StageCard({ stage }: StageCardProps) {
@@ -25,7 +25,7 @@ export function StageCard({ stage }: StageCardProps) {
             {stage.startTime} - {stage.endTime}
           </div>
           <div
-            className={`bg-gradient-to-r ${dayColors[stage.day]} text-white px-3 py-1 rounded-full text-sm font-medium shadow-md`}
+            className={`bg-gradient-to-r ${gradientClasses[stage.day]} text-white px-3 py-1 rounded-full text-sm font-medium shadow-md`}
           >
             {dayLabels[stage.day]}
           </div>

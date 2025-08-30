@@ -16,8 +16,8 @@ export enum Zone {
  * 축제 날짜
  */
 export enum FestivalDay {
+  FRIDAY = 'FRI',
   SATURDAY = 'SAT',
-  SUNDAY = 'SUN',
 }
 
 /**

@@ -14,14 +14,14 @@ export class StageService {
 
   async findAll(): Promise<{ sat: Stage[]; sun: Stage[] }> {
     const satStages = await this.stageRepository.find({
-      where: { day: FestivalDay.SATURDAY },
+      where: { day: FestivalDay.FRIDAY },
       order: {
         startTime: 'ASC',
       },
     });
 
     const sunStages = await this.stageRepository.find({
-      where: { day: FestivalDay.SUNDAY },
+      where: { day: FestivalDay.SATURDAY },
       order: {
         startTime: 'ASC',
       },

@@ -9,8 +9,8 @@ interface SegmentControlProps {
 
 export function SegmentControl({ selectedDay, onDayChange }: SegmentControlProps) {
   const days = [
+    { value: FestivalDay.FRIDAY, label: '금요일 (FRI)', shortLabel: 'FRI' },
     { value: FestivalDay.SATURDAY, label: '토요일 (SAT)', shortLabel: 'SAT' },
-    { value: FestivalDay.SUNDAY, label: '일요일 (SUN)', shortLabel: 'SUN' },
   ];
 
   return (

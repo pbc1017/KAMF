@@ -17,7 +17,7 @@ const mockStages: StageWithDay[] = [
     endTime: '10:30',
     descriptionKo: 'KAMF 2025 축제의 시작을 알리는 개막식입니다. 모든 참가자들을 환영합니다.',
     descriptionEn: 'The opening ceremony of KAMF 2025, welcoming all participants.',
-    day: FestivalDay.SATURDAY,
+    day: FestivalDay.FRIDAY,
   },
   {
     id: 2,
@@ -27,7 +27,7 @@ const mockStages: StageWithDay[] = [
     endTime: '12:00',
     descriptionKo: '젊은 에너지가 넘치는 록 밴드의 열정적인 공연입니다.',
     descriptionEn: 'An energetic performance by a rock band with young energy.',
-    day: FestivalDay.SATURDAY,
+    day: FestivalDay.FRIDAY,
   },
   {
     id: 3,
@@ -37,7 +37,7 @@ const mockStages: StageWithDay[] = [
     endTime: '15:30',
     descriptionKo: '감성적인 어쿠스틱 기타와 보컬이 어우러진 따뜻한 음악 시간입니다.',
     descriptionEn: 'A warm acoustic guitar and vocal session that blends emotions.',
-    day: FestivalDay.SATURDAY,
+    day: FestivalDay.FRIDAY,
   },
   {
     id: 4,
@@ -47,28 +47,28 @@ const mockStages: StageWithDay[] = [
     endTime: '17:30',
     descriptionKo: '최신 K-POP과 EDM이 만나는 흥겨운 DJ 무대입니다.',
     descriptionEn: 'A fun DJ performance with the latest K-POP and EDM.',
-    day: FestivalDay.SATURDAY,
+    day: FestivalDay.FRIDAY,
   },
   {
     id: 5,
-    titleKo: '토요일 메인 콘서트',
-    titleEn: 'Saturday Main Concert',
+    titleKo: '금요일 메인 콘서트',
+    titleEn: 'Friday Main Concert',
     startTime: '19:00',
     endTime: '21:00',
-    descriptionKo: '토요일의 하이라이트! 유명 아티스트들의 화려한 무대가 펼쳐집니다.',
-    descriptionEn: 'The highlight of Saturday! A dazzling stage with famous artists.',
-    day: FestivalDay.SATURDAY,
+    descriptionKo: '금요일의 하이라이트! 유명 아티스트들의 화려한 무대가 펼쳐집니다.',
+    descriptionEn: 'The highlight of Friday! A dazzling stage with famous artists.',
+    day: FestivalDay.FRIDAY,
   },
-  // Sunday stages
+  // Saturday stages
   {
     id: 6,
     titleKo: '모닝 재즈 카페',
     titleEn: 'Morning Jazz Cafe',
     startTime: '10:30',
     endTime: '11:30',
-    descriptionKo: '일요일 아침을 여는 부드러운 재즈 선율과 함께하는 시간입니다.',
-    descriptionEn: 'A warm jazz session that opens the Sunday morning.',
-    day: FestivalDay.SUNDAY,
+    descriptionKo: '토요일 아침을 여는 부드러운 재즈 선율과 함께하는 시간입니다.',
+    descriptionEn: 'A warm jazz session that opens the Saturday morning.',
+    day: FestivalDay.SATURDAY,
   },
   {
     id: 7,
@@ -78,7 +78,7 @@ const mockStages: StageWithDay[] = [
     endTime: '13:00',
     descriptionKo: '우아하고 품격 있는 클래식 음악 연주회입니다.',
     descriptionEn: 'A classical music performance with elegance and refinement.',
-    day: FestivalDay.SUNDAY,
+    day: FestivalDay.SATURDAY,
   },
   {
     id: 8,
@@ -88,7 +88,7 @@ const mockStages: StageWithDay[] = [
     endTime: '16:00',
     descriptionKo: '개성 넘치는 인디 아티스트들의 특별한 무대를 만나보세요.',
     descriptionEn: 'A special stage with indie artists who stand out.',
-    day: FestivalDay.SUNDAY,
+    day: FestivalDay.SATURDAY,
   },
   {
     id: 9,
@@ -98,7 +98,7 @@ const mockStages: StageWithDay[] = [
     endTime: '18:00',
     descriptionKo: '남녀노소 모두가 함께 즐길 수 있는 트로트 가요 무대입니다.',
     descriptionEn: 'A trot festival where everyone can enjoy.',
-    day: FestivalDay.SUNDAY,
+    day: FestivalDay.SATURDAY,
   },
   {
     id: 10,
@@ -108,12 +108,12 @@ const mockStages: StageWithDay[] = [
     endTime: '21:30',
     descriptionKo: 'KAMF 2025의 마지막을 장식하는 감동적인 폐막 콘서트입니다.',
     descriptionEn: 'An emotional closing concert that decorates the end of KAMF 2025.',
-    day: FestivalDay.SUNDAY,
+    day: FestivalDay.SATURDAY,
   },
 ];
 
 export default function StagesPage() {
-  const [selectedDay, setSelectedDay] = useState<FestivalDay>(FestivalDay.SATURDAY);
+  const [selectedDay, setSelectedDay] = useState<FestivalDay>(FestivalDay.FRIDAY);
 
   // 선택된 날짜에 해당하는 공연 필터링 및 시간순 정렬
   const filteredStages = mockStages

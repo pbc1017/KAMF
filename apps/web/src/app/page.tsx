@@ -125,7 +125,7 @@ export default function Home() {
           </h1>
           <p className="text-2xl text-purple-200 mb-4 font-medium">KAIST Art & Music Festival</p>
           <p className="text-lg text-purple-100 mb-6">
-            📅 2025년 5월 17일(토) - 18일(일) | 📍 대학교 캠퍼스
+            📅 2025년 9월 5일(금) - 6일(토) | 📍 대학교 캠퍼스
           </p>
         </div>
         <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-500/30 to-pink-500/30 backdrop-blur-sm border border-purple-400/30 text-purple-100 rounded-full text-lg font-medium shadow-lg">
