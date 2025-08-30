@@ -56,3 +56,10 @@ export interface Stage {
 export interface StageWithDay extends Stage {
   day: FestivalDay;
 }
+
+/**
+ * 날짜가 포함된 공연 정보
+ */
+export interface StageWithDay extends Stage {
+  day: FestivalDay;
+}

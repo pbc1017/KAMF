@@ -7,8 +7,8 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'KAMF Web App',
-  description: 'Modern ESM monorepo web application',
+  title: '2025 KAMF',
+  description: 'KAMF official website',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
