@@ -1,10 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { sign, verify, JwtPayload } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 import { User } from '../../entities/user.entity.js';
 
-export interface TokenPayload extends JwtPayload {
+export interface TokenPayload {
+  iat?: number;
+  exp?: number;
   userId: string;
   phoneNumber: string;
   roles: string[];
@@ -39,11 +41,11 @@ export class JwtAuthService {
       throw new Error('JWT secrets not configured');
     }
 
-    const accessToken = sign(payload, jwtSecret, {
+    const accessToken = jwt.sign(payload, jwtSecret, {
       expiresIn: '1h', // 1시간
     });
 
-    const refreshToken = sign(payload, jwtRefreshSecret, {
+    const refreshToken = jwt.sign(payload, jwtRefreshSecret, {
       expiresIn: '7d', // 7일
     });
 
@@ -67,7 +69,7 @@ export class JwtAuthService {
         throw new Error('JWT secret not configured');
       }
 
-      return verify(token, jwtSecret) as TokenPayload;
+      return jwt.verify(token, jwtSecret) as TokenPayload;
     } catch (error) {
       if (error.name === 'TokenExpiredError') {
         throw new UnauthorizedException('Access token expired');
@@ -91,7 +93,7 @@ export class JwtAuthService {
         throw new Error('JWT refresh secret not configured');
       }
 
-      return verify(token, jwtRefreshSecret) as TokenPayload;
+      return jwt.verify(token, jwtRefreshSecret) as TokenPayload;
     } catch (error) {
       if (error.name === 'TokenExpiredError') {
         throw new UnauthorizedException('Refresh token expired');
