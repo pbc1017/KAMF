@@ -8,6 +8,7 @@ import databaseConfig from './config/database.config.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { BoothModule } from './modules/booth/booth.module.js';
 import { StageModule } from './modules/stage/stage.module.js';
+import { UsersModule } from './modules/users/users.module.js';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { StageModule } from './modules/stage/stage.module.js';
       inject: [ConfigService],
     }),
     AuthModule,
+    UsersModule,
     BoothModule,
     StageModule,
   ],
