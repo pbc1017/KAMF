@@ -8,12 +8,16 @@ import type {
 import { ApiResponse } from '@kamf/interface/types/common.js';
 import { UserRole } from '@kamf/interface/types/user.js';
 import { Controller, Post, Body, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiOkResponse, ApiBody } from '@nestjs/swagger';
 
+import { MessageResponseDto, AuthResponseDto } from '../../common/dto/common.dto.js';
 import { UserService } from '../users/users.service.js';
 
+import { AuthRequestDto, VerifyCodeRequestDto, RefreshTokenRequestDto } from './auth.dto.js';
 import { JwtAuthService } from './jwt.service.js';
 import { SmsService } from './sms.service.js';
 
+@ApiTags('인증 (Authentication)')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -26,6 +30,15 @@ export class AuthController {
    * 인증 코드 요청 API
    * POST /api/auth/request-code
    */
+  @ApiOperation({
+    summary: '인증 코드 요청',
+    description: '휴대폰 번호로 SMS 인증 코드를 요청합니다.',
+  })
+  @ApiBody({ type: AuthRequestDto })
+  @ApiOkResponse({
+    description: '인증 코드 발송 성공',
+    type: MessageResponseDto,
+  })
   @Post('request-code')
   async requestCode(@Body() body: AuthRequest): Promise<ApiResponse<RequestCodeResponse>> {
     try {
@@ -59,6 +72,15 @@ export class AuthController {
    * 인증 코드 검증 및 로그인 API
    * POST /api/auth/verify
    */
+  @ApiOperation({
+    summary: '인증 코드 검증 및 로그인',
+    description: 'SMS로 받은 인증 코드를 검증하여 로그인을 진행합니다.',
+  })
+  @ApiBody({ type: VerifyCodeRequestDto })
+  @ApiOkResponse({
+    description: '인증 성공 및 토큰 발급',
+    type: AuthResponseDto,
+  })
   @Post('verify')
   async verifyCode(@Body() body: VerifyCodeRequest): Promise<ApiResponse<AuthResponse>> {
     try {
@@ -125,6 +147,15 @@ export class AuthController {
    * 토큰 갱신 API
    * POST /api/auth/refresh
    */
+  @ApiOperation({
+    summary: '토큰 갱신',
+    description: 'Refresh Token을 사용하여 새로운 Access Token을 발급받습니다.',
+  })
+  @ApiBody({ type: RefreshTokenRequestDto })
+  @ApiOkResponse({
+    description: '토큰 갱신 성공',
+    type: AuthResponseDto,
+  })
   @Post('refresh')
   async refreshToken(@Body() body: RefreshTokenRequest): Promise<ApiResponse<AuthResponse>> {
     try {
