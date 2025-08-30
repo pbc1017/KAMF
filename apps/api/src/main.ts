@@ -60,7 +60,7 @@ async function bootstrap() {
     )
     .addServer(
       process.env.NODE_ENV === 'production'
-        ? 'https://api.kamf.sparcs.org'
+        ? `http://localhost:${process.env.SERVER_PORT || 8000}`
         : `http://localhost:${process.env.SERVER_PORT || 8000}`,
       process.env.NODE_ENV === 'production' ? '프로덕션 서버' : '개발 서버'
     )
