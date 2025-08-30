@@ -1,7 +1,8 @@
+import { AuthRequest, VerifyCodeRequest, RefreshTokenRequest } from '@kamf/interface/types/api.js';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, Length, Matches } from 'class-validator';
 
-export class AuthRequestDto {
+export class AuthRequestDto implements AuthRequest {
   @ApiProperty({
     description: '전화번호 (010-1234-5678 또는 01012345678 형식)',
     example: '010-1234-5678',
@@ -11,7 +12,7 @@ export class AuthRequestDto {
   phoneNumber: string;
 }
 
-export class VerifyCodeRequestDto {
+export class VerifyCodeRequestDto implements VerifyCodeRequest {
   @ApiProperty({
     description: '전화번호 (010-1234-5678 또는 01012345678 형식)',
     example: '010-1234-5678',
@@ -31,7 +32,7 @@ export class VerifyCodeRequestDto {
   code: string;
 }
 
-export class RefreshTokenRequestDto {
+export class RefreshTokenRequestDto implements RefreshTokenRequest {
   @ApiProperty({
     description: 'Refresh Token',
     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',

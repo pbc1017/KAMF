@@ -1,8 +1,8 @@
-import { UserRole } from '@kamf/interface/types/user.js';
+import { UserRole, UpdateUserRequest } from '@kamf/interface/types/user.js';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsArray, IsEnum, Length } from 'class-validator';
 
-export class UpdateDisplayNameDto {
+export class UpdateDisplayNameDto implements Pick<UpdateUserRequest, 'displayName'> {
   @ApiProperty({
     description: '사용자 표시 이름 (1-50자)',
     example: '김축제',
@@ -13,7 +13,7 @@ export class UpdateDisplayNameDto {
   displayName: string;
 }
 
-export class UpdateUserRolesDto {
+export class UpdateUserRolesDto implements Pick<UpdateUserRequest, 'roles'> {
   @ApiProperty({
     description: '사용자 역할 목록',
     enum: UserRole,
