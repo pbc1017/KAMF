@@ -10,78 +10,97 @@ import { SearchBar } from '@/components/SearchBar';
 const sampleBooths: Booth[] = [
   {
     id: 1,
-    titleKr: 'KAMF 굿즈샵',
+    titleKo: 'KAMF 굿즈샵',
     titleEn: 'KAMF Merchandise Shop',
     zone: Zone.BOOTH,
-    description:
+    descriptionKo:
       '공식 KAMF 굿즈와 기념품을 판매하는 부스입니다. 티셔츠, 스티커, 뱃지 등 다양한 아이템을 만나보세요.',
+    descriptionEn:
+      'A booth selling official KAMF merchandise and souvenirs. You can find various items like t-shirts, stickers, and badges.',
   },
   {
     id: 2,
-    titleKr: '동아리 체험존',
+    titleKo: '동아리 체험존',
     titleEn: 'Club Experience Zone',
     zone: Zone.BOOTH,
-    description:
+    descriptionKo:
       '다양한 동아리들의 활동을 체험해볼 수 있는 공간입니다. 로봇공학, 댄스, 밴드 등 흥미로운 체험이 준비되어 있습니다.',
+    descriptionEn:
+      'A space where you can experience various club activities. You can experience interesting activities like robotics, dance, and band.',
   },
   {
     id: 3,
-    titleKr: '종합 안내소',
+    titleKo: '종합 안내소',
     titleEn: 'Information Center',
     zone: Zone.INFO,
-    description: '축제 전반에 대한 정보 제공과 분실물 접수, 응급처치 등의 서비스를 제공합니다.',
+    descriptionKo: '축제 전반에 대한 정보 제공과 분실물 접수, 응급처치 등의 서비스를 제공합니다.',
+    descriptionEn:
+      'We provide information about the festival, lost and found services, and first aid services.',
   },
   {
     id: 4,
-    titleKr: '타코 트럭',
+    titleKo: '타코 트럭',
     titleEn: 'Taco Truck',
     zone: Zone.FOOD_TRUCK,
-    description: '신선한 재료로 만든 멕시칸 타코와 부리또를 판매합니다. 매콤달콤한 맛이 일품!',
+    descriptionKo: '신선한 재료로 만든 멕시칸 타코와 부리또를 판매합니다. 매콤달콤한 맛이 일품!',
+    descriptionEn:
+      'We sell delicious tacos and burritos made with fresh ingredients. The spicy and delicious taste is a must-try!',
   },
   {
     id: 5,
-    titleKr: '버거 & 프라이',
+    titleKo: '버거 & 프라이',
     titleEn: 'Burger & Fries',
     zone: Zone.FOOD_TRUCK,
-    description: '수제 패티로 만든 맛있는 햄버거와 바삭한 감자튀김을 즐길 수 있습니다.',
+    descriptionKo: '수제 패티로 만든 맛있는 햄버거와 바삭한 감자튀김을 즐길 수 있습니다.',
+    descriptionEn: 'You can enjoy delicious burgers and crispy fries made with homemade patties.',
   },
   {
     id: 6,
-    titleKr: '아이스크림 카트',
+    titleKo: '아이스크림 카트',
     titleEn: 'Ice Cream Cart',
     zone: Zone.FOOD_TRUCK,
-    description:
+    descriptionKo:
       '더운 날씨에 시원한 아이스크림으로 달콤한 휴식을 취해보세요. 다양한 맛이 준비되어 있습니다.',
+    descriptionEn:
+      'Enjoy a refreshing ice cream in the hot weather. There are various flavors prepared.',
   },
   {
     id: 7,
-    titleKr: 'HOF 라운지',
+    titleKo: 'HOF 라운지',
     titleEn: 'HOF Lounge',
     zone: Zone.HOF,
-    description: '축제의 하이라이트! 시원한 맥주와 치킨으로 친구들과 즐거운 시간을 보내세요.',
+    descriptionKo: '축제의 하이라이트! 시원한 맥주와 치킨으로 친구들과 즐거운 시간을 보내세요.',
+    descriptionEn:
+      'The highlight of the festival! Enjoy refreshing beer and chicken with your friends.',
   },
   {
     id: 8,
-    titleKr: '게임 체험존',
+    titleKo: '게임 체험존',
     titleEn: 'Gaming Zone',
     zone: Zone.BOOTH,
-    description: '최신 VR 게임부터 클래식 아케이드까지! 다양한 게임을 무료로 체험할 수 있습니다.',
+    descriptionKo: '최신 VR 게임부터 클래식 아케이드까지! 다양한 게임을 무료로 체험할 수 있습니다.',
+    descriptionEn:
+      'Experience various games from the latest VR games to classic arcade games for free.',
   },
   {
     id: 9,
-    titleKr: '포토존',
+    titleKo: '포토존',
     titleEn: 'Photo Zone',
     zone: Zone.BOOTH,
-    description:
+    descriptionKo:
       '인스타그램 감성 가득한 포토존에서 친구들과 멋진 추억을 남겨보세요. 다양한 배경과 소품이 준비되어 있습니다.',
+    descriptionEn:
+      'Enjoy a photo zone with Instagram-style atmosphere. There are various backgrounds and props prepared.',
   },
   {
     id: 10,
-    titleKr: '의료진 부스',
+    titleKo: '의료진 부스',
     titleEn: 'Medical Booth',
     zone: Zone.INFO,
-    description:
+    descriptionKo:
       '응급상황 대비 의료진이 상주하는 부스입니다. 간단한 상처 치료와 응급처치가 가능합니다.',
+    descriptionEn:
+      'A booth with medical staff for emergency situations. Simple wound treatment and first aid are possible.',
   },
 ];
 
@@ -97,9 +116,10 @@ export default function BoothListPage() {
       // 검색어 필터
       const searchMatch =
         !searchQuery ||
-        booth.titleKr.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        booth.titleKo.toLowerCase().includes(searchQuery.toLowerCase()) ||
         booth.titleEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booth.description.toLowerCase().includes(searchQuery.toLowerCase());
+        booth.descriptionKo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        booth.descriptionEn.toLowerCase().includes(searchQuery.toLowerCase());
 
       return zoneMatch && searchMatch;
     });
