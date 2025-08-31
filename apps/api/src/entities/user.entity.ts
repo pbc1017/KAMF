@@ -1,42 +1,30 @@
-import { UserRole } from '@kamf/interface/types/user.js';
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm';
+
+import { ModifiableEntity } from '../common/entities/base.entity.js';
+
+import { Role } from './role.entity.js';
 
 @Entity('users')
-export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+export class User extends ModifiableEntity {
+  @PrimaryGeneratedColumn('uuid')
+  @ApiProperty({ description: '사용자 ID' })
+  id: string;
 
   @Column({ unique: true })
-  email: string;
+  @ApiProperty({ description: '전화번호' })
+  phoneNumber: string;
 
-  @Column({ unique: true })
-  username: string;
+  @Column()
+  @ApiProperty({ description: '표시 이름' })
+  displayName: string;
 
-  @Column({ nullable: true })
-  firstName?: string;
-
-  @Column({ nullable: true })
-  lastName?: string;
-
-  @Column({ default: true })
-  isActive: boolean;
-
-  @Column({
-    type: 'enum',
-    enum: UserRole,
-    default: UserRole.USER,
+  @ManyToMany(() => Role, role => role.users)
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: { name: 'userId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'roleId', referencedColumnName: 'id' },
   })
-  role: UserRole;
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
+  @ApiProperty({ description: '사용자 역할 목록', type: () => [Role] })
+  roles: Role[];
 }

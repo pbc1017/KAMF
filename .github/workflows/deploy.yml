@@ -1,0 +1,246 @@
+name: Deploy to Server
+
+on:
+  workflow_run:
+    workflows: ['Docker Build & Push']
+    types: [completed]
+    branches: [main, dev] # dev 브랜치 추가
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to deploy'
+        required: false
+        default: 'latest'
+      environment:
+        description: 'Target environment'
+        required: false
+        type: choice
+        options:
+          - production
+          - development
+        default: 'production'
+
+jobs:
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      environment: ${{ steps.vars.outputs.environment }}
+      domain: ${{ steps.vars.outputs.domain }}
+      image_tag: ${{ steps.vars.outputs.image_tag }}
+      deploy_path: ${{ steps.vars.outputs.deploy_path }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set deployment variables
+        id: vars
+        run: |
+          # 브랜치 및 환경 설정
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            if [[ "${{ inputs.environment }}" == "development" ]]; then
+              DEPLOY_PATH="kamf-dev"
+              DOMAIN="dev.kamf.site"
+              API_PORT="8001"
+              WEB_PORT="3001" 
+              DB_NAME="kamf_dev"
+              IMAGE_TAG="${{ inputs.image_tag }}"
+              ENVIRONMENT="development"
+            else
+              DEPLOY_PATH="kamf"
+              DOMAIN="kamf.site"
+              API_PORT="8000"
+              WEB_PORT="3000"
+              DB_NAME="kamf_prod"
+              IMAGE_TAG="${{ inputs.image_tag }}"
+              ENVIRONMENT="production"
+            fi
+          else
+            # workflow_run 이벤트에서 브랜치 감지
+            BRANCH="${{ github.event.workflow_run.head_branch }}"
+            if [[ "${BRANCH}" == "dev" ]]; then
+              DEPLOY_PATH="kamf-dev"
+              DOMAIN="dev.kamf.site"
+              API_PORT="8001"
+              WEB_PORT="3001"
+              DB_NAME="kamf_dev" 
+              IMAGE_TAG="dev"
+              ENVIRONMENT="development"
+            else
+              DEPLOY_PATH="kamf"
+              DOMAIN="kamf.site"
+              API_PORT="8000"
+              WEB_PORT="3000"
+              DB_NAME="kamf_prod"
+              IMAGE_TAG="${{ github.sha }}"
+              ENVIRONMENT="production"
+            fi
+          fi
+
+          echo "deploy_path=${DEPLOY_PATH}" >> $GITHUB_OUTPUT
+          echo "domain=${DOMAIN}" >> $GITHUB_OUTPUT
+          echo "api_port=${API_PORT}" >> $GITHUB_OUTPUT
+          echo "web_port=${WEB_PORT}" >> $GITHUB_OUTPUT
+          echo "db_name=${DB_NAME}" >> $GITHUB_OUTPUT
+          echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "environment=${ENVIRONMENT}" >> $GITHUB_OUTPUT
+          echo "deployment_time=$(date '+%Y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Create deployment environment file
+        run: |
+          cat > .env.deploy << EOF
+          # Deployment Configuration
+          DOCKER_REGISTRY=${{ secrets.DOCKERHUB_USERNAME }}
+          IMAGE_TAG=${{ steps.vars.outputs.image_tag }}
+          DEPLOY_PATH=${{ steps.vars.outputs.deploy_path }}
+
+          # Environment-specific Configuration
+          NODE_ENV=production
+          API_PORT=${{ steps.vars.outputs.api_port }}
+          WEB_PORT=${{ steps.vars.outputs.web_port }}
+          CORS_ORIGIN=https://${{ steps.vars.outputs.domain }}
+          NEXT_PUBLIC_API_URL=https://${{ steps.vars.outputs.domain }}
+          NEXT_PUBLIC_APP_URL=https://${{ steps.vars.outputs.domain }}
+
+          # Database Configuration (공유 MySQL)
+          DB_HOST=kamf-mysql
+          DB_PORT=3306
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_NAME=${{ steps.vars.outputs.db_name }}
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+
+          # JWT & Authentication
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRES_IN=1h
+          REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}
+          REFRESH_TOKEN_EXPIRES_IN=7d
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+
+          # Twilio SMS Configuration
+          TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_SERVICE_SID=${{ secrets.TWILIO_SERVICE_SID }}
+
+          # Deployment Metadata
+          DEPLOYMENT_TIME=${{ steps.vars.outputs.deployment_time }}
+          DEPLOYED_BY=${{ github.actor }}
+          COMMIT_SHA=${{ github.sha }}
+          ENVIRONMENT=${{ steps.vars.outputs.environment }}
+          DOMAIN=${{ steps.vars.outputs.domain }}
+          EOF
+
+      - name: Copy deployment files to server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: 'deploy/,.env.deploy'
+          target: '/home/${{ secrets.SERVER_USERNAME }}/${{ steps.vars.outputs.deploy_path }}/'
+          strip_components: 0
+          overwrite: true
+
+      - name: Deploy to ${{ steps.vars.outputs.environment }} server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            set -e
+
+            echo "🚀 Starting deployment to ${{ steps.vars.outputs.environment }} server..."
+            echo "📦 Image Tag: ${{ steps.vars.outputs.image_tag }}"
+            echo "🌍 Environment: ${{ steps.vars.outputs.environment }}"
+            echo "🌐 Domain: ${{ steps.vars.outputs.domain }}"
+            echo "📂 Deploy Path: ${{ steps.vars.outputs.deploy_path }}"
+            echo "👤 Deployed by: ${{ github.actor }}"
+            echo "🔖 Commit: ${{ github.sha }}"
+
+            # 배포 디렉토리로 이동
+            cd /home/${{ secrets.SERVER_USERNAME }}/${{ steps.vars.outputs.deploy_path }}
+
+            # 환경변수 로드
+            if [ ! -f .env.deploy ]; then
+              echo "❌ .env.deploy file not found!"
+              exit 1
+            fi
+
+            # 배포 스크립트 실행 권한 부여
+            chmod +x deploy/scripts/deploy.sh
+
+            # 배포 실행
+            echo "📥 Executing deployment script..."
+            ./deploy/scripts/deploy.sh
+
+            # 보안: 환경변수 파일 제거
+            rm -f .env.deploy
+
+            echo "✅ ${{ steps.vars.outputs.environment }} deployment completed successfully!"
+
+      - name: Verify deployment status
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            echo "✅ ${{ steps.vars.outputs.environment }} deployment verification completed"
+            echo "📊 Final container status:"
+            cd /home/${{ secrets.SERVER_USERNAME }}/${{ steps.vars.outputs.deploy_path }}
+            docker-compose ps
+
+  notify:
+    name: Notify Deployment Result
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always()
+
+    steps:
+      - name: Notify Slack
+        if: vars.SLACK_WEBHOOK_URL != ''
+        run: |
+          STATUS="${{ needs.deploy.result }}"
+          if [ "$STATUS" = "success" ]; then
+            STATUS_KR="성공"
+            EMOJI="🎉"
+            COLOR="good"
+          else
+            STATUS_KR="실패"
+            EMOJI="💥"
+            COLOR="danger"
+          fi
+
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{
+              \"attachments\": [{
+                \"color\": \"${COLOR}\",
+                \"title\": \"${EMOJI} 배포 ${STATUS_KR}\",
+                                 \"fields\": [
+                   {\"title\": \"프로젝트\", \"value\": \"KAMF\", \"short\": true},
+                   {\"title\": \"환경\", \"value\": \"${{ needs.deploy.outputs.environment }}\", \"short\": true},
+                   {\"title\": \"도메인\", \"value\": \"${{ needs.deploy.outputs.domain }}\", \"short\": true},
+                   {\"title\": \"브랜치\", \"value\": \"${{ github.ref_name }}\", \"short\": true},
+                   {\"title\": \"배포자\", \"value\": \"${{ github.actor }}\", \"short\": true},
+                   {\"title\": \"이미지 태그\", \"value\": \"${{ needs.deploy.outputs.image_tag }}\", \"short\": true},
+                   {\"title\": \"커밋\", \"value\": \"${{ github.sha }}\", \"short\": false},
+                   {\"title\": \"시간\", \"value\": \"$(date '+%Y-%m-%d %H:%M:%S')\", \"short\": false}
+                 ]
+              }]
+            }" \
+            "${{ vars.SLACK_WEBHOOK_URL }}"
+
+      - name: Create deployment record
+        if: needs.deploy.result == 'success'
+        run: |
+          echo "📝 Deployment record created:"
+          echo "  - Status: ${{ needs.deploy.result }}"
+          echo "  - Image Tag: ${{ github.sha }}"
+          echo "  - Deployed by: ${{ github.actor }}"
+          echo "  - Time: $(date '+%Y-%m-%d %H:%M:%S UTC')"

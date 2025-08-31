@@ -1,4 +1,4 @@
-name: CI
+name: Code Quality Check
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  ci:
+  quality-check:
     name: Build, Lint, Format & Test
     runs-on: ubuntu-latest
 

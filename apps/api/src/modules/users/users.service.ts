@@ -1,111 +1,197 @@
-import type {
-  PaginationParams,
-  PaginatedResponse,
-  ApiResponse,
-} from '@kamf/interface/types/common.js';
-import type { CreateUserDto, UpdateUserDto } from '@kamf/interface/types/user.js';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { UserRole, CreateUserRequest, UpdateUserRequest } from '@kamf/interface/types/user.js';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { NicknameGenerator } from '../../common/utils/nickname-generator.js';
+import { Role } from '../../entities/role.entity.js';
 import { User } from '../../entities/user.entity.js';
 
 @Injectable()
-export class UsersService {
+export class UserService {
   constructor(
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>
+    private userRepository: Repository<User>,
+    @InjectRepository(Role)
+    private roleRepository: Repository<Role>
   ) {}
 
-  async findAll(params: PaginationParams): Promise<ApiResponse<PaginatedResponse<User>>> {
-    const { page = 1, limit = 10 } = params;
-
-    const [users, total] = await this.userRepository.findAndCount({
-      skip: (page - 1) * limit,
-      take: limit,
-      order: { id: 'ASC' },
+  /**
+   * 전화번호로 사용자 조회
+   * @param phoneNumber 전화번호
+   * @returns 사용자 또는 null
+   */
+  async findByPhoneNumber(phoneNumber: string): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: { phoneNumber },
+      relations: ['roles'],
     });
-
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      success: true,
-      data: {
-        data: users,
-        total,
-        page,
-        limit,
-        totalPages,
-      },
-    };
   }
 
-  async findOne(id: number): Promise<ApiResponse<User>> {
-    const user = await this.userRepository.findOne({
+  /**
+   * ID로 사용자 조회
+   * @param id 사용자 ID
+   * @returns 사용자 또는 null
+   */
+  async findById(id: string): Promise<User | null> {
+    return await this.userRepository.findOne({
       where: { id },
+      relations: ['roles'],
     });
+  }
 
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+  /**
+   * 새 사용자 생성
+   * @param data 사용자 생성 데이터
+   * @returns 생성된 사용자
+   */
+  async createUser(data: CreateUserRequest): Promise<User> {
+    // 전화번호 중복 확인
+    const existingUser = await this.findByPhoneNumber(data.phoneNumber);
+    if (existingUser) {
+      throw new ConflictException('이미 등록된 전화번호입니다');
     }
 
-    return {
-      success: true,
-      data: user,
-    };
-  }
+    // 역할 조회 (기본값: USER)
+    const roleNames = data.roles || [UserRole.USER];
+    const roles = await this.roleRepository.find({
+      where: roleNames.map(name => ({ name })),
+    });
 
-  async create(createUserDto: CreateUserDto): Promise<ApiResponse<User>> {
+    if (roles.length !== roleNames.length) {
+      throw new NotFoundException('유효하지 않은 역할이 포함되어 있습니다');
+    }
+
+    // 사용자 생성
     const user = this.userRepository.create({
-      email: createUserDto.email,
-      username: createUserDto.username,
-      firstName: createUserDto.firstName,
-      lastName: createUserDto.lastName,
-      role: createUserDto.role,
+      phoneNumber: data.phoneNumber,
+      displayName: data.displayName || NicknameGenerator.generate(),
+      roles,
     });
 
-    const savedUser = await this.userRepository.save(user);
-
-    return {
-      success: true,
-      data: savedUser,
-      message: 'User created successfully',
-    };
+    return await this.userRepository.save(user);
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<ApiResponse<User>> {
-    const user = await this.userRepository.findOne({
-      where: { id },
-    });
-
+  /**
+   * 사용자 이름 변경
+   * @param userId 사용자 ID
+   * @param displayName 새 이름
+   * @returns 수정된 사용자
+   */
+  async updateDisplayName(userId: string, displayName: string): Promise<User> {
+    const user = await this.findById(userId);
     if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException('사용자를 찾을 수 없습니다');
     }
 
-    Object.assign(user, updateUserDto);
-    const updatedUser = await this.userRepository.save(user);
-
-    return {
-      success: true,
-      data: updatedUser,
-      message: 'User updated successfully',
-    };
+    user.displayName = displayName;
+    return await this.userRepository.save(user);
   }
 
-  async remove(id: number): Promise<ApiResponse<void>> {
-    const user = await this.userRepository.findOne({
-      where: { id },
-    });
-
+  /**
+   * 사용자 역할 관리 (ADMIN 전용)
+   * @param userId 사용자 ID
+   * @param roleNames 새 역할 목록
+   * @returns 수정된 사용자
+   */
+  async updateUserRoles(userId: string, roleNames: UserRole[]): Promise<User> {
+    const user = await this.findById(userId);
     if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException('사용자를 찾을 수 없습니다');
     }
 
-    await this.userRepository.remove(user);
+    // 새 역할 조회
+    const roles = await this.roleRepository.find({
+      where: roleNames.map(name => ({ name })),
+    });
+
+    if (roles.length !== roleNames.length) {
+      throw new NotFoundException('유효하지 않은 역할이 포함되어 있습니다');
+    }
+
+    user.roles = roles;
+    return await this.userRepository.save(user);
+  }
+
+  /**
+   * 전체 사용자 목록 조회 (ADMIN 전용)
+   * @returns 사용자 목록
+   */
+  async findAll(): Promise<User[]> {
+    return await this.userRepository.find({
+      relations: ['roles'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  /**
+   * 사용자 정보 업데이트 (통합)
+   * @param userId 사용자 ID
+   * @param data 업데이트 데이터
+   * @returns 수정된 사용자
+   */
+  async updateUser(userId: string, data: UpdateUserRequest): Promise<User> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다');
+    }
+
+    // 이름 변경
+    if (data.displayName !== undefined) {
+      user.displayName = data.displayName;
+    }
+
+    // 역할 변경 (관리자만 가능)
+    if (data.roles !== undefined) {
+      const roles = await this.roleRepository.find({
+        where: data.roles.map(name => ({ name })),
+      });
+
+      if (roles.length !== data.roles.length) {
+        throw new NotFoundException('유효하지 않은 역할이 포함되어 있습니다');
+      }
+
+      user.roles = roles;
+    }
+
+    return await this.userRepository.save(user);
+  }
+
+  /**
+   * 특정 역할을 가진 사용자 조회
+   * @param role 역할
+   * @returns 해당 역할을 가진 사용자 목록
+   */
+  async findByRole(role: UserRole): Promise<User[]> {
+    return await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.roles', 'role')
+      .where('role.name = :role', { role })
+      .orderBy('user.createdAt', 'DESC')
+      .getMany();
+  }
+
+  /**
+   * 사용자 통계 정보
+   * @returns 사용자 통계
+   */
+  async getUserStats() {
+    const totalUsers = await this.userRepository.count();
+
+    const roleStats = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoin('user.roles', 'role')
+      .select('role.name', 'roleName')
+      .addSelect('COUNT(DISTINCT user.id)', 'userCount')
+      .groupBy('role.name')
+      .getRawMany();
 
     return {
-      success: true,
-      message: 'User deleted successfully',
+      totalUsers,
+      roleStats: roleStats.reduce((acc, stat) => {
+        acc[stat.roleName] = parseInt(stat.userCount);
+        return acc;
+      }, {}),
     };
   }
 }
