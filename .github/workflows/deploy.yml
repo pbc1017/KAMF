@@ -1,0 +1,184 @@
+name: Deploy to Server
+
+on:
+  workflow_run:
+    workflows: ['Docker Build & Push']
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to deploy'
+        required: false
+        default: 'latest'
+
+jobs:
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set deployment variables
+        id: vars
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            IMAGE_TAG="${{ inputs.image_tag }}"
+          else
+            IMAGE_TAG="${{ github.sha }}"
+          fi
+
+          echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "deployment_time=$(date '+%Y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Create deployment environment file
+        run: |
+          cat > .env.deploy << EOF
+          # Docker Configuration
+          DOCKER_REGISTRY=${{ secrets.DOCKERHUB_USERNAME }}
+          IMAGE_TAG=${{ steps.vars.outputs.image_tag }}
+
+          # Application Environment
+          NODE_ENV=production
+          SERVER_PORT=8000
+          API_PREFIX=api
+          CORS_ORIGIN=${{ secrets.CORS_ORIGIN_PROD }}
+
+          # Next.js Environment (런타임에는 불필요하지만 일관성을 위해 포함)
+          NEXT_PORT=3000
+
+          # Database Configuration
+          DB_HOST=mysql
+          DB_PORT=3306
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+
+          # JWT & Authentication
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRES_IN=1h
+          REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}
+          REFRESH_TOKEN_EXPIRES_IN=7d
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+
+          # Twilio SMS Configuration
+          TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_SERVICE_SID=${{ secrets.TWILIO_SERVICE_SID }}
+
+          # Deployment Metadata
+          DEPLOYMENT_TIME=${{ steps.vars.outputs.deployment_time }}
+          DEPLOYED_BY=${{ github.actor }}
+          COMMIT_SHA=${{ github.sha }}
+          EOF
+
+      - name: Copy deployment files to server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: 'deploy/,.env.deploy'
+          target: '/home/${{ secrets.SERVER_USERNAME }}/kamf/'
+          strip_components: 0
+          overwrite: true
+
+      - name: Deploy to production server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            set -e
+
+            echo "🚀 Starting deployment to production server..."
+            echo "📦 Image Tag: ${{ steps.vars.outputs.image_tag }}"
+            echo "👤 Deployed by: ${{ github.actor }}"
+            echo "🔖 Commit: ${{ github.sha }}"
+
+            # 배포 디렉토리로 이동
+            cd /home/${{ secrets.SERVER_USERNAME }}/kamf
+
+            # 환경변수 로드
+            if [ ! -f .env.deploy ]; then
+              echo "❌ .env.deploy file not found!"
+              exit 1
+            fi
+
+            # 배포 스크립트 실행 권한 부여
+            chmod +x deploy/scripts/deploy.sh
+
+            # 배포 실행
+            echo "📥 Executing deployment script..."
+            ./deploy/scripts/deploy.sh
+
+            # 보안: 환경변수 파일 제거
+            rm -f .env.deploy
+
+            echo "✅ Deployment completed successfully!"
+
+      - name: Verify deployment status
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            echo "✅ Deployment verification completed"
+            echo "📊 Final container status:"
+            docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep kamf
+
+  notify:
+    name: Notify Deployment Result
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always()
+
+    steps:
+      - name: Notify Slack
+        if: vars.SLACK_WEBHOOK_URL != ''
+        run: |
+          STATUS="${{ needs.deploy.result }}"
+          if [ "$STATUS" = "success" ]; then
+            STATUS_KR="성공"
+            EMOJI="🎉"
+            COLOR="good"
+          else
+            STATUS_KR="실패"
+            EMOJI="💥"
+            COLOR="danger"
+          fi
+
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{
+              \"attachments\": [{
+                \"color\": \"${COLOR}\",
+                \"title\": \"${EMOJI} 배포 ${STATUS_KR}\",
+                \"fields\": [
+                  {\"title\": \"프로젝트\", \"value\": \"KAMF\", \"short\": true},
+                  {\"title\": \"환경\", \"value\": \"Production\", \"short\": true},
+                  {\"title\": \"브랜치\", \"value\": \"${{ github.ref_name }}\", \"short\": true},
+                  {\"title\": \"배포자\", \"value\": \"${{ github.actor }}\", \"short\": true},
+                  {\"title\": \"커밋\", \"value\": \"${{ github.sha }}\", \"short\": false},
+                  {\"title\": \"시간\", \"value\": \"$(date '+%Y-%m-%d %H:%M:%S')\", \"short\": false}
+                ]
+              }]
+            }" \
+            "${{ vars.SLACK_WEBHOOK_URL }}"
+
+      - name: Create deployment record
+        if: needs.deploy.result == 'success'
+        run: |
+          echo "📝 Deployment record created:"
+          echo "  - Status: ${{ needs.deploy.result }}"
+          echo "  - Image Tag: ${{ github.sha }}"
+          echo "  - Deployed by: ${{ github.actor }}"
+          echo "  - Time: $(date '+%Y-%m-%d %H:%M:%S UTC')"
