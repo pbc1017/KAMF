@@ -146,3 +146,17 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #9333ea, #db2777);
 }
+
+/* 작은 화면에서 배경 이미지 최소 크기 유지 */
+.bg-home-image {
+  background-image: url('/kamf_home.png');
+  background-size: contain;
+  background-position: top center;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 350px) {
+  .bg-home-image {
+    background-size: 350px auto;
+  }
+}
