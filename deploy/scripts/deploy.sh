@@ -82,18 +82,48 @@ print_success "All images pulled successfully"
 print_info "Stopping application containers (keeping MySQL running)..."
 docker-compose stop api web nginx || true
 
-# 새 컨테이너 시작
-print_info "Starting updated containers..."
-if ! docker-compose up -d; then
+# MySQL 컨테이너가 이미 실행 중인지 확인
+print_info "Checking MySQL container status..."
+MYSQL_RUNNING=$(docker ps -q -f name=kamf-mysql)
+
+if [ -z "$MYSQL_RUNNING" ]; then
+    print_info "Starting MySQL container first..."
+    docker-compose up -d mysql
+    
+    print_info "Waiting for MySQL to be ready..."
+    for i in {1..30}; do
+        if docker-compose exec -T mysql mysqladmin ping -h localhost --silent; then
+            print_success "MySQL is ready"
+            break
+        fi
+        echo "Waiting for MySQL... ($i/30)"
+        sleep 2
+    done
+fi
+
+# 환경별 데이터베이스 생성
+print_info "Ensuring database '${DB_NAME}' exists..."
+docker-compose exec -T mysql mysql -u root -p${MYSQL_ROOT_PASSWORD} -e "
+CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
+GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USERNAME}'@'%';
+FLUSH PRIVILEGES;
+" 2>/dev/null || print_warning "Database setup failed (may already exist)"
+
+print_success "Database '${DB_NAME}' is ready"
+
+# 새 컨테이너 시작 (MySQL 제외)
+print_info "Starting updated application containers..."
+if ! docker-compose up -d api web nginx; then
     print_error "Failed to start containers!"
     
     # 롤백 시도
     print_warning "Attempting to rollback..."
-    docker-compose down || true
+    docker-compose stop api web nginx || true
     if [ -f .deployment-backup-* ]; then
         print_info "Rolling back to previous state..."
         # 간단한 롤백: 기존 이미지로 다시 시작
-        docker-compose up -d || print_error "Rollback failed!"
+        docker-compose up -d api web nginx || print_error "Rollback failed!"
     fi
     exit 1
 fi
@@ -106,8 +136,8 @@ WAIT_TIME=0
 MAX_WAIT=60
 
 while [ $WAIT_TIME -lt $MAX_WAIT ]; do
-    # API 컨테이너 상태 확인
-    if docker-compose ps api | grep -q "Up"; then
+    # API 컨테이너 상태 확인 (환경별 이름)
+    if docker ps | grep -q "${DEPLOY_PATH}-api.*Up"; then
         break
     fi
     
@@ -122,33 +152,33 @@ if [ $WAIT_TIME -ge $MAX_WAIT ]; then
     exit 1
 fi
 
-# 컨테이너 헬스체크
+# 컨테이너 헬스체크 (환경별 컨테이너 이름 사용)
 print_info "Performing container health checks..."
 
 # API 컨테이너 체크
-if ! docker-compose ps api | grep -q "Up"; then
-    print_error "API container is not running!"
+if ! docker ps | grep -q "${DEPLOY_PATH}-api.*Up"; then
+    print_error "API container (${DEPLOY_PATH}-api) is not running!"
     docker-compose logs api
     exit 1
 fi
 
 # Web 컨테이너 체크  
-if ! docker-compose ps web | grep -q "Up"; then
-    print_error "Web container is not running!"
+if ! docker ps | grep -q "${DEPLOY_PATH}-web.*Up"; then
+    print_error "Web container (${DEPLOY_PATH}-web) is not running!"
     docker-compose logs web
     exit 1
 fi
 
-# MySQL 컨테이너 체크
-if ! docker-compose ps mysql | grep -q "Up"; then
-    print_error "MySQL container is not running!"
+# MySQL 컨테이너 체크 (공유)
+if ! docker ps | grep -q "kamf-mysql.*Up"; then
+    print_error "MySQL container (kamf-mysql) is not running!"
     docker-compose logs mysql
     exit 1
 fi
 
-# Nginx 컨테이너 체크
-if ! docker-compose ps nginx | grep -q "Up"; then
-    print_error "Nginx container is not running!"
+# Nginx 컨테이너 체크 (공유)
+if ! docker ps | grep -q "kamf-nginx.*Up"; then
+    print_error "Nginx container (kamf-nginx) is not running!"
     docker-compose logs nginx
     exit 1
 fi
@@ -186,6 +216,21 @@ else
     print_warning "Web application internal health check failed (but continuing)"
 fi
 
+# 외부 접근 헬스체크 (포트별)
+print_info "Testing external access on port ${API_PORT}..."
+if curl -f -m 10 http://localhost:${API_PORT}/health > /dev/null 2>&1; then
+    print_success "External API access confirmed"
+else
+    print_warning "External API access test failed (but continuing)"
+fi
+
+print_info "Testing external access on port ${WEB_PORT}..."
+if curl -f -m 10 http://localhost:${WEB_PORT}/ > /dev/null 2>&1; then
+    print_success "External Web access confirmed"  
+else
+    print_warning "External Web access test failed (but continuing)"
+fi
+
 # 배포 후 정리
 print_info "Performing post-deployment cleanup..."
 
@@ -198,8 +243,14 @@ docker volume prune -f || true
 print_success "Cleanup completed"
 
 # 배포 완료 로그
-print_success "=== KAMF Production Deployment Completed ==="
+print_success "=== KAMF ${ENVIRONMENT:-Production} Deployment Completed ==="
 print_info "Deployment Summary:"
+print_info "  - Environment: ${ENVIRONMENT:-Production}"
+print_info "  - Deploy Path: ${DEPLOY_PATH:-kamf}"
+print_info "  - Domain: ${DOMAIN:-kamf.site}"
+print_info "  - Database: ${DB_NAME:-kamf_prod}"
+print_info "  - API Port: ${API_PORT:-8000}"
+print_info "  - Web Port: ${WEB_PORT:-3000}"
 print_info "  - Docker Registry: $DOCKER_REGISTRY"
 print_info "  - Image Tag: $IMAGE_TAG"
 print_info "  - Deployed By: ${DEPLOYED_BY:-Unknown}"

@@ -4,19 +4,32 @@ on:
   workflow_run:
     workflows: ['Docker Build & Push']
     types: [completed]
-    branches: [main]
+    branches: [main, dev] # dev 브랜치 추가
   workflow_dispatch:
     inputs:
       image_tag:
         description: 'Docker image tag to deploy'
         required: false
         default: 'latest'
+      environment:
+        description: 'Target environment'
+        required: false
+        type: choice
+        options:
+          - production
+          - development
+        default: 'production'
 
 jobs:
   deploy:
-    name: Deploy to Production Server
+    name: Deploy to Server
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      environment: ${{ steps.vars.outputs.environment }}
+      domain: ${{ steps.vars.outputs.domain }}
+      image_tag: ${{ steps.vars.outputs.image_tag }}
+      deploy_path: ${{ steps.vars.outputs.deploy_path }}
 
     steps:
       - name: Checkout code
@@ -25,37 +38,78 @@ jobs:
       - name: Set deployment variables
         id: vars
         run: |
+          # 브랜치 및 환경 설정
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            IMAGE_TAG="${{ inputs.image_tag }}"
+            if [[ "${{ inputs.environment }}" == "development" ]]; then
+              DEPLOY_PATH="kamf-dev"
+              DOMAIN="dev.kamf.site"
+              API_PORT="8001"
+              WEB_PORT="3001" 
+              DB_NAME="kamf_dev"
+              IMAGE_TAG="${{ inputs.image_tag }}"
+              ENVIRONMENT="development"
+            else
+              DEPLOY_PATH="kamf"
+              DOMAIN="kamf.site"
+              API_PORT="8000"
+              WEB_PORT="3000"
+              DB_NAME="kamf_prod"
+              IMAGE_TAG="${{ inputs.image_tag }}"
+              ENVIRONMENT="production"
+            fi
           else
-            IMAGE_TAG="${{ github.sha }}"
+            # workflow_run 이벤트에서 브랜치 감지
+            BRANCH="${{ github.event.workflow_run.head_branch }}"
+            if [[ "${BRANCH}" == "dev" ]]; then
+              DEPLOY_PATH="kamf-dev"
+              DOMAIN="dev.kamf.site"
+              API_PORT="8001"
+              WEB_PORT="3001"
+              DB_NAME="kamf_dev" 
+              IMAGE_TAG="dev"
+              ENVIRONMENT="development"
+            else
+              DEPLOY_PATH="kamf"
+              DOMAIN="kamf.site"
+              API_PORT="8000"
+              WEB_PORT="3000"
+              DB_NAME="kamf_prod"
+              IMAGE_TAG="${{ github.sha }}"
+              ENVIRONMENT="production"
+            fi
           fi
 
+          echo "deploy_path=${DEPLOY_PATH}" >> $GITHUB_OUTPUT
+          echo "domain=${DOMAIN}" >> $GITHUB_OUTPUT
+          echo "api_port=${API_PORT}" >> $GITHUB_OUTPUT
+          echo "web_port=${WEB_PORT}" >> $GITHUB_OUTPUT
+          echo "db_name=${DB_NAME}" >> $GITHUB_OUTPUT
           echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "environment=${ENVIRONMENT}" >> $GITHUB_OUTPUT
           echo "deployment_time=$(date '+%Y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
 
       - name: Create deployment environment file
         run: |
           cat > .env.deploy << EOF
-          # Docker Configuration
+          # Deployment Configuration
           DOCKER_REGISTRY=${{ secrets.DOCKERHUB_USERNAME }}
           IMAGE_TAG=${{ steps.vars.outputs.image_tag }}
+          DEPLOY_PATH=${{ steps.vars.outputs.deploy_path }}
 
-          # Application Environment
+          # Environment-specific Configuration
           NODE_ENV=production
-          SERVER_PORT=8000
-          API_PREFIX=api
-          CORS_ORIGIN=${{ secrets.CORS_ORIGIN_PROD }}
+          API_PORT=${{ steps.vars.outputs.api_port }}
+          WEB_PORT=${{ steps.vars.outputs.web_port }}
+          CORS_ORIGIN=https://${{ steps.vars.outputs.domain }}
+          NEXT_PUBLIC_API_URL=https://${{ steps.vars.outputs.domain }}
+          NEXT_PUBLIC_APP_URL=https://${{ steps.vars.outputs.domain }}
 
-          # Next.js Environment (런타임에는 불필요하지만 일관성을 위해 포함)
-          NEXT_PORT=3000
-
-          # Database Configuration
-          DB_HOST=mysql
+          # Database Configuration (공유 MySQL)
+          DB_HOST=kamf-mysql
           DB_PORT=3306
           DB_USERNAME=${{ secrets.DB_USERNAME }}
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_NAME=${{ secrets.DB_NAME }}
+          DB_NAME=${{ steps.vars.outputs.db_name }}
           MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
 
           # JWT & Authentication
@@ -74,6 +128,8 @@ jobs:
           DEPLOYMENT_TIME=${{ steps.vars.outputs.deployment_time }}
           DEPLOYED_BY=${{ github.actor }}
           COMMIT_SHA=${{ github.sha }}
+          ENVIRONMENT=${{ steps.vars.outputs.environment }}
+          DOMAIN=${{ steps.vars.outputs.domain }}
           EOF
 
       - name: Copy deployment files to server
@@ -84,11 +140,11 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           source: 'deploy/,.env.deploy'
-          target: '/home/${{ secrets.SERVER_USERNAME }}/kamf/'
+          target: '/home/${{ secrets.SERVER_USERNAME }}/${{ steps.vars.outputs.deploy_path }}/'
           strip_components: 0
           overwrite: true
 
-      - name: Deploy to production server
+      - name: Deploy to ${{ steps.vars.outputs.environment }} server
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -98,13 +154,16 @@ jobs:
           script: |
             set -e
 
-            echo "🚀 Starting deployment to production server..."
+            echo "🚀 Starting deployment to ${{ steps.vars.outputs.environment }} server..."
             echo "📦 Image Tag: ${{ steps.vars.outputs.image_tag }}"
+            echo "🌍 Environment: ${{ steps.vars.outputs.environment }}"
+            echo "🌐 Domain: ${{ steps.vars.outputs.domain }}"
+            echo "📂 Deploy Path: ${{ steps.vars.outputs.deploy_path }}"
             echo "👤 Deployed by: ${{ github.actor }}"
             echo "🔖 Commit: ${{ github.sha }}"
 
             # 배포 디렉토리로 이동
-            cd /home/${{ secrets.SERVER_USERNAME }}/kamf
+            cd /home/${{ secrets.SERVER_USERNAME }}/${{ steps.vars.outputs.deploy_path }}
 
             # 환경변수 로드
             if [ ! -f .env.deploy ]; then
@@ -122,7 +181,7 @@ jobs:
             # 보안: 환경변수 파일 제거
             rm -f .env.deploy
 
-            echo "✅ Deployment completed successfully!"
+            echo "✅ ${{ steps.vars.outputs.environment }} deployment completed successfully!"
 
       - name: Verify deployment status
         uses: appleboy/ssh-action@v1.0.0
@@ -132,9 +191,10 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
-            echo "✅ Deployment verification completed"
+            echo "✅ ${{ steps.vars.outputs.environment }} deployment verification completed"
             echo "📊 Final container status:"
-            docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep kamf
+            cd /home/${{ secrets.SERVER_USERNAME }}/${{ steps.vars.outputs.deploy_path }}
+            docker-compose ps
 
   notify:
     name: Notify Deployment Result
@@ -162,14 +222,16 @@ jobs:
               \"attachments\": [{
                 \"color\": \"${COLOR}\",
                 \"title\": \"${EMOJI} 배포 ${STATUS_KR}\",
-                \"fields\": [
-                  {\"title\": \"프로젝트\", \"value\": \"KAMF\", \"short\": true},
-                  {\"title\": \"환경\", \"value\": \"Production\", \"short\": true},
-                  {\"title\": \"브랜치\", \"value\": \"${{ github.ref_name }}\", \"short\": true},
-                  {\"title\": \"배포자\", \"value\": \"${{ github.actor }}\", \"short\": true},
-                  {\"title\": \"커밋\", \"value\": \"${{ github.sha }}\", \"short\": false},
-                  {\"title\": \"시간\", \"value\": \"$(date '+%Y-%m-%d %H:%M:%S')\", \"short\": false}
-                ]
+                                 \"fields\": [
+                   {\"title\": \"프로젝트\", \"value\": \"KAMF\", \"short\": true},
+                   {\"title\": \"환경\", \"value\": \"${{ needs.deploy.outputs.environment }}\", \"short\": true},
+                   {\"title\": \"도메인\", \"value\": \"${{ needs.deploy.outputs.domain }}\", \"short\": true},
+                   {\"title\": \"브랜치\", \"value\": \"${{ github.ref_name }}\", \"short\": true},
+                   {\"title\": \"배포자\", \"value\": \"${{ github.actor }}\", \"short\": true},
+                   {\"title\": \"이미지 태그\", \"value\": \"${{ needs.deploy.outputs.image_tag }}\", \"short\": true},
+                   {\"title\": \"커밋\", \"value\": \"${{ github.sha }}\", \"short\": false},
+                   {\"title\": \"시간\", \"value\": \"$(date '+%Y-%m-%d %H:%M:%S')\", \"short\": false}
+                 ]
               }]
             }" \
             "${{ vars.SLACK_WEBHOOK_URL }}"

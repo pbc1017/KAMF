@@ -3,13 +3,13 @@ version: '3.8'
 services:
   mysql:
     image: mysql:8.0
-    container_name: kamf-mysql
+    container_name: kamf-mysql # 고정 이름 (공유)
     restart: unless-stopped
+    ports:
+      - '3306:3306' # 고정 포트 (공유)
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      # 초기 데이터베이스는 생성하지 않음 (스크립트에서 처리)
     volumes:
       - mysql_data:/var/lib/mysql
       - ../mysql-init:/docker-entrypoint-initdb.d
@@ -24,21 +24,23 @@ services:
 
   api:
     image: ${DOCKER_REGISTRY}/kamf-api:${IMAGE_TAG:-latest}
-    container_name: kamf-api
+    container_name: ${DEPLOY_PATH:-kamf}-api # 환경별 컨테이너 이름
     restart: unless-stopped
+    ports:
+      - '${API_PORT:-8000}:8000' # 환경별 외부 포트
     environment:
       # Application Environment
       NODE_ENV: ${NODE_ENV:-production}
-      SERVER_PORT: ${SERVER_PORT:-8000}
+      SERVER_PORT: 8000 # 내부 포트는 고정
       API_PREFIX: ${API_PREFIX:-api}
       CORS_ORIGIN: ${CORS_ORIGIN}
 
-      # Database Connection
-      DB_HOST: mysql
+      # Database Connection (공유 MySQL)
+      DB_HOST: kamf-mysql # 고정 호스트명
       DB_PORT: 3306
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
+      DB_NAME: ${DB_NAME} # 환경별 데이터베이스
 
       # JWT & Authentication
       JWT_SECRET: ${JWT_SECRET}
@@ -49,7 +51,7 @@ services:
       # Twilio SMS
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
-      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
+      TWILIO_SERVICE_SID: ${TWILIO_SERVICE_SID}
     depends_on:
       mysql:
         condition: service_healthy
@@ -63,26 +65,29 @@ services:
 
   web:
     image: ${DOCKER_REGISTRY}/kamf-web:${IMAGE_TAG:-latest}
-    container_name: kamf-web
+    container_name: ${DEPLOY_PATH:-kamf}-web # 환경별 컨테이너 이름
     restart: unless-stopped
+    ports:
+      - '${WEB_PORT:-3000}:3000' # 환경별 외부 포트
     environment:
       NODE_ENV: ${NODE_ENV:-production}
-      NEXT_PORT: 3000
+      NEXT_PORT: 3000 # 내부 포트는 고정
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
     depends_on:
       api:
         condition: service_healthy
     networks:
       - kamf-network
     healthcheck:
-      test:
-        ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/api/health']
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/']
       timeout: 10s
       retries: 5
       interval: 30s
 
   nginx:
     image: nginx:alpine
-    container_name: kamf-nginx
+    container_name: kamf-nginx # 고정 이름 (공유)
     restart: unless-stopped
     ports:
       - '80:80'
