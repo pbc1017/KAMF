@@ -7,6 +7,9 @@ import { BoothCard } from '@/components/BoothCard';
 import { SearchBar } from '@/components/SearchBar';
 import { useBooths } from '@/hooks/useBooths';
 
+// 동적 렌더링 강제 설정 - 빌드 시 정적 생성 방지
+export const dynamic = 'force-dynamic';
+
 // 로딩 컴포넌트
 function BoothListSkeleton() {
   return (

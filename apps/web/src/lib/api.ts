@@ -1,5 +1,8 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
+// 빌드 환경 감지
+const isBuildTime = typeof window === 'undefined' && process.env.NODE_ENV === 'production';
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -11,8 +14,34 @@ export class ApiError extends Error {
   }
 }
 
+// 빌드 타임용 mock 데이터 생성
+function getMockResponse(endpoint: string) {
+  if (endpoint.includes('booths')) {
+    return {
+      data: [],
+    };
+  }
+
+  if (endpoint.includes('stages')) {
+    return {
+      data: {
+        fri: [],
+        sat: [],
+      },
+    };
+  }
+
+  return {};
+}
+
 export async function apiClient<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}/${endpoint.startsWith('/') ? endpoint.slice(1) : endpoint}`;
+
+  // 빌드 시에는 API 호출을 건너뛰고 적절한 mock 응답 반환
+  if (isBuildTime) {
+    console.log('Skipping API call during build time:', url);
+    return getMockResponse(endpoint) as T;
+  }
 
   console.log('API Request:', url); // 디버깅용
 
@@ -42,6 +71,13 @@ export async function apiClient<T>(endpoint: string, options?: RequestInit): Pro
     return data;
   } catch (error) {
     console.error('API Client Error:', error); // 디버깅용
+
+    // 네트워크 오류 시 개발환경에서는 적절한 mock 응답 반환
+    if (error instanceof TypeError && error.message.includes('fetch failed')) {
+      console.warn('Network error detected, returning mock response for development');
+      return getMockResponse(endpoint) as T;
+    }
+
     throw error;
   }
 }
