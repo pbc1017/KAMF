@@ -38,14 +38,17 @@ jobs:
 
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             TAGS="${REGISTRY}/kamf-${SERVICE}:latest,${REGISTRY}/kamf-${SERVICE}:${{ github.sha }}"
+            MAIN_TAG="${REGISTRY}/kamf-${SERVICE}:latest"
             ENV_SUFFIX="PROD"
           else
             # dev 브랜치 또는 workflow_dispatch
             TAGS="${REGISTRY}/kamf-${SERVICE}:dev,${REGISTRY}/kamf-${SERVICE}:dev-${{ github.sha }}"
+            MAIN_TAG="${REGISTRY}/kamf-${SERVICE}:dev"
             ENV_SUFFIX="DEV"
           fi
 
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "main_tag=${MAIN_TAG}" >> $GITHUB_OUTPUT
           echo "env_suffix=${ENV_SUFFIX}" >> $GITHUB_OUTPUT
           echo "service=${SERVICE}" >> $GITHUB_OUTPUT
 
@@ -86,13 +89,15 @@ jobs:
 
       - name: Run security scan
         uses: aquasecurity/trivy-action@master
+        if: success()
         with:
-          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/kamf-${{ matrix.service }}:${{ github.sha }}
+          image-ref: ${{ steps.meta.outputs.main_tag }}
           format: 'sarif'
           output: 'trivy-results-${{ matrix.service }}.sarif'
 
       - name: Upload security scan results
         uses: github/codeql-action/upload-sarif@v2
+        if: success()
         with:
           sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
           category: 'docker-${{ matrix.service }}'
