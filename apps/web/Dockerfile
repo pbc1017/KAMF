@@ -32,7 +32,9 @@ ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
 
 # Next.js 빌드 실행
-RUN pnpm build --filter @kamf/web
+# 의존성 순서대로 빌드 (interface -> web)
+RUN pnpm --filter @kamf/interface build
+RUN pnpm --filter @kamf/web build
 
 # 런타임 단계
 FROM node:18-alpine AS runner

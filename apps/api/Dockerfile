@@ -25,8 +25,9 @@ COPY . .
 # node_modules 복사 (deps 단계에서)
 COPY --from=deps /app/node_modules ./node_modules
 
-# API 빌드 실행
-RUN pnpm build --filter @kamf/api
+# 의존성 순서대로 빌드 (interface -> api)
+RUN pnpm --filter @kamf/interface build
+RUN pnpm --filter @kamf/api build
 
 # 런타임 단계
 FROM node:18-alpine AS runner
