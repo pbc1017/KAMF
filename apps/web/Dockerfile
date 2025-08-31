@@ -22,8 +22,8 @@ FROM base AS builder
 # 소스 코드 전체 복사
 COPY . .
 
-# node_modules 복사 (deps 단계에서)
-COPY --from=deps /app/node_modules ./node_modules
+# pnpm workspace 완전 설치 (각 패키지의 node_modules 설정)
+RUN pnpm install --frozen-lockfile
 
 # GitHub Actions에서 주입될 환경변수들 (빌드 시점에 필요)
 ARG NEXT_PUBLIC_API_URL

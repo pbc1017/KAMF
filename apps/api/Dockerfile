@@ -22,8 +22,8 @@ FROM base AS builder
 # 소스 코드 전체 복사
 COPY . .
 
-# node_modules 복사 (deps 단계에서)
-COPY --from=deps /app/node_modules ./node_modules
+# pnpm workspace 완전 설치 (각 패키지의 node_modules 설정)
+RUN pnpm install --frozen-lockfile
 
 # 의존성 순서대로 빌드 (interface -> api)
 RUN pnpm --filter @kamf/interface build
