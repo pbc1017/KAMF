@@ -75,40 +75,34 @@ else
     log_warning "호스트에 nginx가 설치되어 있지 않습니다."
 fi
 
-# 3. SSL 인증서 복사
-log_info "SSL 인증서를 복사합니다..."
+# 3. Docker 볼륨 생성 (SSL 인증서용)
+log_info "Docker 볼륨을 생성합니다..."
 
-# Let's Encrypt 인증서 확인 및 복사
-if [[ -d "/etc/letsencrypt/live" ]]; then
-    # 운영환경 인증서 (kamf.site)
-    if [[ -d "/etc/letsencrypt/live/kamf.site" ]]; then
-        log_info "운영환경 SSL 인증서를 복사합니다..."
-        sudo cp /etc/letsencrypt/live/kamf.site/fullchain.pem nginx/ssl/kamf.site.crt
-        sudo cp /etc/letsencrypt/live/kamf.site/privkey.pem nginx/ssl/kamf.site.key
-        sudo chown $(whoami):$(whoami) nginx/ssl/kamf.site.*
-        log_success "운영환경 SSL 인증서 복사 완료"
-    else
-        log_warning "운영환경 SSL 인증서를 찾을 수 없습니다: /etc/letsencrypt/live/kamf.site"
-    fi
-    
-    # 개발환경 인증서 (dev.kamf.site)
-    if [[ -d "/etc/letsencrypt/live/dev.kamf.site" ]]; then
-        log_info "개발환경 SSL 인증서를 복사합니다..."
-        sudo cp /etc/letsencrypt/live/dev.kamf.site/fullchain.pem nginx/ssl/dev.kamf.site.crt
-        sudo cp /etc/letsencrypt/live/dev.kamf.site/privkey.pem nginx/ssl/dev.kamf.site.key
-        sudo chown $(whoami):$(whoami) nginx/ssl/dev.kamf.site.*
-        log_success "개발환경 SSL 인증서 복사 완료"
-    else
-        log_warning "개발환경 SSL 인증서를 찾을 수 없습니다: /etc/letsencrypt/live/dev.kamf.site"
-    fi
+# SSL 인증서용 볼륨 생성
+if ! docker volume ls | grep -q kamf-letsencrypt-data; then
+    docker volume create kamf-letsencrypt-data
+    log_success "letsencrypt 볼륨 생성 완료"
 else
-    log_error "Let's Encrypt 인증서 디렉터리를 찾을 수 없습니다: /etc/letsencrypt/live"
-    log_info "수동으로 SSL 인증서를 nginx/ssl/ 디렉터리에 복사해야 합니다."
-    log_info "필요한 파일들:"
-    log_info "  - nginx/ssl/kamf.site.crt"
-    log_info "  - nginx/ssl/kamf.site.key"
-    log_info "  - nginx/ssl/dev.kamf.site.crt"
-    log_info "  - nginx/ssl/dev.kamf.site.key"
+    log_info "letsencrypt 볼륨이 이미 존재합니다."
+fi
+
+# webroot 볼륨 생성
+if ! docker volume ls | grep -q kamf-webroot-data; then
+    docker volume create kamf-webroot-data
+    log_success "webroot 볼륨 생성 완료"
+else
+    log_info "webroot 볼륨이 이미 존재합니다."
+fi
+
+# SSL 인증서 상태 확인
+log_info "SSL 인증서 상태를 확인합니다..."
+if docker run --rm -v kamf-letsencrypt-data:/etc/letsencrypt alpine ls /etc/letsencrypt/live/ 2>/dev/null | grep -E "(kamf\.site|dev\.kamf\.site)"; then
+    log_success "SSL 인증서가 이미 존재합니다."
+else
+    log_warning "SSL 인증서가 없습니다. 다음 명령어로 발급하세요:"
+    log_info "  export CERTBOT_EMAIL=\"your-email@example.com\""
+    log_info "  export DOMAIN=\"kamf.site\""
+    log_info "  ./scripts/issue-ssl.sh"
 fi
 
 # 4. nginx 설정 파일 확인
@@ -139,19 +133,26 @@ fi
 
 log_success "모든 nginx 설정 파일이 존재합니다."
 
+# 4. nginx 설정 파일들 확인 (번호 변경됨)
+
 # 5. 설정 완료 메시지
 echo ""
 log_success "Docker Nginx 설정 초기화가 완료되었습니다!"
 echo ""
-log_info "다음 단계:"
+log_info "📋 다음 단계:"
 log_info "1. nginx 설정 파일들을 검토하세요:"
 for file in "${config_files[@]}"; do
     echo "   - $file"
 done
 echo ""
-log_info "2. SSL 인증서가 올바르게 복사되었는지 확인하세요:"
-echo "   ls -la nginx/ssl/"
+log_info "2. SSL 인증서 발급 (필요한 경우):"
+echo "   export CERTBOT_EMAIL=\"your-email@example.com\""
+echo "   export DOMAIN=\"kamf.site\""
+echo "   ./scripts/issue-ssl.sh"
 echo ""
-log_info "3. Docker Nginx로 전환하려면 다음 스크립트를 실행하세요:"
+log_info "3. Docker Nginx로 전환:"
 echo "   ./scripts/migrate-to-docker-nginx.sh"
+echo ""
+log_info "4. SSL 인증서 자동 갱신 설정 (선택사항):"
+echo "   ./scripts/setup-ssl-cron.sh"
 echo ""
