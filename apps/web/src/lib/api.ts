@@ -34,6 +34,12 @@ function getMockResponse(endpoint: string) {
   return {};
 }
 
+// 토큰 가져오기 함수
+function getAuthToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('accessToken');
+}
+
 export async function apiClient<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}/${endpoint.startsWith('/') ? endpoint.slice(1) : endpoint}`;
 
@@ -45,12 +51,17 @@ export async function apiClient<T>(endpoint: string, options?: RequestInit): Pro
 
   console.log('API Request:', url); // 디버깅용
 
+  // Authorization 헤더 준비
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...((options?.headers as Record<string, string>) || {}),
+  };
+
   try {
     const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
+      headers,
       ...options,
     });
 
