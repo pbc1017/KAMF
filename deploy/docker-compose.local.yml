@@ -1,0 +1,28 @@
+# 로컬 개발 환경용 설정
+# 사용법: cd deploy && docker-compose -f docker-compose.yml -f docker-compose.local.yml up
+
+services:
+  # ================================
+  # 로컬 개발용 MySQL 설정
+  # ================================
+  mysql:
+    container_name: kamf-mysql
+    ports:
+      - '${DB_PORT:-3306}:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ../mysql-init:/docker-entrypoint-initdb.d
+    environment:
+      # 로컬 개발용 고정 값들
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+
+  # ================================
+  # API/Web는 로컬에서 직접 실행
+  # ================================
+  # npm run dev로 실행하므로 Docker 서비스 정의하지 않음
+
+volumes:
+  mysql_data:

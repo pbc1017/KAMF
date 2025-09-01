@@ -1,0 +1,52 @@
+# 개발 서버 환경용 설정
+# 사용법: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  # ================================
+  # 개발 서버용 MySQL
+  # ================================
+  mysql:
+    container_name: ${DEPLOY_PATH:-kamf-dev}-mysql
+    ports:
+      - '23306:3306'
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+    networks:
+      - kamf-dev-network
+    environment:
+      MYSQL_DATABASE: kamf_dev
+
+  # ================================
+  # 개발 서버용 API
+  # ================================
+  api:
+    container_name: ${DEPLOY_PATH:-kamf-dev}-api
+    ports:
+      - '${API_PORT:-8001}:8000'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      DB_HOST: mysql # 컨테이너간 통신
+    networks:
+      - kamf-dev-network
+
+  # ================================
+  # 개발 서버용 Web
+  # ================================
+  web:
+    container_name: ${DEPLOY_PATH:-kamf-dev}-web
+    ports:
+      - '${WEB_PORT:-3001}:3000'
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+    networks:
+      - kamf-dev-network
+
+volumes:
+  mysql_dev_data:
+
+networks:
+  kamf-dev-network:
+    name: ${DEPLOY_PATH:-kamf-dev}-network
+    driver: bridge

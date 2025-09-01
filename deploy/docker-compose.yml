@@ -1,27 +1,43 @@
-version: '3.8'
-
 services:
+  # ================================
+  # MySQL 데이터베이스 (공통 설정)
+  # ================================
+  mysql:
+    image: mysql:8.0
+    container_name: ${DEPLOY_PATH:-kamf}-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      timeout: 20s
+      retries: 10
+      interval: 30s
+
+  # ================================
+  # API 서비스 (공통 설정)
+  # ================================
   api:
     image: ${DOCKER_REGISTRY}/kamf-api:${IMAGE_TAG:-latest}
-    container_name: ${DEPLOY_PATH:-kamf}-api # 환경별 컨테이너 이름
+    container_name: ${DEPLOY_PATH:-kamf}-api
     restart: unless-stopped
-    ports:
-      - '${API_PORT:-8000}:8000' # 환경별 외부 포트
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
     environment:
       # Application Environment
       NODE_ENV: ${NODE_ENV:-production}
-      SERVER_PORT: 8000 # 내부 포트는 고정
+      SERVER_PORT: 8000
       API_PREFIX: ${API_PREFIX:-api}
       CORS_ORIGIN: ${CORS_ORIGIN}
 
-      # Database Connection (호스트 MySQL)
-      DB_HOST: host.docker.internal # 호스트 MySQL 접근
-      DB_PORT: 3306
-      DB_USERNAME: ${DB_USERNAME:-kamf}
-      DB_PASSWORD: ${DB_PASSWORD:-kamf_password}
-      DB_NAME: ${DB_NAME} # 환경별 데이터베이스
+      # Database Connection
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
 
       # JWT & Authentication
       JWT_SECRET: ${JWT_SECRET}
@@ -33,39 +49,32 @@ services:
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
       TWILIO_SERVICE_SID: ${TWILIO_SERVICE_SID}
-
-    networks:
-      - kamf-network
+    depends_on:
+      - mysql
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
       timeout: 10s
       retries: 5
       interval: 30s
 
+  # ================================
+  # Web 서비스 (공통 설정)
+  # ================================
   web:
     image: ${DOCKER_REGISTRY}/kamf-web:${IMAGE_TAG:-latest}
-    container_name: ${DEPLOY_PATH:-kamf}-web # 환경별 컨테이너 이름
+    container_name: ${DEPLOY_PATH:-kamf}-web
     restart: unless-stopped
-    ports:
-      - '${WEB_PORT:-3000}:3000' # 환경별 외부 포트
     environment:
       NODE_ENV: ${NODE_ENV:-production}
-      NEXT_PORT: 3000 # 내부 포트는 고정
-      HOSTNAME: 0.0.0.0 # Next.js가 모든 인터페이스에서 리스닝
-      HOST: 0.0.0.0 # 추가 바인딩 옵션
+      NEXT_PORT: 3000
+      HOSTNAME: 0.0.0.0
+      HOST: 0.0.0.0
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
     depends_on:
       - api
-    networks:
-      - kamf-network
     healthcheck:
       test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/']
       timeout: 10s
       retries: 5
       interval: 30s
-
-networks:
-  kamf-network:
-    name: ${DEPLOY_PATH:-kamf}-network
-    driver: bridge
