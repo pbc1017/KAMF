@@ -19,6 +19,9 @@ export default function LoginPage() {
   // 인증번호 요청 mutation
   const requestCodeMutation = useRequestCode();
 
+  // 재시도를 위한 mutation (같은 hook 재사용)
+  const resendCodeMutation = useRequestCode();
+
   // 인증번호 확인 & 로그인 mutation
   const verifyCodeMutation = useVerifyCode();
 
@@ -48,6 +51,34 @@ export default function LoginPage() {
             typeof error.response.data.message === 'string'
               ? error.response.data.message
               : '인증번호 요청에 실패했습니다.';
+          alert(errorMessage);
+        },
+      }
+    );
+  };
+
+  const handleResendCode = () => {
+    resendCodeMutation.mutate(
+      { phoneNumber },
+      {
+        onSuccess: () => {
+          // 재발송 성공 - alert 대신 자연스러운 UX
+          console.log('인증번호가 재발송되었습니다.');
+        },
+        onError: (error: unknown) => {
+          const errorMessage =
+            error &&
+            typeof error === 'object' &&
+            'response' in error &&
+            error.response &&
+            typeof error.response === 'object' &&
+            'data' in error.response &&
+            error.response.data &&
+            typeof error.response.data === 'object' &&
+            'message' in error.response.data &&
+            typeof error.response.data.message === 'string'
+              ? error.response.data.message
+              : '인증번호 재발송에 실패했습니다.';
           alert(errorMessage);
         },
       }
@@ -134,7 +165,9 @@ export default function LoginPage() {
               phoneNumber={phoneNumber}
               onVerifyCode={handleVerifyCode}
               onBackToPhone={handleBackToPhone}
+              onResendCode={handleResendCode}
               isLoading={verifyCodeMutation.isPending}
+              isResending={resendCodeMutation.isPending}
             />
           )}
         </div>
