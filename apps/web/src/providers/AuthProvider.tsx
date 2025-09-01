@@ -4,7 +4,7 @@ import { AuthTokens, GetUserResponse } from '@kamf/interface';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-import { apiClient } from '@/lib/api';
+import { apiClient, setTokens, clearTokens } from '@/lib/api';
 
 export interface AuthUser {
   id: string;
@@ -79,9 +79,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [isError, hasToken, mounted]);
 
   const handleLogin = (tokens: AuthTokens, userData: AuthUser) => {
-    // 토큰 저장
-    localStorage.setItem('accessToken', tokens.accessToken);
-    localStorage.setItem('refreshToken', tokens.refreshToken);
+    // 토큰 저장 (api.ts의 토큰 관리 함수 사용)
+    setTokens(tokens.accessToken, tokens.refreshToken);
 
     // 캐시 업데이트 - API 응답 구조에 맞게 설정
     queryClient.setQueryData(['user', 'me'], {
@@ -93,9 +92,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const handleLogout = () => {
-    // 토큰 제거
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    // 토큰 제거 (api.ts의 토큰 관리 함수 사용)
+    clearTokens();
 
     // 캐시 클리어
     queryClient.clear();
@@ -107,6 +105,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.location.href = '/';
     }
   };
+
+  // 전역 로그아웃 이벤트 리스너 등록
+  useEffect(() => {
+    const handleAuthLogout = () => {
+      console.log('Auth logout event received');
+      handleLogout();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('auth:logout', handleAuthLogout);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('auth:logout', handleAuthLogout);
+      }
+    };
+  }, []);
 
   const contextValue: AuthContextType = {
     user,
