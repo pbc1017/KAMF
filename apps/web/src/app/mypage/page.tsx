@@ -6,7 +6,7 @@ import Button, { DangerButton, SecondaryButton } from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { FullScreenLoading } from '@/components/ui/LoadingSpinner';
 import { useRequireAuth } from '@/hooks/useAuthGuard';
-import { useMe, useUpdateMe } from '@/hooks/useUser';
+import { useUpdateMe } from '@/hooks/useUser';
 import { useAuth } from '@/providers/AuthProvider';
 
 export default function MyPage() {
@@ -16,17 +16,14 @@ export default function MyPage() {
   // 인증 가드: 인증되지 않은 사용자는 로그인 페이지로 리다이렉트
   const { isLoading: authGuardLoading } = useRequireAuth();
   const { user, logout } = useAuth();
-
-  // 사용자 정보 조회
-  const { data: userResponse } = useMe();
   const updateMeMutation = useUpdateMe();
 
   useEffect(() => {
-    // 사용자 정보 로드 시 displayName 설정
-    if (userResponse?.data?.user.displayName) {
-      setDisplayName(userResponse.data.user.displayName);
+    // AuthProvider의 사용자 정보로 displayName 설정
+    if (user?.displayName) {
+      setDisplayName(user.displayName);
     }
-  }, [userResponse]);
+  }, [user]);
 
   const handleUpdateDisplayName = () => {
     if (!displayName.trim()) {
@@ -64,8 +61,8 @@ export default function MyPage() {
   const handleCancelEdit = () => {
     setIsEditing(false);
     // 원래 값으로 복원
-    if (userResponse?.data?.user.displayName) {
-      setDisplayName(userResponse.data.user.displayName);
+    if (user?.displayName) {
+      setDisplayName(user.displayName);
     }
   };
 
