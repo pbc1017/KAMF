@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     retry: false,
   });
 
-  const user = userResponse?.user || null;
+  const user = userResponse?.data?.user || null;
 
   useEffect(() => {
     // 마운트되지 않은 경우 처리 안함
@@ -83,8 +83,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('accessToken', tokens.accessToken);
     localStorage.setItem('refreshToken', tokens.refreshToken);
 
-    // 캐시 업데이트
+    // 캐시 업데이트 - API 응답 구조에 맞게 설정
     queryClient.setQueryData(['user', 'me'], {
+      success: true,
       data: { user: userData },
     });
 

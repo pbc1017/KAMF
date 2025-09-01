@@ -5,13 +5,22 @@
 import { User } from '../types/user.type';
 
 export interface GetUserResponse {
-  user: User;
+  success: boolean;
+  data: {
+    user: User;
+  };
 }
 
 export interface GetUsersResponse {
-  users: User[];
+  success: boolean;
+  data: {
+    users: User[];
+  };
 }
 
 export interface UpdateUserResponse {
-  user: User;
+  success: boolean;
+  data: {
+    user: User;
+  };
 }

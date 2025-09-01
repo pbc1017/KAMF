@@ -24,8 +24,8 @@ export default function MyPage() {
     }
 
     // 사용자 정보 로드 시 displayName 설정
-    if (userResponse?.user.displayName) {
-      setDisplayName(userResponse.user.displayName);
+    if (userResponse?.data?.user.displayName) {
+      setDisplayName(userResponse.data.user.displayName);
     }
   }, [isAuthenticated, authLoading, router, userResponse]);
 
@@ -65,8 +65,8 @@ export default function MyPage() {
   const handleCancelEdit = () => {
     setIsEditing(false);
     // 원래 값으로 복원
-    if (userResponse?.user.displayName) {
-      setDisplayName(userResponse.user.displayName);
+    if (userResponse?.data?.user.displayName) {
+      setDisplayName(userResponse.data.user.displayName);
     }
   };
 

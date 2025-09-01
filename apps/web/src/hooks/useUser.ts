@@ -26,7 +26,7 @@ export function useUpdateMe() {
         body: JSON.stringify(data),
       }),
     onSuccess: response => {
-      // 캐시 업데이트
+      // 캐시 업데이트 - API 응답 구조가 이미 올바르므로 그대로 사용
       queryClient.setQueryData(['user', 'me'], response);
     },
   });
