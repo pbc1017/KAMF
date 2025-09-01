@@ -1,4 +1,4 @@
-import { BaseEntity } from './common';
+import { BaseEntity } from './common.type';
 
 /**
  * User related types and interfaces
