@@ -130,6 +130,17 @@ export class AuthController {
         }
       }
 
+      // roles가 없거나 비어있는 경우 기본 USER 역할 부여
+      if (!user.roles || user.roles.length === 0) {
+        try {
+          user = await this.userService.updateUserRoles(user.id, [UserRole.USER]);
+          console.log(`기본 역할 부여: ${user.id}, 역할: USER`);
+        } catch (error) {
+          console.error('기본 역할 부여 실패:', error);
+          // 역할 부여에 실패해도 로그인은 계속 진행
+        }
+      }
+
       // JWT 토큰 생성
       const tokens = this.jwtService.generateTokens(user);
 
