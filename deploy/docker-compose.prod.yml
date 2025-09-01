@@ -21,8 +21,6 @@ services:
   # ================================
   api:
     container_name: ${DEPLOY_PATH:-kamf}-api
-    ports:
-      - '${API_PORT:-8000}:8000'
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     environment:
@@ -36,8 +34,6 @@ services:
   # ================================
   web:
     container_name: ${DEPLOY_PATH:-kamf}-web
-    ports:
-      - '${WEB_PORT:-3000}:3000'
     environment:
       NODE_ENV: production
     networks:

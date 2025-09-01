@@ -1,0 +1,36 @@
+# Docker Nginx 전용 Compose 파일
+# nginx는 모든 환경에서 공유되는 리버스 프록시
+# 사용법: docker-compose -f docker-compose-nginx.yml up -d
+
+services:
+  # ================================
+  # Nginx 리버스 프록시 (단일 공통 서비스)
+  # ================================
+  nginx:
+    image: nginx:alpine
+    container_name: kamf-nginx # 고정된 이름으로 단일 컨테이너 보장
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/ssl/certs:ro
+    networks:
+      - kamf-network # 기본 네트워크
+      - kamf-dev-network # 개발 환경 서비스 접근
+      - kamf-prod-network # 운영 환경 서비스 접근
+    healthcheck:
+      test: ['CMD', 'nginx', '-t']
+      timeout: 10s
+      retries: 3
+      interval: 30s
+
+# 외부 네트워크 참조 (다른 compose 파일에서 생성됨)
+networks:
+  kamf-dev-network:
+    external: true
+    name: kamf-dev-network
+  kamf-prod-network:
+    external: true
+    name: kamf-prod-network
