@@ -4,9 +4,9 @@ import type {
   AuthRequest,
   VerifyCodeRequest,
   RefreshTokenRequest,
-} from '@kamf/interface/types/api.js';
-import { ApiResponse } from '@kamf/interface/types/common.js';
-import { UserRole } from '@kamf/interface/types/user.js';
+} from '@kamf/interface/dtos/auth.dto.js';
+import { ApiResponse } from '@kamf/interface/types/common.type.js';
+import { UserRole } from '@kamf/interface/types/user.type.js';
 import { Controller, Post, Body, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiOkResponse, ApiBody } from '@nestjs/swagger';
 

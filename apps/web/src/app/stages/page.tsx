@@ -1,6 +1,6 @@
 'use client';
 
-import { FestivalDay, StageWithDay } from '@kamf/interface/types/festival.js';
+import { FestivalDay, StageWithDay, Stage } from '@kamf/interface/types/festival.type.js';
 import { useState, useMemo, Suspense } from 'react';
 
 import { SegmentControl } from '@/components/SegmentControl';
@@ -47,12 +47,12 @@ function StagesPageContent() {
   const allStages = useMemo((): StageWithDay[] => {
     const { fri, sat } = stagesResponse.data;
 
-    const friStages: StageWithDay[] = fri.map(stage => ({
+    const friStages: StageWithDay[] = fri.map((stage: Stage) => ({
       ...stage,
       day: FestivalDay.FRIDAY,
     }));
 
-    const satStages: StageWithDay[] = sat.map(stage => ({
+    const satStages: StageWithDay[] = sat.map((stage: Stage) => ({
       ...stage,
       day: FestivalDay.SATURDAY,
     }));

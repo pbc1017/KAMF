@@ -1,4 +1,4 @@
-import { Zone } from '@kamf/interface/types/festival.js';
+import { Zone } from '@kamf/interface/types/festival.type.js';
 import { ApiProperty } from '@nestjs/swagger';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 

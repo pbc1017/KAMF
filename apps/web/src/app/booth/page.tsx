@@ -1,6 +1,6 @@
 'use client';
 
-import { Zone } from '@kamf/interface/types/festival.js';
+import { Zone, Booth } from '@kamf/interface/types/festival.type.js';
 import { useState, useMemo, Suspense } from 'react';
 
 import { BoothCard } from '@/components/BoothCard';
@@ -39,7 +39,7 @@ function BoothListContent() {
   const booths = boothsResponse.data;
 
   const filteredBooths = useMemo(() => {
-    return booths.filter(booth => {
+    return booths.filter((booth: Booth) => {
       // Zone 필터
       const zoneMatch = selectedZone === 'all' || booth.zone === selectedZone;
 
@@ -96,7 +96,7 @@ function BoothListContent() {
         {/* 부스 리스트 */}
         {filteredBooths.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {filteredBooths.map(booth => (
+            {filteredBooths.map((booth: Booth) => (
               <BoothCard key={booth.id} booth={booth} searchQuery={searchQuery} />
             ))}
           </div>

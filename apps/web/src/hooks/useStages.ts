@@ -1,4 +1,4 @@
-import { GetStagesResponse } from '@kamf/interface/types/api.js';
+import { GetStagesResponse } from '@kamf/interface/dtos/festival.dto.js';
 import { useSuspenseQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api';

@@ -1,4 +1,4 @@
-import * as festival from '@kamf/interface/types/festival.js';
+import * as festival from '@kamf/interface/types/festival.type.js';
 import { ApiProperty } from '@nestjs/swagger';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { Zone } from '@kamf/interface/types/festival.js';
+import { Zone } from '@kamf/interface/types/festival.type.js';
 
 interface SearchBarProps {
   searchQuery: string;

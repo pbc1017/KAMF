@@ -1,5 +1,5 @@
-import { GetBoothsByZoneResponse } from '@kamf/interface/types/api.js';
-import { Zone } from '@kamf/interface/types/festival.js';
+import { GetBoothsByZoneResponse } from '@kamf/interface/dtos/festival.dto.js';
+import { Zone } from '@kamf/interface/types/festival.type.js';
 import { useSuspenseQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api';

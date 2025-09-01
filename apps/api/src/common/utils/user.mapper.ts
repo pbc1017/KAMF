@@ -1,4 +1,4 @@
-import { User as UserInterface } from '@kamf/interface/types/user.js';
+import { User as UserInterface } from '@kamf/interface/types/user.type.js';
 
 import { User as UserEntity } from '../../entities/user.entity.js';
 

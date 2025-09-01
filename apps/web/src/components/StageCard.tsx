@@ -1,6 +1,6 @@
 'use client';
 
-import { StageWithDay, FestivalDay } from '@kamf/interface/types/festival.js';
+import { StageWithDay, FestivalDay } from '@kamf/interface/types/festival.type.js';
 
 interface StageCardProps {
   stage: StageWithDay;

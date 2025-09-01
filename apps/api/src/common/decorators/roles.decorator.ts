@@ -1,4 +1,4 @@
-import { UserRole } from '@kamf/interface/types/user.js';
+import { UserRole } from '@kamf/interface/types/user.type.js';
 import { SetMetadata } from '@nestjs/common';
 
 export const ROLES_KEY = 'roles';

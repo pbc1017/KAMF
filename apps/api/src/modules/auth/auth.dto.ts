@@ -1,4 +1,8 @@
-import { AuthRequest, VerifyCodeRequest, RefreshTokenRequest } from '@kamf/interface/types/api.js';
+import {
+  AuthRequest,
+  VerifyCodeRequest,
+  RefreshTokenRequest,
+} from '@kamf/interface/dtos/auth.dto.js';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, Length, Matches } from 'class-validator';
 

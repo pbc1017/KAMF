@@ -1,4 +1,4 @@
-import { UserRole } from '@kamf/interface/types/user.js';
+import { UserRole } from '@kamf/interface/types/user.type.js';
 import { ApiProperty } from '@nestjs/swagger';
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany } from 'typeorm';
 

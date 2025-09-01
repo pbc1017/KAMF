@@ -1,4 +1,4 @@
-import { FestivalDay } from '@kamf/interface/types/festival.js';
+import { FestivalDay } from '@kamf/interface/types/festival.type.js';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';

@@ -1,4 +1,4 @@
-import { UserRole } from '@kamf/interface/types/user.js';
+import { UserRole } from '@kamf/interface/types/user.type.js';
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 

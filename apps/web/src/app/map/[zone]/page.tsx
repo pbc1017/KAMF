@@ -1,6 +1,6 @@
 'use client';
 
-import { Zone } from '@kamf/interface';
+import { Zone, Booth } from '@kamf/interface/types/festival.type.js';
 import { Suspense } from 'react';
 
 import { useBoothsByZone } from '@/hooks/useBoothsByZone';
@@ -126,7 +126,7 @@ function ZonePageContent({ zone }: { zone: Zone }) {
         </div>
 
         <div className="space-y-6">
-          {currentBooths.map(booth => (
+          {currentBooths.map((booth: Booth) => (
             <div key={booth.id} className="card-purple card-purple-hover p-8 group">
               <div className="flex items-start justify-between">
                 <div className="flex-1">

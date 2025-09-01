@@ -1,4 +1,4 @@
-import { UserRole, UpdateUserRequest } from '@kamf/interface/types/user.js';
+import { UserRole, UpdateUserRequest } from '@kamf/interface/types/user.type.js';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsArray, IsEnum, Length } from 'class-validator';
 

@@ -1,4 +1,4 @@
-import { GetStagesResponse } from '@kamf/interface/types/api.js';
+import { GetStagesResponse } from '@kamf/interface/dtos/festival.dto.js';
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
 

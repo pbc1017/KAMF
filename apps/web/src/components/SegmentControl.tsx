@@ -1,6 +1,6 @@
 'use client';
 
-import { FestivalDay } from '@kamf/interface/types/festival.js';
+import { FestivalDay } from '@kamf/interface/types/festival.type.js';
 
 interface SegmentControlProps {
   selectedDay: FestivalDay;

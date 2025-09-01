@@ -1,4 +1,4 @@
-import { UserRole, CreateUserRequest, UpdateUserRequest } from '@kamf/interface/types/user.js';
+import { UserRole, CreateUserRequest, UpdateUserRequest } from '@kamf/interface/types/user.type.js';
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';

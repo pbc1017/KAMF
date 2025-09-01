@@ -1,6 +1,6 @@
 'use client';
 
-import { Booth, Zone } from '@kamf/interface/types/festival.js';
+import { Booth, Zone } from '@kamf/interface/types/festival.type.js';
 
 interface BoothCardProps {
   booth: Booth;
