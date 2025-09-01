@@ -1,33 +1,29 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { useRequireAuth } from '@/hooks/useAuthGuard';
 import { useMe, useUpdateMe } from '@/hooks/useUser';
 import { useAuth } from '@/providers/AuthProvider';
 
 export default function MyPage() {
   const [displayName, setDisplayName] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
-  const router = useRouter();
+
+  // 인증 가드: 인증되지 않은 사용자는 로그인 페이지로 리다이렉트
+  const { isLoading: authGuardLoading } = useRequireAuth();
+  const { user, logout } = useAuth();
 
   // 사용자 정보 조회
   const { data: userResponse } = useMe();
   const updateMeMutation = useUpdateMe();
 
   useEffect(() => {
-    // 인증되지 않은 사용자는 로그인 페이지로 리다이렉트
-    if (!authLoading && !isAuthenticated) {
-      router.push('/login');
-      return;
-    }
-
     // 사용자 정보 로드 시 displayName 설정
     if (userResponse?.data?.user.displayName) {
       setDisplayName(userResponse.data.user.displayName);
     }
-  }, [isAuthenticated, authLoading, router, userResponse]);
+  }, [userResponse]);
 
   const handleUpdateDisplayName = () => {
     if (!displayName.trim()) {
@@ -76,8 +72,8 @@ export default function MyPage() {
     }
   };
 
-  // 로딩 중이거나 인증되지 않은 경우
-  if (authLoading || !isAuthenticated) {
+  // 인증 확인 중인 경우 로딩 표시
+  if (authGuardLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="flex items-center space-x-2">

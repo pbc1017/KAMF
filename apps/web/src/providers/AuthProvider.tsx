@@ -6,7 +6,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 
 import { apiClient } from '@/lib/api';
 
-interface AuthUser {
+export interface AuthUser {
   id: string;
   phoneNumber: string;
   displayName: string;

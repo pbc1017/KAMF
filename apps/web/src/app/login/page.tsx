@@ -6,6 +6,7 @@ import { useState } from 'react';
 import PhoneNumberForm from '@/components/auth/PhoneNumberForm';
 import VerificationCodeForm from '@/components/auth/VerificationCodeForm';
 import { useRequestCode, useVerifyCode } from '@/hooks/useAuth';
+import { useRedirectIfAuthenticated } from '@/hooks/useAuthGuard';
 import { useAuth } from '@/providers/AuthProvider';
 
 type LoginStep = 'phone' | 'code';
@@ -15,6 +16,9 @@ export default function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const router = useRouter();
   const { login } = useAuth();
+
+  // 이미 로그인된 사용자는 홈으로 리다이렉트
+  const { isLoading } = useRedirectIfAuthenticated();
 
   // 인증번호 요청 mutation
   const requestCodeMutation = useRequestCode();
@@ -122,6 +126,18 @@ export default function LoginPage() {
   const handleBackToPhone = () => {
     setStep('phone');
   };
+
+  // 인증 확인 중에는 로딩 표시
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="text-gray-600">로딩 중...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
