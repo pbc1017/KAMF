@@ -60,8 +60,8 @@ async function bootstrap() {
     )
     .addServer(
       process.env.NODE_ENV === 'production'
-        ? `http://localhost:${process.env.SERVER_PORT || 8000}`
-        : `http://localhost:${process.env.SERVER_PORT || 8000}`,
+        ? `http://localhost:${process.env.API_PORT || 8000}`
+        : `http://localhost:${process.env.API_PORT || 8000}`,
       process.env.NODE_ENV === 'production' ? '프로덕션 서버' : '개발 서버'
     )
     .build();
@@ -79,7 +79,7 @@ async function bootstrap() {
     customSiteTitle: 'KAMF API 문서',
   });
 
-  const port = process.env.SERVER_PORT || 8000;
+  const port = process.env.API_PORT || 8000;
   await app.listen(port);
 
   console.log(`🚀 Server is running on: http://localhost:${port}`);

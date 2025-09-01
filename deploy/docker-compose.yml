@@ -28,7 +28,7 @@ services:
     environment:
       # Application Environment
       NODE_ENV: ${NODE_ENV:-production}
-      SERVER_PORT: 8000
+      API_PORT: 8000
       API_PREFIX: ${API_PREFIX:-api}
       CORS_ORIGIN: ${CORS_ORIGIN}
 
@@ -66,7 +66,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV:-production}
-      NEXT_PORT: 3000
+      WEB_PORT: 3000
       HOSTNAME: 0.0.0.0
       HOST: 0.0.0.0
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}

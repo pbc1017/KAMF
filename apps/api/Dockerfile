@@ -45,7 +45,7 @@ RUN apk add --no-cache curl
 
 # 환경변수 설정
 ENV NODE_ENV=production
-ENV SERVER_PORT=8000
+ENV API_PORT=8000
 
 # pnpm deploy 결과물 복사 (flat node_modules 구조)
 COPY --from=builder --chown=nestjs:nodejs /tmp/deploy-api ./

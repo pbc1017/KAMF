@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "dotenv -e ../../.env -- sh -c 'next dev -p $NEXT_PORT'",
+    "dev": "dotenv -e ../../.env -- sh -c 'next dev -p $WEB_PORT'",
     "build": "dotenv -e ../../.env -- next build",
-    "start": "dotenv -e ../../.env -- sh -c 'next start -p $NEXT_PORT'",
+    "start": "dotenv -e ../../.env -- sh -c 'next start -p $WEB_PORT'",
     "clean": "rm -rf .next node_modules",
     "lint": "dotenv -e ../../.env -- eslint . --ext .ts,.tsx",
     "lint:fix": "dotenv -e ../../.env -- eslint . --ext .ts,.tsx --fix",
