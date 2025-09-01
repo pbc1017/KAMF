@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, PrimaryColumn, Column, ManyToMany, JoinTable, BeforeInsert } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 
 import { ModifiableEntity } from '../common/entities/base.entity.js';
 
@@ -7,9 +8,16 @@ import { Role } from './role.entity.js';
 
 @Entity('users')
 export class User extends ModifiableEntity {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('varchar', { length: 36, default: () => 'UUID()' })
   @ApiProperty({ description: '사용자 ID' })
   id: string;
+
+  @BeforeInsert()
+  generateUuid() {
+    if (!this.id) {
+      this.id = uuidv4();
+    }
+  }
 
   @Column({ unique: true })
   @ApiProperty({ description: '전화번호' })
