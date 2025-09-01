@@ -143,7 +143,9 @@ export default function MyPage() {
               </div>
             ) : (
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200">
-                <p className="text-gray-900 font-medium">{displayName || '닉네임 없음'}</p>
+                <p className="text-gray-900 font-medium">
+                  {displayName || '로그인 후 자동 생성된 닉네임입니다'}
+                </p>
                 <button
                   onClick={() => setIsEditing(true)}
                   className="text-blue-600 hover:text-blue-700 font-medium text-sm"

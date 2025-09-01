@@ -15,9 +15,9 @@ export class User extends ModifiableEntity {
   @ApiProperty({ description: '전화번호' })
   phoneNumber: string;
 
-  @Column()
-  @ApiProperty({ description: '표시 이름' })
-  displayName: string;
+  @Column({ nullable: true })
+  @ApiProperty({ description: '표시 이름', nullable: true })
+  displayName: string | null;
 
   @ManyToMany(() => Role, role => role.users)
   @JoinTable({
