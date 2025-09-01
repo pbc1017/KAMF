@@ -2,15 +2,15 @@ import Link from 'next/link';
 
 const mainNavigation = [
   {
+    title: '지도',
+    url: '/map',
+  },
+  {
     title: '부스',
     url: '/booth',
   },
   {
-    title: '야시장',
-    url: '/map/night-market',
-  },
-  {
-    title: '공연',
+    title: '무대',
     url: '/stages',
   },
 ];
@@ -22,7 +22,7 @@ export default function Home() {
         <div className="flex flex-col gap-4 responsive-margin-top">
           {mainNavigation.map((nav, index) => (
             <Link key={index} href={nav.url}>
-              <button className="text-white text-2xl font-bold hover:text-gray-300 transition-colors duration-300 px-6 py-3">
+              <button className="text-white text-2xl font-bold hover:text-gray-300 transition-colors duration-300 px-4 py-3 border-b-2 border-white w-full">
                 {nav.title}
               </button>
             </Link>
