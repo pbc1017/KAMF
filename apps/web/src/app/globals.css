@@ -160,3 +160,14 @@ body {
     background-size: 350px auto;
   }
 }
+
+/* 반응형 마진 톱 - 350px 기준 */
+.responsive-margin-top {
+  margin-top: 350px;
+}
+
+@media (min-width: 400px) {
+  .responsive-margin-top {
+    margin-top: 400px;
+  }
+}
