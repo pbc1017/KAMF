@@ -137,7 +137,7 @@ fi
 # =====================================
 print_info "새로운 애플리케이션 컨테이너 시작 중..."
 
-if ! docker-compose -p "${PROJECT_NAME}" ${COMPOSE_FILES} up -d api web; then
+if ! docker-compose -p "${PROJECT_NAME}" ${COMPOSE_FILES} up -d --no-deps api web; then
     print_error "컨테이너 시작 실패!"
     
     # 간단한 롤백 시도

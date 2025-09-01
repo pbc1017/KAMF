@@ -48,8 +48,7 @@ services:
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
       TWILIO_SERVICE_SID: ${TWILIO_SERVICE_SID}
-    depends_on:
-      - mysql
+    # depends_on 제거: MySQL은 배포 스크립트에서 별도 관리
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
       timeout: 10s

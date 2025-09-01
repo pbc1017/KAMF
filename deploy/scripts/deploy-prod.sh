@@ -213,7 +213,7 @@ else
     print_info "새로운 배포: 모든 서비스 시작 중..."
     
     # 전체 서비스 시작
-    if ! docker-compose -p "${PROJECT_NAME}" ${COMPOSE_FILES} up -d api web; then
+    if ! docker-compose -p "${PROJECT_NAME}" ${COMPOSE_FILES} up -d --no-deps api web; then
         print_error "컨테이너 시작 실패!"
         exit 1
     fi
