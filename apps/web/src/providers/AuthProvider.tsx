@@ -24,8 +24,20 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // 초기 상태: 토큰이 있으면 로그인된 것으로 간주
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !!localStorage.getItem('accessToken');
+    }
+    return false;
+  });
+  const [mounted, setMounted] = useState(false);
   const queryClient = useQueryClient();
+
+  // 클라이언트에서 마운트되었는지 확인
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 토큰이 있는지 확인
   const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
@@ -38,28 +50,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery({
     queryKey: ['user', 'me'],
     queryFn: () => apiClient<GetUserResponse>('users/me'),
-    enabled: hasToken,
+    enabled: hasToken && mounted, // 마운트된 후에만 실행
     retry: false,
   });
 
   const user = userResponse?.user || null;
 
   useEffect(() => {
+    // 마운트되지 않은 경우 처리 안함
+    if (!mounted) {
+      return;
+    }
+
+    // 토큰이 없으면 로그아웃
     if (!hasToken) {
       setIsAuthenticated(false);
       return;
     }
 
+    // API 에러가 발생한 경우 (토큰 만료 등)
     if (isError) {
-      // 토큰이 만료되었거나 유효하지 않은 경우
       handleLogout();
       return;
     }
 
-    if (user) {
-      setIsAuthenticated(true);
-    }
-  }, [user, isError, hasToken]);
+    // 토큰은 있지만 아직 사용자 정보를 불러오는 중인 경우
+    // 이미 토큰 기반으로 true로 설정되어 있으므로 그대로 유지
+  }, [isError, hasToken, mounted]);
 
   const handleLogin = (tokens: AuthTokens, userData: AuthUser) => {
     // 토큰 저장
@@ -92,8 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const contextValue: AuthContextType = {
     user,
-    isLoading: isLoading && hasToken, // 토큰이 있을 때만 로딩 표시
-    isAuthenticated,
+    isLoading: !mounted || (isLoading && hasToken), // 마운트되지 않았거나 로딩 중
+    isAuthenticated: mounted && isAuthenticated, // 마운트된 후에만 인증됨으로 표시
     login: handleLogin,
     logout: handleLogout,
   };

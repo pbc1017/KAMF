@@ -4,7 +4,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 
-const navigationItems = [
+import { useAuth } from '@/providers/AuthProvider';
+
+const basicNavigationItems = [
   {
     title: '지도',
     url: '/map',
@@ -17,14 +19,11 @@ const navigationItems = [
     title: '무대',
     url: '/stages',
   },
-  {
-    title: '로그인',
-    url: '/login',
-  },
 ];
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -33,6 +32,29 @@ export default function Header() {
   const closeMenu = () => {
     setIsMenuOpen(false);
   };
+
+  const handleLogout = () => {
+    logout();
+    closeMenu();
+  };
+
+  // 네비게이션 아이템 생성
+  const navigationItems = [
+    ...basicNavigationItems,
+    ...(isAuthenticated
+      ? [
+          {
+            title: '마이페이지',
+            url: '/mypage',
+          },
+        ]
+      : [
+          {
+            title: '로그인',
+            url: '/login',
+          },
+        ]),
+  ];
 
   return (
     <>
@@ -120,21 +142,68 @@ export default function Header() {
             </button>
           </div>
 
+          {/* 사용자 정보 (로그인된 경우) */}
+          {isAuthenticated && user && (
+            <div className="p-6 border-b border-gray-700">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-violet-500 rounded-full flex items-center justify-center">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-white font-semibold">{user.displayName}</p>
+                  <p className="text-gray-400 text-sm">{user.phoneNumber}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 메뉴 항목들 */}
           <nav className="p-6">
-            <ul className="space-y-4">
-              {navigationItems.map((item, index) => (
-                <li key={index}>
-                  <Link
-                    href={item.url}
-                    onClick={closeMenu}
-                    className="block w-full text-left p-4 text-lg font-semibold text-black bg-white hover:bg-violet-500 hover:text-white rounded-2xl border border-gray-300 hover:border-violet-500 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg"
-                  >
-                    {item.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {/* 로딩 중일 때 */}
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                <span className="ml-2 text-white">로딩 중...</span>
+              </div>
+            ) : (
+              <ul className="space-y-4">
+                {navigationItems.map((item, index) => (
+                  <li key={index}>
+                    <Link
+                      href={item.url}
+                      onClick={closeMenu}
+                      className="block w-full text-left p-4 text-lg font-semibold text-black bg-white hover:bg-violet-500 hover:text-white rounded-2xl border border-gray-300 hover:border-violet-500 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg"
+                    >
+                      {item.title}
+                    </Link>
+                  </li>
+                ))}
+
+                {/* 로그아웃 버튼 (로그인된 경우) */}
+                {isAuthenticated && (
+                  <li>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left p-4 text-lg font-semibold text-white bg-red-600 hover:bg-red-700 rounded-2xl border border-red-500 hover:border-red-700 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg"
+                    >
+                      로그아웃
+                    </button>
+                  </li>
+                )}
+              </ul>
+            )}
           </nav>
 
           {/* 하단 정보 */}
