@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import { ReactNode } from 'react';
 
 import './globals.css';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { QueryProvider } from '@/providers/queryProvider';
 
@@ -19,7 +20,7 @@ const Header = dynamic(() => import('@/components/Header'), {
             <div className="w-25 h-8 bg-gray-700 rounded animate-pulse"></div>
           </div>
           <div className="flex-1 flex justify-end">
-            <div className="w-10 h-10 bg-gray-700 rounded-lg animate-pulse"></div>
+            <LoadingSpinner color="gray" />
           </div>
         </div>
       </div>

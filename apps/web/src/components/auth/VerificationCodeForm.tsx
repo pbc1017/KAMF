@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+import Button from '@/components/ui/Button';
+
 interface VerificationCodeFormProps {
   phoneNumber: string;
   onVerifyCode: (code: string) => void;
@@ -178,50 +180,37 @@ export default function VerificationCodeForm({
 
       {/* 버튼들 */}
       <div className="space-y-3">
-        <button
+        <Button
           type="submit"
-          disabled={isLoading || code.some(digit => !digit) || isExpired}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl transition duration-200"
+          disabled={code.some(digit => !digit) || isExpired}
+          isLoading={isLoading}
+          fullWidth
         >
-          {isLoading ? (
-            <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-              인증 중...
-            </div>
-          ) : isExpired ? (
-            '시간 만료'
-          ) : (
-            '로그인'
-          )}
-        </button>
+          {isExpired ? '시간 만료' : '로그인'}
+        </Button>
 
         {/* 재시도 버튼 */}
         {isExpired && (
-          <button
+          <Button
             type="button"
             onClick={handleResend}
-            disabled={isResending}
-            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl transition duration-200"
+            isLoading={isResending}
+            fullWidth
+            className="bg-green-600 hover:bg-green-700 focus:ring-green-500"
           >
-            {isResending ? (
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                재발송 중...
-              </div>
-            ) : (
-              '인증번호 재발송'
-            )}
-          </button>
+            인증번호 재발송
+          </Button>
         )}
 
-        <button
+        <Button
           type="button"
           onClick={onBackToPhone}
-          className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-xl transition duration-200"
+          variant="secondary"
+          fullWidth
           disabled={isLoading}
         >
           전화번호 다시 입력
-        </button>
+        </Button>
       </div>
 
       {/* 도움말 */}

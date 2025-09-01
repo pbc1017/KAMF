@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 import PhoneNumberForm from '@/components/auth/PhoneNumberForm';
 import VerificationCodeForm from '@/components/auth/VerificationCodeForm';
+import { FullScreenLoading } from '@/components/ui/LoadingSpinner';
 import { useRequestCode, useVerifyCode } from '@/hooks/useAuth';
 import { useRedirectIfAuthenticated } from '@/hooks/useAuthGuard';
 import { useAuth } from '@/providers/AuthProvider';
@@ -129,14 +130,7 @@ export default function LoginPage() {
 
   // 인증 확인 중에는 로딩 표시
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex items-center space-x-2">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="text-gray-600">로딩 중...</span>
-        </div>
-      </div>
-    );
+    return <FullScreenLoading />;
   }
 
   return (

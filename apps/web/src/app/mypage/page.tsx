@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 
+import Button, { DangerButton, SecondaryButton } from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import { FullScreenLoading } from '@/components/ui/LoadingSpinner';
 import { useRequireAuth } from '@/hooks/useAuthGuard';
 import { useMe, useUpdateMe } from '@/hooks/useUser';
 import { useAuth } from '@/providers/AuthProvider';
@@ -74,14 +77,7 @@ export default function MyPage() {
 
   // 인증 확인 중인 경우 로딩 표시
   if (authGuardLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex items-center space-x-2">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="text-gray-600">로딩 중...</span>
-        </div>
-      </div>
-    );
+    return <FullScreenLoading />;
   }
 
   return (
@@ -124,29 +120,28 @@ export default function MyPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">닉네임</label>
             {isEditing ? (
               <div className="space-y-3">
-                <input
+                <Input
                   type="text"
                   value={displayName}
                   onChange={e => setDisplayName(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
                   placeholder="닉네임을 입력하세요"
                   maxLength={20}
                 />
                 <div className="flex space-x-2">
-                  <button
+                  <Button
                     onClick={handleUpdateDisplayName}
-                    disabled={updateMeMutation.isPending}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-xl transition duration-200"
+                    isLoading={updateMeMutation.isPending}
+                    className="flex-1"
                   >
-                    {updateMeMutation.isPending ? '저장 중...' : '저장'}
-                  </button>
-                  <button
+                    저장
+                  </Button>
+                  <SecondaryButton
                     onClick={handleCancelEdit}
                     disabled={updateMeMutation.isPending}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed text-gray-700 font-semibold py-2 px-4 rounded-xl transition duration-200"
+                    className="flex-1"
                   >
                     취소
-                  </button>
+                  </SecondaryButton>
                 </div>
               </div>
             ) : (
@@ -165,9 +160,10 @@ export default function MyPage() {
 
         {/* 액션 버튼들 */}
         <div className="space-y-4">
-          <button
+          <DangerButton
             onClick={handleLogout}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-xl transition duration-200 flex items-center justify-center space-x-2"
+            fullWidth
+            className="flex items-center justify-center space-x-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -178,7 +174,7 @@ export default function MyPage() {
               />
             </svg>
             <span>로그아웃</span>
-          </button>
+          </DangerButton>
         </div>
       </div>
     </div>

@@ -1,5 +1,7 @@
 import React from 'react';
 
+import Button from '@/components/ui/Button';
+
 interface PhoneNumberFormProps {
   phoneNumber: string;
   setPhoneNumber: (phone: string) => void;
@@ -69,20 +71,9 @@ export default function PhoneNumberForm({
         )}
       </div>
 
-      <button
-        type="submit"
-        disabled={isLoading || !isValidPhone}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl transition duration-200 text-lg"
-      >
-        {isLoading ? (
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-            인증번호 발송중...
-          </div>
-        ) : (
-          '인증번호 받기'
-        )}
-      </button>
+      <Button type="submit" disabled={!isValidPhone} isLoading={isLoading} fullWidth size="lg">
+        인증번호 받기
+      </Button>
     </form>
   );
 }
