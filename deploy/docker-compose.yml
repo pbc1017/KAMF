@@ -29,7 +29,6 @@ services:
       # Application Environment
       NODE_ENV: ${NODE_ENV:-production}
       API_PORT: 8000
-      API_PREFIX: ${API_PREFIX:-api}
       CORS_ORIGIN: ${CORS_ORIGIN}
 
       # Database Connection

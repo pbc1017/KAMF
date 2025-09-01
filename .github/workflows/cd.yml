@@ -83,8 +83,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ steps.meta.outputs.env_suffix == 'PROD' && secrets.NEXT_PUBLIC_API_URL_PROD || secrets.NEXT_PUBLIC_API_URL_DEV }}
-            NEXT_PUBLIC_APP_URL=${{ steps.meta.outputs.env_suffix == 'PROD' && secrets.NEXT_PUBLIC_APP_URL_PROD || secrets.NEXT_PUBLIC_APP_URL_DEV }}
+            NEXT_PUBLIC_API_URL=${{ steps.meta.outputs.env_suffix == 'PROD' && 'https://kamf.site/api' || 'https://dev.kamf.site/api' }}
+            NEXT_PUBLIC_APP_URL=${{ steps.meta.outputs.env_suffix == 'PROD' && 'https://kamf.site' || 'https://dev.kamf.site' }}
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
           labels: |
@@ -110,8 +110,9 @@ jobs:
   deploy:
     name: Deploy to Server
     runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
     needs: build-and-push
-    if: success() && github.ref == 'refs/heads/main'
+    if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
     outputs:
       environment: ${{ steps.vars.outputs.environment }}
       domain: ${{ steps.vars.outputs.domain }}
@@ -123,14 +124,14 @@ jobs:
       - name: Set deployment variables
         id: vars
         run: |
-          # main 브랜치에서는 항상 production 배포
-          DEPLOY_PATH="kamf"
-          DOMAIN="kamf.site"
-          API_PORT="8000"
-          WEB_PORT="3000"
-          DB_NAME="kamf_prod"
-          IMAGE_TAG="latest"  # 항상 latest 사용
-          ENVIRONMENT="production"
+          # Environment Variables 활용 (브랜치에 따라 자동으로 다른 environment 적용)
+          DEPLOY_PATH="${{ vars.DEPLOY_PATH }}"
+          DOMAIN="${{ vars.DOMAIN }}"
+          API_PORT="${{ vars.API_PORT }}"
+          WEB_PORT="${{ vars.WEB_PORT }}"
+          DB_NAME="${{ vars.DB_NAME }}"
+          IMAGE_TAG="${{ vars.IMAGE_TAG }}"
+          ENVIRONMENT="${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}"
 
           echo "deploy_path=${DEPLOY_PATH}" >> $GITHUB_OUTPUT
           echo "domain=${DOMAIN}" >> $GITHUB_OUTPUT
@@ -153,9 +154,9 @@ jobs:
           NODE_ENV=production
           API_PORT=${{ steps.vars.outputs.api_port }}
           WEB_PORT=${{ steps.vars.outputs.web_port }}
-          CORS_ORIGIN=http://${{ steps.vars.outputs.domain }}
-          NEXT_PUBLIC_API_URL=http://${{ steps.vars.outputs.domain }}/api
-          NEXT_PUBLIC_APP_URL=http://${{ steps.vars.outputs.domain }}
+          CORS_ORIGIN=https://${{ steps.vars.outputs.domain }}
+          NEXT_PUBLIC_API_URL=https://${{ steps.vars.outputs.domain }}/api
+          NEXT_PUBLIC_APP_URL=https://${{ steps.vars.outputs.domain }}
 
           # Database Configuration (공유 MySQL)
           DB_HOST=kamf-mysql
@@ -206,7 +207,7 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             set -e
-            echo "🚀 Starting deployment to production server..."
+            echo "🚀 Starting deployment to ${{ steps.vars.outputs.environment }} server..."
             echo "📦 Image Tag: ${{ steps.vars.outputs.image_tag }}"
             echo "🌍 Environment: ${{ steps.vars.outputs.environment }}"
             echo "🌐 Domain: ${{ steps.vars.outputs.domain }}"
@@ -218,133 +219,26 @@ jobs:
               echo "❌ .env.deploy file not found!"
               exit 1
             fi
-            chmod +x deploy/scripts/deploy.sh
-            echo "📥 Executing deployment script..."
-            ./deploy/scripts/deploy.sh
-            rm -f .env.deploy
-            echo "✅ Production deployment completed successfully!"
 
-  deploy-dev:
-    name: Deploy to Dev Server
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    if: success() && github.ref == 'refs/heads/dev'
-    outputs:
-      environment: ${{ steps.vars.outputs.environment }}
-      domain: ${{ steps.vars.outputs.domain }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set dev deployment variables
-        id: vars
-        run: |
-          # dev 브랜치에서는 개발 환경 배포
-          DEPLOY_PATH="kamf-dev"
-          DOMAIN="dev.kamf.site"
-          API_PORT="8001"
-          WEB_PORT="3001"
-          DB_NAME="kamf_dev"
-          IMAGE_TAG="dev"
-          ENVIRONMENT="development"
-
-          echo "deploy_path=${DEPLOY_PATH}" >> $GITHUB_OUTPUT
-          echo "domain=${DOMAIN}" >> $GITHUB_OUTPUT
-          echo "api_port=${API_PORT}" >> $GITHUB_OUTPUT
-          echo "web_port=${WEB_PORT}" >> $GITHUB_OUTPUT
-          echo "db_name=${DB_NAME}" >> $GITHUB_OUTPUT
-          echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
-          echo "environment=${ENVIRONMENT}" >> $GITHUB_OUTPUT
-          echo "deployment_time=$(date '+%Y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
-
-      - name: Create dev deployment environment file
-        run: |
-          cat > .env.deploy << EOF
-          # Development Deployment Configuration
-          DOCKER_REGISTRY=${{ secrets.DOCKERHUB_USERNAME }}
-          IMAGE_TAG=${{ steps.vars.outputs.image_tag }}
-          DEPLOY_PATH=${{ steps.vars.outputs.deploy_path }}
-
-          # Environment-specific Configuration
-          NODE_ENV=production
-          API_PORT=${{ steps.vars.outputs.api_port }}
-          WEB_PORT=${{ steps.vars.outputs.web_port }}
-          CORS_ORIGIN=http://${{ steps.vars.outputs.domain }}
-          NEXT_PUBLIC_API_URL=http://${{ steps.vars.outputs.domain }}/api
-          NEXT_PUBLIC_APP_URL=http://${{ steps.vars.outputs.domain }}
-
-          # Database Configuration (공유 MySQL)
-          DB_HOST=kamf-mysql
-          DB_PORT=3306
-          DB_USERNAME=${{ secrets.DB_USERNAME }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_NAME=${{ steps.vars.outputs.db_name }}
-          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-
-          # JWT & Authentication
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          JWT_EXPIRES_IN=1h
-          REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}
-          REFRESH_TOKEN_EXPIRES_IN=7d
-          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-
-          # Twilio SMS Configuration
-          TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }}
-          TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}
-          TWILIO_SERVICE_SID=${{ secrets.TWILIO_SERVICE_SID }}
-
-          # Deployment Metadata
-          DEPLOYMENT_TIME=${{ steps.vars.outputs.deployment_time }}
-          DEPLOYED_BY=${{ github.actor }}
-          COMMIT_SHA=${{ github.sha }}
-          ENVIRONMENT=${{ steps.vars.outputs.environment }}
-          DOMAIN=${{ steps.vars.outputs.domain }}
-          EOF
-
-      - name: Copy deployment files to dev server
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          source: 'deploy/,.env.deploy'
-          target: '/home/${{ secrets.SERVER_USERNAME }}/${{ steps.vars.outputs.deploy_path }}/'
-          strip_components: 0
-          overwrite: true
-
-      - name: Deploy to development server
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          script: |
-            set -e
-            echo "🚀 Starting deployment to development server..."
-            echo "📦 Image Tag: ${{ steps.vars.outputs.image_tag }}"
-            echo "🌍 Environment: ${{ steps.vars.outputs.environment }}"
-            echo "🌐 Domain: ${{ steps.vars.outputs.domain }}"
-            echo "👤 Deployed by: ${{ github.actor }}"
-            echo "🔖 Commit: ${{ github.sha }}"
-
-            cd /home/${{ secrets.SERVER_USERNAME }}/${{ steps.vars.outputs.deploy_path }}
-            if [ ! -f .env.deploy ]; then
-              echo "❌ .env.deploy file not found!"
-              exit 1
+            # 환경에 따라 다른 배포 스크립트 실행
+            if [ "${{ steps.vars.outputs.environment }}" = "production" ]; then
+              chmod +x deploy/scripts/deploy-prod.sh
+              echo "📥 Executing production deployment script..."
+              ./deploy/scripts/deploy-prod.sh
+              echo "✅ Production deployment completed successfully!"
+            else
+              chmod +x deploy/scripts/deploy-dev.sh
+              echo "📥 Executing development deployment script..."
+              ./deploy/scripts/deploy-dev.sh
+              echo "✅ Development deployment completed successfully!"
             fi
-            chmod +x deploy/scripts/deploy.sh
-            echo "📥 Executing deployment script..."
-            ./deploy/scripts/deploy.sh
+
             rm -f .env.deploy
-            echo "✅ Development deployment completed successfully!"
 
   notify:
     name: Notify Build & Deploy Result
     runs-on: ubuntu-latest
-    needs: [build-and-push, deploy, deploy-dev]
+    needs: [build-and-push, deploy]
     if: always()
 
     steps:
