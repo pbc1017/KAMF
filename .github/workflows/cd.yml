@@ -83,8 +83,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ steps.meta.outputs.env_suffix == 'PROD' && 'https://kamf.site/api' || 'https://dev.kamf.site/api' }}
-            NEXT_PUBLIC_APP_URL=${{ steps.meta.outputs.env_suffix == 'PROD' && 'https://kamf.site' || 'https://dev.kamf.site' }}
+            NEXT_PUBLIC_API_URL=https://${{ vars.DOMAIN }}/api
+            NEXT_PUBLIC_APP_URL=https://${{ vars.DOMAIN }}
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
           labels: |
