@@ -1,17 +1,22 @@
-import { HistoryItemDto, HourlyStatsDto } from '@kamf/interface';
-import { Injectable } from '@nestjs/common';
+import { HistoryItemDto } from '@kamf/interface';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, QueryRunner } from 'typeorm';
+import { Repository, QueryRunner, Between } from 'typeorm';
 
 import { TimeService } from '../../common/services/time.service.js';
 import { SafetyCount } from '../../entities/safety-count.entity.js';
 
+import { SafetyCacheService } from './safety-cache.service.js';
+
 @Injectable()
 export class SafetyRepository {
+  private readonly logger = new Logger(SafetyRepository.name);
+
   constructor(
     @InjectRepository(SafetyCount)
     private readonly safetyCountRepository: Repository<SafetyCount>,
-    private readonly timeService: TimeService
+    private readonly timeService: TimeService,
+    private readonly cacheService: SafetyCacheService
   ) {}
 
   /**
@@ -19,21 +24,24 @@ export class SafetyRepository {
    */
   async findByUserAndDate(userId: string, date?: string): Promise<SafetyCount | null> {
     const targetDate = date || this.timeService.getCurrentUTCDate();
+    const startOfDay = `${targetDate} 00:00:00`;
+    const endOfDay = `${targetDate} 23:59:59`;
 
     return this.safetyCountRepository.findOne({
-      where: { userId, date: targetDate },
+      where: {
+        userId,
+        createdAt: Between(new Date(startOfDay), new Date(endOfDay)),
+      },
+      order: { createdAt: 'DESC' }, // 최신 레코드 첫 번째
     });
   }
 
   /**
    * 새로운 SafetyCount 레코드 생성
    */
-  async create(userId: string, date?: string): Promise<SafetyCount> {
-    const targetDate = date || this.timeService.getCurrentUTCDate();
-
+  async create(userId: string): Promise<SafetyCount> {
     const safetyCount = this.safetyCountRepository.create({
       userId,
-      date: targetDate,
       increment: 0,
       decrement: 0,
     });
@@ -55,7 +63,7 @@ export class SafetyRepository {
    * @param totalDecrement 하루 총 퇴장 카운트 (누적)
    * @param queryRunner 트랜잭션용 QueryRunner
    */
-  async upsertCount(
+  async createCount(
     userId: string,
     totalIncrement: number = 0,
     totalDecrement: number = 0,
@@ -65,31 +73,18 @@ export class SafetyRepository {
       ? queryRunner.manager.getRepository(SafetyCount)
       : this.safetyCountRepository;
 
-    const today = this.timeService.getCurrentUTCDate();
-
-    // 기존 레코드 조회 또는 생성
-    let safetyCount = await repository.findOne({
-      where: { userId, date: today },
+    // 항상 새로운 레코드 생성 (매 5초마다)
+    const safetyCount = repository.create({
+      userId,
+      increment: totalIncrement,
+      decrement: totalDecrement,
     });
-
-    if (!safetyCount) {
-      safetyCount = repository.create({
-        userId,
-        date: today,
-        increment: 0,
-        decrement: 0,
-      });
-    }
-
-    // 카운트 업데이트 (하루 총 누적값으로 설정)
-    safetyCount.increment = totalIncrement;
-    safetyCount.decrement = totalDecrement;
 
     return repository.save(safetyCount);
   }
 
   /**
-   * 특정 날짜의 전체 통계 조회
+   * 특정 날짜의 전체 통계 조회 (각 유저의 최신값 합계)
    */
   async getDailyTotalStats(date?: string): Promise<{
     totalIncrement: number;
@@ -98,50 +93,164 @@ export class SafetyRepository {
   }> {
     const targetDate = date || this.timeService.getCurrentUTCDate();
 
-    const result = await this.safetyCountRepository
-      .createQueryBuilder('sc')
-      .select([
-        'SUM(sc.increment) as totalIncrement',
-        'SUM(sc.decrement) as totalDecrement',
-        '(SUM(sc.increment) - SUM(sc.decrement)) as currentInside',
-      ])
-      .where('sc.date = :date', { date: targetDate })
-      .getRawOne();
+    // 각 유저별 최신 레코드를 가져와서 합산 (Raw SQL 사용)
+    const latestRecords = await this.safetyCountRepository.query(
+      `
+      SELECT sc.userId, sc.increment, sc.decrement
+      FROM safety_counts sc
+      WHERE DATE(sc.createdAt) = ?
+        AND sc.createdAt = (
+          SELECT MAX(sc2.createdAt) 
+          FROM safety_counts sc2 
+          WHERE sc2.userId = sc.userId 
+            AND DATE(sc2.createdAt) = ?
+        )
+      GROUP BY sc.userId, sc.increment, sc.decrement
+      `,
+      [targetDate, targetDate]
+    );
+
+    // 집계 계산
+    let totalIncrement = 0;
+    let totalDecrement = 0;
+
+    for (const record of latestRecords) {
+      totalIncrement += parseInt(record.increment) || 0;
+      totalDecrement += parseInt(record.decrement) || 0;
+    }
+
+    const currentInside = totalIncrement - totalDecrement;
 
     return {
-      totalIncrement: parseInt(result?.totalIncrement) || 0,
-      totalDecrement: parseInt(result?.totalDecrement) || 0,
-      currentInside: parseInt(result?.currentInside) || 0,
+      totalIncrement,
+      totalDecrement,
+      currentInside: Math.max(0, currentInside), // 음수 방지
     };
   }
 
   /**
-   * 시간대별 통계 조회 (가상 데이터 - 실제로는 더 복잡한 로직 필요)
+   * 분단위 통계 조회 (최근 6시간의 완료된 분만) - 캐시 적용
    */
-  async getHourlyStats(date?: string): Promise<HourlyStatsDto[]> {
+  async getMinuteStats(
+    date?: string
+  ): Promise<{ minute: string; currentInside: number; increment: number; decrement: number }[]> {
     const targetDate = date || this.timeService.getCurrentUTCDate();
-    const hourlySlots = this.timeService.getHourlyTimeSlots(targetDate);
+    const now = new Date();
+    const currentMinute = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      now.getHours(),
+      now.getMinutes()
+    );
 
-    // 현재는 균등 분배로 가상 데이터 생성
-    // 실제로는 createdAt 필드를 기반으로 시간대별 집계가 필요
-    const dailyStats = await this.getDailyTotalStats(targetDate);
-    const hourlyIncrement = Math.floor(dailyStats.totalIncrement / 24);
-    const hourlyDecrement = Math.floor(dailyStats.totalDecrement / 24);
+    // 최근 6시간의 완료된 분들만 생성 (메모리 최적화)
+    const completedMinutes: Date[] = [];
+    const sixHoursAgo = new Date(currentMinute.getTime() - 6 * 60 * 60 * 1000); // 6시간 전
+    const startOfDay = new Date(`${targetDate}T00:00:00Z`);
 
-    let cumulativeTotal = 0;
+    // 6시간 전과 하루 시작 중 더 늦은 시간을 시작점으로 설정
+    const startTime = sixHoursAgo > startOfDay ? sixHoursAgo : startOfDay;
 
-    return hourlySlots.map(slot => {
-      const increment = slot.hour <= this.timeService.getCurrentUTCHour() ? hourlyIncrement : 0;
-      const decrement = slot.hour <= this.timeService.getCurrentUTCHour() ? hourlyDecrement : 0;
-      cumulativeTotal += increment - decrement;
+    for (
+      let minute = new Date(startTime);
+      minute < currentMinute;
+      minute.setMinutes(minute.getMinutes() + 1)
+    ) {
+      completedMinutes.push(new Date(minute));
+    }
 
-      return {
-        hour: slot.hour,
-        increment,
-        decrement,
-        total: Math.max(0, cumulativeTotal),
-      };
-    });
+    const results: {
+      minute: string;
+      currentInside: number;
+      increment: number;
+      decrement: number;
+    }[] = [];
+
+    // 각 완료된 분에 대해 캐시 확인 후 DB 조회
+    for (const minuteTime of completedMinutes) {
+      const minuteString = minuteTime.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
+
+      // 1. 캐시에서 조회 시도
+      const cached = await this.cacheService.getMinuteStats(targetDate, minuteString);
+
+      if (cached) {
+        // count가 0보다 큰 시간만 포함
+        if (cached.currentInside > 0 || cached.increment > 0) {
+          results.push({
+            minute: cached.minute,
+            currentInside: cached.currentInside,
+            increment: cached.increment,
+            decrement: cached.decrement,
+          });
+        }
+        continue;
+      }
+
+      // 2. 캐시 미스: DB에서 계산
+      const computedStats = await this.computeMinuteStats(targetDate, minuteTime);
+
+      // 3. 결과를 캐시에 저장
+      await this.cacheService.setMinuteStats(targetDate, minuteString, computedStats);
+
+      // count가 0보다 큰 시간만 포함
+      if (computedStats.currentInside > 0 || computedStats.increment > 0) {
+        results.push(computedStats);
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * 특정 분의 통계를 DB에서 계산 (캐시용)
+   */
+  private async computeMinuteStats(
+    targetDate: string,
+    minuteTime: Date
+  ): Promise<{ minute: string; currentInside: number; increment: number; decrement: number }> {
+    const minuteString = minuteTime.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
+
+    // 🔧 핵심 수정: 해당 분의 끝 시간 (다음 분 시작 직전)
+    const nextMinute = new Date(minuteTime);
+    nextMinute.setMinutes(nextMinute.getMinutes() + 1);
+
+    // 해당 분까지의 각 유저별 최신 레코드 조회
+    const latestRecords = await this.safetyCountRepository.query(
+      `
+      SELECT sc.userId, sc.increment, sc.decrement, sc.createdAt
+      FROM safety_counts sc
+      WHERE sc.createdAt < ? 
+        AND DATE(sc.createdAt) = ?
+        AND sc.createdAt = (
+          SELECT MAX(sc2.createdAt) 
+          FROM safety_counts sc2 
+          WHERE sc2.userId = sc.userId 
+            AND sc2.createdAt < ? 
+            AND DATE(sc2.createdAt) = ?
+        )
+      GROUP BY sc.userId, sc.increment, sc.decrement, sc.createdAt
+      `,
+      [nextMinute, targetDate, nextMinute, targetDate]
+    );
+
+    // 집계 계산
+    let totalIncrement = 0;
+    let totalDecrement = 0;
+
+    for (const record of latestRecords) {
+      totalIncrement += parseInt(record.increment) || 0;
+      totalDecrement += parseInt(record.decrement) || 0;
+    }
+
+    const currentInside = totalIncrement - totalDecrement;
+
+    return {
+      minute: minuteString,
+      currentInside: Math.max(0, currentInside), // 음수 방지
+      increment: totalIncrement,
+      decrement: totalDecrement,
+    };
   }
 
   /**
@@ -260,6 +369,11 @@ export class SafetyRepository {
    * 특정 날짜의 모든 레코드 삭제 (관리자용)
    */
   async deleteByDate(date: string): Promise<void> {
-    await this.safetyCountRepository.delete({ date });
+    const startOfDay = `${date} 00:00:00`;
+    const endOfDay = `${date} 23:59:59`;
+
+    await this.safetyCountRepository.delete({
+      createdAt: Between(new Date(startOfDay), new Date(endOfDay)),
+    });
   }
 }

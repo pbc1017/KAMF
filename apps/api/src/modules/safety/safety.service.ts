@@ -5,8 +5,8 @@ import {
   HistoryResponseDto,
   UserStatsDto,
 } from '@kamf/interface';
-import { Injectable, BadRequestException, ConflictException, Logger } from '@nestjs/common';
-import { DataSource, QueryFailedError } from 'typeorm';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 
 import { TimeService } from '../../common/services/time.service.js';
 
@@ -34,70 +34,45 @@ export class SafetyService {
       throw new BadRequestException('하루 총 카운트는 1000개 이하여야 합니다');
     }
 
-    let retryCount = 0;
-    const maxRetries = 3;
+    const queryRunner = this.dataSource.createQueryRunner();
 
-    while (retryCount < maxRetries) {
-      const queryRunner = this.dataSource.createQueryRunner();
+    try {
       await queryRunner.connect();
       await queryRunner.startTransaction();
+      // 새 레코드 생성 (동시성 충돌 없음)
+      await this.safetyRepository.createCount(userId, increment, decrement, queryRunner);
 
-      try {
-        // 트랜잭션 내에서 카운트 업데이트
-        await this.safetyRepository.upsertCount(userId, increment, decrement, queryRunner);
+      await queryRunner.commitTransaction();
 
-        await queryRunner.commitTransaction();
+      // 업데이트 후 현재 통계 조회
+      const [totalStats, userStats] = await Promise.all([
+        this.safetyRepository.getDailyTotalStats(),
+        this.getUserStats(userId),
+      ]);
 
-        // 업데이트 후 현재 통계 조회
-        const [totalStats, userStats] = await Promise.all([
-          this.safetyRepository.getDailyTotalStats(),
-          this.getUserStats(userId),
-        ]);
+      // 카운트 생성 완료 (로그 제거로 성능 최적화)
 
-        this.logger.log(
-          `User ${userId} set daily totals: increment=${increment}, decrement=${decrement}. Current inside: ${totalStats.currentInside}`
-        );
-
-        return {
-          success: true,
-          currentTotal: totalStats.currentInside,
-          userStats,
-          todayStats: {
-            totalIncrement: totalStats.totalIncrement,
-            totalDecrement: totalStats.totalDecrement,
-            currentInside: totalStats.currentInside,
-          },
-        };
-      } catch (error) {
+      return {
+        success: true,
+        currentTotal: totalStats.currentInside,
+        userStats,
+        todayStats: {
+          totalIncrement: totalStats.totalIncrement,
+          totalDecrement: totalStats.totalDecrement,
+          currentInside: totalStats.currentInside,
+        },
+      };
+    } catch (error) {
+      // 트랜잭션이 시작된 경우에만 롤백
+      if (queryRunner.isTransactionActive) {
         await queryRunner.rollbackTransaction();
+      }
 
-        if (error instanceof QueryFailedError) {
-          // 낙관적 락 충돌이나 유니크 제약 조건 위반 시 재시도
-          if (
-            error.message.includes('version') ||
-            error.message.includes('Duplicate entry') ||
-            error.driverError?.errno === 1062
-          ) {
-            retryCount++;
-            this.logger.warn(
-              `Optimistic lock conflict for user ${userId}, retrying... (${retryCount}/${maxRetries})`
-            );
-
-            if (retryCount < maxRetries) {
-              // 짧은 지연 후 재시도
-              await new Promise(resolve => setTimeout(resolve, Math.random() * 100 + 50));
-              continue;
-            } else {
-              throw new ConflictException(
-                '동시에 너무 많은 요청이 발생했습니다. 잠시 후 다시 시도해주세요.'
-              );
-            }
-          }
-        }
-
-        this.logger.error(`Error updating count for user ${userId}:`, error);
-        throw error;
-      } finally {
+      this.logger.error(`Error creating count record for user ${userId}:`, error);
+      throw error;
+    } finally {
+      // 연결 해제
+      if (!queryRunner.isReleased) {
         await queryRunner.release();
       }
     }
@@ -115,10 +90,10 @@ export class SafetyService {
     }
 
     try {
-      const [totalStats, userStats, hourlyStats] = await Promise.all([
+      const [totalStats, userStats, minuteStats] = await Promise.all([
         this.safetyRepository.getDailyTotalStats(targetDate),
         this.getUserStats(userId, targetDate),
-        this.safetyRepository.getHourlyStats(targetDate),
+        this.safetyRepository.getMinuteStats(targetDate),
       ]);
 
       return {
@@ -126,7 +101,7 @@ export class SafetyService {
         currentTotal: totalStats.currentInside,
         todayStats: totalStats,
         userStats,
-        hourlyStats,
+        minuteStats,
       };
     } catch (error) {
       this.logger.error(`Error getting stats for user ${userId} on ${targetDate}:`, error);

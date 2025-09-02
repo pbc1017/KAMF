@@ -96,7 +96,7 @@ export class TodayStatsDto implements TodayStats {
 }
 
 /**
- * 시간대별 통계 DTO (Interface)
+ * 시간대별 통계 DTO (Interface) - 호환성 유지
  */
 export interface HourlyStats {
   /** 시간 (0-23) */
@@ -110,7 +110,7 @@ export interface HourlyStats {
 }
 
 /**
- * 시간대별 통계 DTO (NestJS Class)
+ * 시간대별 통계 DTO (NestJS Class) - 호환성 유지
  */
 export class HourlyStatsDto implements HourlyStats {
   @ApiProperty({ description: '시간 (0-23)', example: 14 })
@@ -124,6 +124,37 @@ export class HourlyStatsDto implements HourlyStats {
 
   @ApiProperty({ description: '해당 시간까지의 누적 인원', example: 35 })
   total: number;
+}
+
+/**
+ * 분단위 통계 DTO (Interface)
+ */
+export interface MinuteStats {
+  /** 분 시간 (YYYY-MM-DDTHH:mm) */
+  minute: string;
+  /** 해당 시점까지의 현재 인원 */
+  currentInside: number;
+  /** 해당 시점까지의 총 입장 */
+  increment: number;
+  /** 해당 시점까지의 총 퇴장 */
+  decrement: number;
+}
+
+/**
+ * 분단위 통계 DTO (NestJS Class)
+ */
+export class MinuteStatsDto implements MinuteStats {
+  @ApiProperty({ description: '분 시간 (YYYY-MM-DDTHH:mm)', example: '2025-01-20T14:30' })
+  minute: string;
+
+  @ApiProperty({ description: '해당 시점까지의 현재 인원', example: 35 })
+  currentInside: number;
+
+  @ApiProperty({ description: '해당 시점까지의 총 입장', example: 120 })
+  increment: number;
+
+  @ApiProperty({ description: '해당 시점까지의 총 퇴장', example: 85 })
+  decrement: number;
 }
 
 /**
@@ -169,8 +200,8 @@ export interface StatsResponse {
   todayStats: TodayStats;
   /** 사용자 개인 통계 */
   userStats: UserStats;
-  /** 시간대별 통계 */
-  hourlyStats: HourlyStats[];
+  /** 분단위 통계 */
+  minuteStats: MinuteStats[];
 }
 
 /**
@@ -190,10 +221,10 @@ export class StatsResponseDto implements StatsResponse {
   userStats: UserStatsDto;
 
   @ApiProperty({
-    description: '시간대별 통계',
-    type: [HourlyStatsDto],
+    description: '분단위 통계',
+    type: [MinuteStatsDto],
   })
-  hourlyStats: HourlyStatsDto[];
+  minuteStats: MinuteStatsDto[];
 }
 
 /**
