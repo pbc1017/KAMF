@@ -38,11 +38,23 @@ export default function Header() {
     closeMenu();
   };
 
+  // SAFETY 역할 확인
+  const hasSafetyRole = user?.roles?.includes('safety') || false;
+
   // 네비게이션 아이템 생성
   const navigationItems = [
     ...basicNavigationItems,
     ...(isAuthenticated
       ? [
+          // SAFETY 역할을 가진 사용자에게만 안전 관리 메뉴 표시
+          ...(hasSafetyRole
+            ? [
+                {
+                  title: '안전 관리',
+                  url: '/safety',
+                },
+              ]
+            : []),
           {
             title: '마이페이지',
             url: '/mypage',
