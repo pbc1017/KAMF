@@ -136,6 +136,8 @@ export interface CountResponse {
   currentTotal: number;
   /** 사용자 통계 */
   userStats: UserStats;
+  /** 오늘 통계 */
+  todayStats: TodayStats;
 }
 
 /**
@@ -150,6 +152,9 @@ export class CountResponseDto implements CountResponse {
 
   @ApiProperty({ description: '사용자 통계', type: UserStatsDto })
   userStats: UserStatsDto;
+
+  @ApiProperty({ description: '오늘 통계', type: TodayStatsDto })
+  todayStats: TodayStatsDto;
 }
 
 /**

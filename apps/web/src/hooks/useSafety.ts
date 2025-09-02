@@ -110,30 +110,39 @@ export function useUpdateSafetyCount() {
       toast.error('카운트 업데이트에 실패했습니다. 다시 시도해주세요.');
     },
     onSuccess: (data: CountResponseDto) => {
-      // 성공 시 관련 쿼리들 무효화하여 서버에서 최신 데이터 다시 가져오기
-      queryClient.invalidateQueries({ queryKey: SAFETY_QUERY_KEYS.stats });
+      // count 응답으로 받은 데이터로 stats 캐시 직접 업데이트 (invalidate 대신)
+      const currentStatsData = queryClient.getQueryData<StatsResponseDto>(SAFETY_QUERY_KEYS.stats);
+
+      if (currentStatsData) {
+        const updatedStatsData: StatsResponseDto = {
+          ...currentStatsData,
+          todayStats: data.todayStats,
+          userStats: data.userStats,
+          currentTotal: data.currentTotal,
+        };
+
+        queryClient.setQueryData(SAFETY_QUERY_KEYS.stats, updatedStatsData);
+      }
+
+      // history는 필요시에만 무효화 (카운트 변경 시 히스토리도 업데이트되므로)
       queryClient.invalidateQueries({ queryKey: SAFETY_QUERY_KEYS.history });
 
-      toast.success(`업데이트 완료! 현재 인원: ${data.currentTotal}명`);
-    },
-    onSettled: () => {
-      // 성공/실패 여부와 관계없이 통계 쿼리 무효화
-      queryClient.invalidateQueries({ queryKey: SAFETY_QUERY_KEYS.stats });
+      // 토스트는 SafetyControls에서 동기화 시에만 표시
     },
   });
 }
 
 /**
- * 안전 통계 조회 훅 (실시간 업데이트)
+ * 안전 통계 조회 훅 (1분 간격 업데이트)
  */
 export function useSafetyStats(date?: string) {
   return useQuery({
     queryKey: [...SAFETY_QUERY_KEYS.stats, date],
     queryFn: () => getSafetyStats(date),
-    refetchInterval: 5000, // 5초마다 자동 새로고침
+    refetchInterval: 60000, // 1분마다 자동 새로고침 (카운트 동기화는 5초마다)
     refetchIntervalInBackground: true, // 백그라운드에서도 새로고침
     refetchOnWindowFocus: true, // 윈도우 포커스 시 새로고침
-    staleTime: 2000, // 2초간은 신선한 데이터로 간주
+    staleTime: 30000, // 30초간은 신선한 데이터로 간주
     retry: 3, // 실패 시 3번까지 재시도
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // 지수 백오프
   });

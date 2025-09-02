@@ -1,7 +1,8 @@
 'use client';
 
+import type { TodayStats, UserStats } from '@kamf/interface';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import SafetyControls from '@/components/safety/SafetyControls';
 import { FullScreenLoading } from '@/components/ui/LoadingSpinner';
@@ -16,11 +17,32 @@ export default function SafetyPage() {
   const { isLoading: authGuardLoading } = useRequireAuth();
   const { user, isLoading: userLoading } = useAuth();
 
-  // Safety 통계 데이터 조회 (실시간 업데이트)
+  // Safety 통계 데이터 조회 (초기 데이터)
   const { data: stats, isLoading: statsLoading, error: statsError } = useSafetyStats();
+
+  // Count 응답에서 받은 최신 통계 데이터 (우선순위 높음)
+  const [countStats, setCountStats] = useState<{
+    todayStats: TodayStats;
+    userStats: UserStats;
+    currentTotal: number;
+  } | null>(null);
 
   // SAFETY 역할 확인
   const hasSafetyRole = user?.roles?.includes('safety') || false;
+
+  // 표시할 데이터 결정 (Count 응답 데이터 우선, 없으면 Stats API 데이터)
+  const displayStats = countStats || stats;
+  const isLoading = statsLoading && !countStats;
+
+  // Count 응답 데이터 업데이트 핸들러
+  const handleStatsUpdate = (newStats: {
+    todayStats: TodayStats;
+    userStats: UserStats;
+    currentTotal: number;
+  }) => {
+    console.log('🔄 Updated stats from count response:', newStats);
+    setCountStats(newStats);
+  };
 
   useEffect(() => {
     // 사용자 로딩이 완료되고 SAFETY 역할이 없으면 홈으로 리다이렉트
@@ -93,7 +115,7 @@ export default function SafetyPage() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
               <h2 className="text-xl font-semibold text-gray-700 mb-4">현재 인원수</h2>
-              {statsLoading ? (
+              {isLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                   <span className="ml-3 text-gray-600">로딩 중...</span>
@@ -101,12 +123,19 @@ export default function SafetyPage() {
               ) : (
                 <>
                   <div className="text-6xl font-bold text-blue-600 mb-2">
-                    {stats?.currentTotal ?? 0}
+                    {displayStats?.currentTotal ?? 0}
                   </div>
                   <p className="text-gray-500 text-lg">명</p>
-                  {stats && (
+                  {displayStats && (
                     <div className="mt-4 text-sm text-gray-400">
-                      마지막 업데이트: {new Date().toLocaleTimeString('ko-KR')}
+                      {countStats ? (
+                        <>
+                          <span className="text-green-600 font-medium">● 실시간</span>
+                          <span className="ml-2">카운트 동기화 완료</span>
+                        </>
+                      ) : (
+                        <>마지막 업데이트: {new Date().toLocaleTimeString('ko-KR')}</>
+                      )}
                     </div>
                   )}
                 </>
@@ -115,12 +144,12 @@ export default function SafetyPage() {
           </div>
 
           {/* In/Out 컨트롤 영역 */}
-          <SafetyControls />
+          <SafetyControls onStatsUpdate={handleStatsUpdate} />
 
           {/* 오늘 통계 카드 */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">오늘 통계</h3>
-            {statsLoading ? (
+            {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-300"></div>
                 <span className="ml-2 text-gray-500">로딩 중...</span>
@@ -130,20 +159,20 @@ export default function SafetyPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">총 입장</span>
                   <span className="text-2xl font-bold text-green-600">
-                    {stats?.todayStats.totalIncrement ?? 0}
+                    {displayStats?.todayStats.totalIncrement ?? 0}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">총 퇴장</span>
                   <span className="text-2xl font-bold text-red-600">
-                    {stats?.todayStats.totalDecrement ?? 0}
+                    {displayStats?.todayStats.totalDecrement ?? 0}
                   </span>
                 </div>
                 <div className="border-t pt-4">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 font-medium">현재 내부 인원</span>
                     <span className="text-2xl font-bold text-blue-600">
-                      {stats?.todayStats.currentInside ?? 0}
+                      {displayStats?.todayStats.currentInside ?? 0}
                     </span>
                   </div>
                 </div>
@@ -155,7 +184,7 @@ export default function SafetyPage() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-700 mb-4">내 기여 통계</h3>
-              {statsLoading ? (
+              {isLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-300"></div>
                   <span className="ml-2 text-gray-500">로딩 중...</span>
@@ -164,19 +193,19 @@ export default function SafetyPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="text-center">
                     <div className="text-3xl font-bold text-green-600 mb-2">
-                      {stats?.userStats.increment ?? 0}
+                      {displayStats?.userStats.increment ?? 0}
                     </div>
                     <p className="text-gray-600">내가 센 입장</p>
                   </div>
                   <div className="text-center">
                     <div className="text-3xl font-bold text-red-600 mb-2">
-                      {stats?.userStats.decrement ?? 0}
+                      {displayStats?.userStats.decrement ?? 0}
                     </div>
                     <p className="text-gray-600">내가 센 퇴장</p>
                   </div>
                   <div className="text-center">
                     <div className="text-3xl font-bold text-blue-600 mb-2">
-                      {stats?.userStats.netCount ?? 0}
+                      {displayStats?.userStats.netCount ?? 0}
                     </div>
                     <p className="text-gray-600">순 기여도</p>
                   </div>

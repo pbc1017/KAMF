@@ -62,6 +62,11 @@ export class SafetyService {
           success: true,
           currentTotal: totalStats.currentInside,
           userStats,
+          todayStats: {
+            totalIncrement: totalStats.totalIncrement,
+            totalDecrement: totalStats.totalDecrement,
+            currentInside: totalStats.currentInside,
+          },
         };
       } catch (error) {
         await queryRunner.rollbackTransaction();
