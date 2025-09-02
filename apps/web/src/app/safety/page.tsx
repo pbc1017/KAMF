@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
+import SafetyControls from '@/components/safety/SafetyControls';
 import { FullScreenLoading } from '@/components/ui/LoadingSpinner';
 import { useRequireAuth } from '@/hooks/useAuthGuard';
 import { useSafetyStats } from '@/hooks/useSafety';
@@ -113,24 +114,8 @@ export default function SafetyPage() {
             </div>
           </div>
 
-          {/* In/Out 컨트롤 영역 (4단계에서 구현 예정) */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">인원 카운트</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {/* 임시 버튼들 - 4단계에서 실제 구현 */}
-              <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-6 px-4 rounded-xl text-xl transition-colors duration-200">
-                IN
-                <div className="text-sm mt-1">입장</div>
-              </button>
-              <button className="bg-red-600 hover:bg-red-700 text-white font-semibold py-6 px-4 rounded-xl text-xl transition-colors duration-200">
-                OUT
-                <div className="text-sm mt-1">퇴장</div>
-              </button>
-            </div>
-            <div className="mt-4 text-center text-gray-500 text-sm">
-              4단계에서 실제 기능이 구현됩니다
-            </div>
-          </div>
+          {/* In/Out 컨트롤 영역 */}
+          <SafetyControls />
 
           {/* 오늘 통계 카드 */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
