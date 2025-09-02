@@ -7,6 +7,7 @@ import { AppService } from './app.service.js';
 import databaseConfig from './config/database.config.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { BoothModule } from './modules/booth/booth.module.js';
+import { SafetyModule } from './modules/safety/safety.module.js';
 import { StageModule } from './modules/stage/stage.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 
@@ -24,6 +25,7 @@ import { UsersModule } from './modules/users/users.module.js';
     AuthModule,
     UsersModule,
     BoothModule,
+    SafetyModule,
     StageModule,
   ],
   controllers: [AppController],
