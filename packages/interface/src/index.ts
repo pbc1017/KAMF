@@ -8,3 +8,4 @@ export * from './types/auth.type.js';
 export * from './dtos/auth.dto.js';
 export * from './dtos/festival.dto.js';
 export * from './dtos/user.dto.js';
+export * from './dtos/safety.dto.js';

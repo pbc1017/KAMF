@@ -24,7 +24,13 @@
     "format:check": "dotenv -e ../../.env -- prettier --check ."
   },
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "@nestjs/swagger": "^7.4.2",
+    "class-validator": "^0.14.1"
+  },
+  "peerDependencies": {
+    "@nestjs/swagger": "^7.0.0",
+    "class-validator": "^0.14.0"
   },
   "publishConfig": {
     "access": "restricted"
