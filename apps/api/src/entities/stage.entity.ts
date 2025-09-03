@@ -40,4 +40,11 @@ export class Stage extends BaseEntity {
   })
   @ApiProperty({ description: '축제 날짜', enum: festival.FestivalDay })
   day: festival.FestivalDay;
+
+  @Column({
+    type: 'enum',
+    enum: festival.StageType,
+  })
+  @ApiProperty({ description: '무대 타입', enum: festival.StageType })
+  stageType: festival.StageType;
 }
