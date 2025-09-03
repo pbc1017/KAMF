@@ -60,7 +60,7 @@ export function BoothMapViewer({ booths, selectedBoothNumber, onBoothClick }: Bo
         {isImageLoaded &&
           boothPositions.map(({ booth, position }) => {
             const isSelected = selectedBoothNumber === booth.boothNumber;
-            const shouldShowVisually = !selectedBoothNumber || isSelected; // 시각적으로 보여줄지 결정
+            const shouldShowVisually = selectedBoothNumber && isSelected; // 선택된 부스가 있고, 해당 부스인 경우에만 표시
 
             return (
               <div
