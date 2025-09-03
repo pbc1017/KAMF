@@ -1,6 +1,7 @@
 # KAMF 코드베이스 구조
 
 ## 📁 모노레포 최상위 구조
+
 ```
 kamf/
 ├── apps/                      # 애플리케이션들
@@ -20,6 +21,7 @@ kamf/
 ```
 
 ## 🌐 웹 앱 구조 (apps/web/)
+
 ```
 web/
 ├── src/
@@ -46,6 +48,7 @@ web/
 ```
 
 ## 🔧 API 서버 구조 (apps/api/)
+
 ```
 api/
 ├── src/
@@ -78,6 +81,7 @@ api/
 ```
 
 ## 📦 인터페이스 패키지 구조 (packages/interface/)
+
 ```
 interface/
 ├── src/
@@ -96,6 +100,7 @@ interface/
 ```
 
 ## 🐳 배포 구조 (deploy/)
+
 ```
 deploy/
 ├── docker-compose.yml        # 기본 Docker 설정
@@ -113,11 +118,12 @@ deploy/
 ```
 
 ## 📊 2024-kamf-safety 별도 프로젝트
+
 ```
 2024-kamf-safety/            # 2024년도 안전 관련 별도 구현
 ├── packages/
 │   ├── api/                 # NestJS API (Drizzle ORM)
-│   ├── web/                 # Next.js 웹앱  
+│   ├── web/                 # Next.js 웹앱
 │   └── interface/           # 공유 인터페이스
 └── resource/                # 분석 자료 및 덤프 파일
 ```
@@ -125,21 +131,25 @@ deploy/
 ## 🔍 주요 디렉토리별 역할
 
 ### 인증 및 사용자 관리
+
 - `apps/api/src/modules/auth/`: JWT 토큰, SMS 인증
 - `apps/api/src/modules/users/`: 사용자 CRUD, 역할 관리
 - `apps/web/src/components/auth/`: 로그인 UI 컴포넌트
 
 ### 축제 관리
+
 - `apps/api/src/modules/booth/`: 부스 정보 관리
 - `apps/api/src/modules/stage/`: 스테이지 정보 관리
 - `apps/web/src/app/booth/`, `apps/web/src/app/stages/`: 관리 UI
 
-### 안전 모니터링  
+### 안전 모니터링
+
 - `apps/api/src/modules/safety/`: 실시간 카운트, 캐싱
 - `apps/web/src/app/safety/`: 모니터링 대시보드
 - `apps/web/src/components/safety/`: 차트, 컨트롤 UI
 
 ### 공통 기능
+
 - `packages/interface/`: 모든 앱에서 사용하는 타입 정의
 - `apps/api/src/common/`: 가드, 데코레이터, 유틸리티
 - `apps/web/src/components/ui/`: 재사용 가능한 UI 컴포넌트

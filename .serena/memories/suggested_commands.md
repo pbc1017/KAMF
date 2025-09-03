@@ -3,6 +3,7 @@
 ## 🚀 프로젝트 설정 및 시작
 
 ### 초기 설정
+
 ```bash
 # 의존성 설치
 pnpm install
@@ -18,9 +19,11 @@ pnpm build
 ```
 
 ### 개발 서버 실행
+
 ```bash
 # 모든 앱 동시 실행 (web + api)
 pnpm dev
+
 
 # 개별 앱 실행
 pnpm --filter @kamf/web dev     # 웹: http://localhost:3000
@@ -34,17 +37,19 @@ pnpm api dev                    # API만
 ## 🏗️ 빌드 및 배포
 
 ### 빌드
+
 ```bash
 # 전체 빌드
 pnpm build
 
-# 개별 빌드  
+# 개별 빌드
 pnpm --filter @kamf/web build
 pnpm --filter @kamf/api build
 pnpm --filter @kamf/interface build
 ```
 
 ### 프로덕션 실행
+
 ```bash
 # 전체 시작
 pnpm start
@@ -57,11 +62,12 @@ pnpm --filter @kamf/api start
 ## 🗄️ 데이터베이스 관리
 
 ### Docker 기반 MySQL
+
 ```bash
 # 데이터베이스 시작
 pnpm db:up
 
-# 데이터베이스 중지  
+# 데이터베이스 중지
 pnpm db:down
 
 # 데이터베이스 재시작
@@ -81,6 +87,7 @@ pnpm db:status
 ```
 
 ### TypeORM 마이그레이션
+
 ```bash
 # 마이그레이션 생성 (엔티티 변경사항 기반)
 pnpm migration:generate -- src/migrations/YourMigrationName
@@ -101,6 +108,7 @@ pnpm migration:show
 ## 🧹 코드 품질 관리
 
 ### 린팅
+
 ```bash
 # 전체 프로젝트 린트 검사
 pnpm lint
@@ -114,6 +122,7 @@ pnpm --filter @kamf/api lint
 ```
 
 ### 포매팅
+
 ```bash
 # 전체 프로젝트 포맷
 pnpm format
@@ -126,6 +135,7 @@ pnpm --filter @kamf/web format
 ```
 
 ## 🧪 테스트 (API 전용)
+
 ```bash
 # 단위 테스트 실행
 pnpm --filter @kamf/api test
@@ -144,6 +154,7 @@ pnpm --filter @kamf/api test:debug
 ```
 
 ## 🧽 정리 및 유지보수
+
 ```bash
 # 전체 정리 (node_modules, dist, .next 등)
 pnpm clean
@@ -155,11 +166,12 @@ pnpm --filter @kamf/interface clean
 ```
 
 ## 🖥️ Darwin (macOS) 시스템 유틸리티
+
 ```bash
 # 파일 검색
 find . -name "*.ts" -type f
 
-# 내용 검색  
+# 내용 검색
 grep -r "searchterm" src/
 
 # 디렉토리 구조 확인
@@ -180,6 +192,7 @@ ls -la
 ```
 
 ## 🔍 개발 유틸리티
+
 ```bash
 # API 문서 확인 (서버 실행 후)
 open http://localhost:3001/api
@@ -199,6 +212,7 @@ pnpm --filter @kamf/api add package-name
 ```
 
 ## 📦 Docker 배포 (선택사항)
+
 ```bash
 # 로컬 Docker 환경
 cd deploy
@@ -207,6 +221,6 @@ docker-compose -f docker-compose.yml -f docker-compose.local.yml up
 # 개발 환경 배포
 ./scripts/deploy-dev.sh
 
-# 프로덕션 배포  
+# 프로덕션 배포
 ./scripts/deploy-prod.sh
 ```
