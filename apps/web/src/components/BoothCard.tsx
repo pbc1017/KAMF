@@ -1,6 +1,7 @@
 'use client';
 
 import { Booth, Zone } from '@kamf/interface/types/festival.type.js';
+import { forwardRef } from 'react';
 
 interface BoothCardProps {
   booth: Booth;
@@ -43,18 +44,17 @@ function highlightText(text: string, query: string) {
   );
 }
 
-export function BoothCard({
-  booth,
-  searchQuery = '',
-  isSelected = false,
-  onClick,
-}: BoothCardProps) {
+export const BoothCard = forwardRef<HTMLDivElement, BoothCardProps>(function BoothCard(
+  { booth, searchQuery = '', isSelected = false, onClick },
+  ref
+) {
   const handleClick = () => {
     onClick?.(booth.boothNumber);
   };
 
   return (
     <div
+      ref={ref}
       className={`relative card-purple card-purple-hover p-8 group cursor-pointer transition-all duration-300 ${
         isSelected ? 'ring-2 ring-purple-400 bg-purple-800/40 scale-[1.02]' : 'hover:scale-[1.01]'
       }`}
@@ -103,4 +103,4 @@ export function BoothCard({
       )}
     </div>
   );
-}
+});
