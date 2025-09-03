@@ -90,7 +90,7 @@ function ZonePageContent({ zone }: { zone: Zone }) {
       {/* Zone 제목 섹션 */}
       <div className={`bg-gradient-to-r ${currentZoneInfo.bgGradient} shadow-xl`}>
         <div className="max-w-4xl mx-auto px-6 py-16">
-          <div className="text-center animate-float">
+          <div className="text-center">
             <h1 className="text-6xl font-bold text-white mb-6">{currentZoneInfo.nameKr}</h1>
             <p className="text-2xl text-white/90 font-medium">{currentZoneInfo.nameEn}</p>
           </div>

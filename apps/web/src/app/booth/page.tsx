@@ -60,7 +60,7 @@ function BoothListContent() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* 헤더 */}
         <div className="text-center mb-12">
-          <div className="animate-float">
+          <div>
             <h1 className="text-6xl font-bold text-white mb-6">
               KAMF <span className="text-purple-gradient">부스</span>
             </h1>

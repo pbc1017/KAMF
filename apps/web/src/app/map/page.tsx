@@ -94,7 +94,7 @@ export default function MapPage() {
     <main className="min-h-screen bg-purple-organic organic-overlay">
       {/* 헤더 */}
       <div className="text-center py-16">
-        <div className="animate-float">
+        <div>
           <h1 className="text-6xl font-bold text-white mb-6">
             KAMF <span className="text-purple-gradient">축제 지도</span>
           </h1>

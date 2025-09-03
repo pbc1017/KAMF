@@ -87,7 +87,7 @@ function StagesPageContent() {
       <div className="max-w-4xl mx-auto px-4">
         {/* 헤더 */}
         <div className="text-center mb-12">
-          <div className="animate-float">
+          <div>
             <h1 className="text-6xl font-bold text-white mb-6">
               <span className="text-purple-gradient">무대</span> 프로그램
             </h1>
