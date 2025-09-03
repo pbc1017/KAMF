@@ -15,7 +15,7 @@ export class BoothService {
   async findAll(): Promise<Booth[]> {
     return this.boothRepository.find({
       order: {
-        id: 'ASC',
+        boothNumber: 'ASC',
       },
     });
   }
@@ -24,7 +24,7 @@ export class BoothService {
     return this.boothRepository.find({
       where: { zone },
       order: {
-        id: 'ASC',
+        boothNumber: 'ASC',
       },
     });
   }
