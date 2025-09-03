@@ -5,21 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { useAuth } from '@/providers/AuthProvider';
-
-const basicNavigationItems = [
-  {
-    title: '지도',
-    url: '/map',
-  },
-  {
-    title: '부스',
-    url: '/booth',
-  },
-  {
-    title: '무대',
-    url: '/stages',
-  },
-];
+import { getTodayStagesUrl } from '@/utils/stages';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -40,6 +26,22 @@ export default function Header() {
 
   // SAFETY 역할 확인
   const hasSafetyRole = user?.roles?.includes('safety') || false;
+
+  // 기본 네비게이션 아이템
+  const basicNavigationItems = [
+    {
+      title: '지도',
+      url: '/map',
+    },
+    {
+      title: '부스',
+      url: '/booth',
+    },
+    {
+      title: '무대',
+      url: getTodayStagesUrl(),
+    },
+  ];
 
   // 네비게이션 아이템 생성
   const navigationItems = [

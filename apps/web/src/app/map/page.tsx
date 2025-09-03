@@ -1,12 +1,14 @@
 import Link from 'next/link';
 
+import { getTodayStagesUrl } from '@/utils/stages';
+
 // 지도 구역 정보
 const mapAreas = [
   {
     id: 'stage',
     nameKr: '무대',
     nameEn: 'Stage',
-    url: '/stages',
+    url: getTodayStagesUrl(),
     available: true,
     position: 'top-8 left-1/2 transform -translate-x-1/2',
     color:

@@ -1,22 +1,23 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-const mainNavigation = [
-  {
-    title: '지도',
-    url: '/map',
-  },
-  {
-    title: '부스',
-    url: '/booth',
-  },
-  {
-    title: '무대',
-    url: '/stages',
-  },
-];
+import { getTodayStagesUrl } from '@/utils/stages';
 
 export default function Home() {
+  const mainNavigation = [
+    {
+      title: '지도',
+      url: '/map',
+    },
+    {
+      title: '부스',
+      url: '/booth',
+    },
+    {
+      title: '무대',
+      url: getTodayStagesUrl(),
+    },
+  ];
   return (
     <main className="min-h-screen bg-black relative">
       <div className="relative z-10 flex justify-center items-start min-h-screen">
