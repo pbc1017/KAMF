@@ -104,11 +104,11 @@ export default function MyPage() {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">내 정보</h2>
 
-          {/* 전화번호 */}
+          {/* 이메일 */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">전화번호</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">이메일</label>
             <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
-              <p className="text-gray-900 font-medium">{user?.phoneNumber}</p>
+              <p className="text-gray-900 font-medium">{user?.email}</p>
             </div>
           </div>
 

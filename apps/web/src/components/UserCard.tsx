@@ -16,7 +16,7 @@ export function UserCard({ user }: UserCardProps) {
         <h3 className="block mt-1 text-lg leading-tight font-medium text-black">
           {user.displayName}
         </h3>
-        <p className="mt-2 text-gray-500">@{user.phoneNumber}</p>
+        <p className="mt-2 text-gray-500">@{user.email}</p>
         <p className="mt-2 text-gray-500">{user.displayName}</p>
         <div className="mt-4">
           <span

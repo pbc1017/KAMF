@@ -175,7 +175,7 @@ export default function Header() {
                 </div>
                 <div>
                   <p className="text-white font-semibold">{user.displayName || '새 사용자'}</p>
-                  <p className="text-gray-400 text-sm">{user.phoneNumber}</p>
+                  <p className="text-gray-400 text-sm">{user.email}</p>
                 </div>
               </div>
             </div>
