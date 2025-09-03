@@ -65,7 +65,7 @@ export function BoothCard({ booth, searchQuery = '' }: BoothCardProps) {
           >
             {zoneLabels[booth.zone]}
           </span>
-          <span className="text-purple-300 text-sm font-medium">#{booth.id}</span>
+          <span className="text-purple-300 text-sm font-medium">#{booth.boothNumber}</span>
         </div>
       </div>
     </div>
