@@ -4,8 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from '../users/users.module.js';
 
 import { AuthController } from './auth.controller.js';
+import { EmailService } from './email.service.js';
 import { JwtAuthService } from './jwt.service.js';
-import { SmsService } from './sms.service.js';
 
 @Module({
   imports: [
@@ -13,7 +13,7 @@ import { SmsService } from './sms.service.js';
     forwardRef(() => UsersModule), // 순환 참조 방지
   ],
   controllers: [AuthController],
-  providers: [SmsService, JwtAuthService],
-  exports: [SmsService, JwtAuthService],
+  providers: [EmailService, JwtAuthService],
+  exports: [EmailService, JwtAuthService],
 })
 export class AuthModule {}
