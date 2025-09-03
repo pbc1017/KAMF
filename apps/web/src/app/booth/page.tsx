@@ -4,6 +4,7 @@ import { Zone, Booth } from '@kamf/interface/types/festival.type.js';
 import { useState, useMemo, Suspense } from 'react';
 
 import { BoothCard } from '@/components/BoothCard';
+import { BoothMapViewer } from '@/components/BoothMapViewer';
 import { SearchBar } from '@/components/SearchBar';
 import { useBooths } from '@/hooks/useBooths';
 
@@ -35,6 +36,7 @@ function BoothListSkeleton() {
 function BoothListContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedZone, setSelectedZone] = useState<Zone | 'all'>('all');
+  const [selectedBoothNumber, setSelectedBoothNumber] = useState<string | null>(null);
   const { data: boothsResponse } = useBooths();
   const booths = boothsResponse.data;
 
@@ -54,6 +56,10 @@ function BoothListContent() {
       return zoneMatch && searchMatch;
     });
   }, [booths, searchQuery, selectedZone]);
+
+  const handleBoothSelect = (boothNumber: string) => {
+    setSelectedBoothNumber(prev => (prev === boothNumber ? null : boothNumber));
+  };
 
   return (
     <main className="min-h-screen bg-purple-organic organic-overlay py-12">
@@ -93,34 +99,54 @@ function BoothListContent() {
           </div>
         </div>
 
-        {/* 부스 리스트 */}
-        {filteredBooths.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {filteredBooths.map((booth: Booth) => (
-              <BoothCard key={booth.id} booth={booth} searchQuery={searchQuery} />
-            ))}
+        {/* 메인 컨텐츠: 지도 + 부스 리스트 */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          {/* 지도 영역 */}
+          <div className="xl:sticky xl:top-8 xl:h-fit">
+            <BoothMapViewer
+              booths={booths}
+              selectedBoothNumber={selectedBoothNumber}
+              onBoothClick={handleBoothSelect}
+            />
           </div>
-        ) : (
-          <div className="text-center py-16">
-            <div className="card-purple p-12 rounded-3xl max-w-md mx-auto">
-              <svg
-                className="mx-auto h-16 w-16 text-purple-400 mb-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.071-2.33"
-                />
-              </svg>
-              <h3 className="text-2xl font-bold text-white mb-3">검색 결과가 없습니다</h3>
-              <p className="text-purple-200 text-lg">다른 검색어나 필터를 시도해보세요.</p>
-            </div>
+
+          {/* 부스 리스트 영역 */}
+          <div>
+            {filteredBooths.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6">
+                {filteredBooths.map((booth: Booth) => (
+                  <BoothCard
+                    key={booth.id}
+                    booth={booth}
+                    searchQuery={searchQuery}
+                    isSelected={selectedBoothNumber === booth.boothNumber}
+                    onClick={handleBoothSelect}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <div className="card-purple p-12 rounded-3xl max-w-md mx-auto">
+                  <svg
+                    className="mx-auto h-16 w-16 text-purple-400 mb-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.071-2.33"
+                    />
+                  </svg>
+                  <h3 className="text-2xl font-bold text-white mb-3">검색 결과가 없습니다</h3>
+                  <p className="text-purple-200 text-lg">다른 검색어나 필터를 시도해보세요.</p>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </main>
   );
