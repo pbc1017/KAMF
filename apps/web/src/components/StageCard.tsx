@@ -1,19 +1,19 @@
 'use client';
 
-import { StageWithDay, FestivalDay } from '@kamf/interface/types/festival.type.js';
+import { StageWithDay, StageType } from '@kamf/interface/types/festival.type.js';
 
 interface StageCardProps {
   stage: StageWithDay;
 }
 
-const gradientClasses = {
-  [FestivalDay.FRIDAY]: 'from-purple-600 to-indigo-600',
-  [FestivalDay.SATURDAY]: 'from-indigo-600 to-purple-600',
+const stageTypeGradients = {
+  [StageType.OPEN_STAGE]: 'from-green-600 to-emerald-600',
+  [StageType.MAIN_STAGE]: 'from-orange-600 to-red-600',
 };
 
-const dayLabels = {
-  [FestivalDay.FRIDAY]: '금요일',
-  [FestivalDay.SATURDAY]: '토요일',
+const stageTypeLabels = {
+  [StageType.OPEN_STAGE]: '오픈 스테이지',
+  [StageType.MAIN_STAGE]: '메인 스테이지',
 };
 
 export function StageCard({ stage }: StageCardProps) {
@@ -25,9 +25,9 @@ export function StageCard({ stage }: StageCardProps) {
             {stage.startTime} - {stage.endTime}
           </div>
           <div
-            className={`bg-gradient-to-r ${gradientClasses[stage.day]} text-white px-3 py-1 rounded-full text-sm font-medium shadow-md`}
+            className={`bg-gradient-to-r ${stageTypeGradients[stage.stageType]} text-white px-3 py-1 rounded-full text-sm font-medium shadow-md`}
           >
-            {dayLabels[stage.day]}
+            {stageTypeLabels[stage.stageType]}
           </div>
         </div>
       </div>
