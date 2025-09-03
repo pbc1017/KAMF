@@ -32,8 +32,8 @@ export class EmailService {
    * @param code 6자리 인증 코드
    */
   async sendVerificationCode(email: string, code: string): Promise<void> {
-    // 인증 코드를 메모리에 저장 (10분 후 만료)
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10분
+    // 인증 코드를 메모리에 저장 (3분 후 만료)
+    const expiresAt = new Date(Date.now() + 3 * 60 * 1000); // 3분
     this.verificationCodes.set(email, { code, expiresAt });
 
     // 만료된 코드들 정리
@@ -223,7 +223,7 @@ export class EmailService {
         </div>
         
         <div class="warning">
-          <p>⚠️ 이 코드는 10분간 유효합니다. 다른 사람과 공유하지 마세요.</p>
+          <p>⚠️ 이 코드는 3분간 유효합니다. 다른 사람과 공유하지 마세요.</p>
         </div>
       </div>
       
@@ -253,7 +253,7 @@ KAMF 2025 로그인을 위한 인증 코드입니다.
 이 코드를 입력하여 로그인을 완료해주세요.
 
 ⚠️ 주의사항:
-- 이 코드는 10분간 유효합니다
+- 이 코드는 3분간 유효합니다
 - 다른 사람과 공유하지 마세요
 - 본인이 요청하지 않았다면 이 메일을 무시해주세요
 
