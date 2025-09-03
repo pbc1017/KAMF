@@ -105,15 +105,41 @@ ensure_docker_mysql() {
     local project_name="$2"
     local mysql_port="$3"
     
-    print_info "Docker MySQL 컨테이너 시작 (포트: ${mysql_port})..."
+    print_info "Docker MySQL 상태 확인 중 (포트: ${mysql_port})..."
     
-    # MySQL 컨테이너 시작
-    if ! docker-compose -p "${project_name}" ${compose_files} up -d mysql; then
-        print_error "Docker MySQL 시작 실패"
-        return 1
+    # 1. MySQL 컨테이너가 실행 중인지 확인
+    if docker ps --format "{{.Names}}" | grep -q "^${project_name}-mysql$"; then
+        print_info "MySQL 컨테이너가 실행 중입니다. 연결 상태 확인..."
+        
+        # 2. MySQL 서비스 응답 확인
+        if docker-compose -p "${project_name}" ${compose_files} exec -T mysql mysqladmin ping -h localhost --silent 2>/dev/null; then
+            print_success "Docker MySQL이 이미 정상 작동 중입니다. 재시작 건너뜀"
+            return 0
+        else
+            print_warning "MySQL 컨테이너는 실행 중이지만 응답하지 않습니다. 재시작 필요"
+        fi
+    else
+        print_info "MySQL 컨테이너가 중지되어 있습니다. 시작 필요"
     fi
     
-    # MySQL 준비 대기
+    # 3. MySQL 컨테이너 시작/재시작
+    print_info "Docker MySQL 컨테이너 시작 중..."
+    if ! docker-compose -p "${project_name}" ${compose_files} up -d mysql 2>/dev/null; then
+        print_warning "docker-compose로 MySQL 시작 실패. 직접 복구 시도..."
+        
+        # 4. ContainerConfig 에러 등으로 실패 시 대체 방안
+        print_info "손상된 MySQL 컨테이너 정리 후 재생성..."
+        docker stop "${project_name}-mysql" 2>/dev/null || true
+        docker rm "${project_name}-mysql" 2>/dev/null || true
+        
+        # 5. 직접 MySQL 컨테이너 실행 (docker-compose 우회)
+        if ! docker-compose -p "${project_name}" ${compose_files} up -d mysql; then
+            print_error "MySQL 복구 실패. 수동 점검 필요"
+            return 1
+        fi
+    fi
+    
+    # 6. MySQL 준비 대기
     if wait_for_docker_mysql "$compose_files" "$project_name"; then
         print_success "Docker MySQL이 정상적으로 시작되었습니다"
         return 0
@@ -121,6 +147,43 @@ ensure_docker_mysql() {
         print_error "Docker MySQL 시작에 실패했습니다"
         return 1
     fi
+}
+
+# DB 연결 검증 및 환경변수 확인
+validate_db_connection() {
+    local project_name="$1"
+    local compose_files="$2"
+    local max_attempts="${3:-5}"
+    
+    print_info "DB 연결 및 환경변수 검증 중..."
+    
+    # 1. API 컨테이너의 DB 환경변수 확인
+    if docker ps --format "{{.Names}}" | grep -q "^${project_name}-api$"; then
+        local api_db_password=$(docker inspect "${project_name}-api" --format '{{json .Config.Env}}' | jq -r '.[]' | grep 'DB_PASSWORD' | cut -d'=' -f2)
+        print_info "API DB_PASSWORD: ${api_db_password}"
+    fi
+    
+    # 2. MySQL 컨테이너의 환경변수 확인  
+    if docker ps --format "{{.Names}}" | grep -q "${project_name}-mysql"; then
+        local mysql_password=$(docker inspect "${project_name}-mysql" --format '{{json .Config.Env}}' | jq -r '.[]' | grep 'MYSQL_PASSWORD' | cut -d'=' -f2)
+        print_info "MySQL MYSQL_PASSWORD: ${mysql_password}"
+    fi
+    
+    # 3. 실제 DB 연결 테스트
+    for i in $(seq 1 $max_attempts); do
+        if docker-compose -p "${project_name}" ${compose_files} exec -T mysql mysql -u"${DB_USERNAME:-kamf_user}" -p"${DB_PASSWORD}" -D"${DB_NAME}" -e "SELECT 'Connection Test Success' as status;" >/dev/null 2>&1; then
+            print_success "DB 연결 검증 성공 (${i}/${max_attempts})"
+            return 0
+        fi
+        
+        if [ $i -lt $max_attempts ]; then
+            print_info "DB 연결 재시도... (${i}/${max_attempts})"
+            sleep 2
+        fi
+    done
+    
+    print_error "DB 연결 검증 실패. 환경변수 불일치 가능성"
+    return 1
 }
 
 # =====================================

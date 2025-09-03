@@ -140,13 +140,18 @@ print_info "새로운 애플리케이션 컨테이너 시작 중..."
 if ! docker-compose -p "${PROJECT_NAME}" ${COMPOSE_FILES} up -d --no-deps api web 2>/dev/null; then
     print_warning "컨테이너 시작 실패! ContainerConfig 에러로 인한 강제 복구 시도..."
     
-    # 강제 복구 실행
+    # 강제 복구 실행 (MySQL은 보호됨)
     force_container_recovery "$PROJECT_NAME" "$COMPOSE_FILES"
     
-    # MySQL 재시작 (공유 서비스이므로 먼저 확인)
+    # MySQL 상태 확인 및 조건부 복구 (새로운 안전 로직)
     if ! ensure_docker_mysql "$COMPOSE_FILES" "$PROJECT_NAME" "$MYSQL_PORT"; then
         print_error "MySQL 복구 실패"
         exit 1
+    fi
+    
+    # DB 연결 검증 (환경변수 불일치 방지)
+    if ! validate_db_connection "$PROJECT_NAME" "$COMPOSE_FILES" 3; then
+        print_warning "DB 연결 검증 실패. 환경변수 문제 가능성"
     fi
     
     # 완전 재시작으로 복구 시도
