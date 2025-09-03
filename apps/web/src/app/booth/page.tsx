@@ -1,6 +1,6 @@
 'use client';
 
-import { Zone, Booth } from '@kamf/interface/types/festival.type.js';
+import { Booth } from '@kamf/interface/types/festival.type.js';
 import { useState, useMemo, Suspense, useRef } from 'react';
 
 import { BoothCard } from '@/components/BoothCard';
@@ -35,7 +35,6 @@ function BoothListSkeleton() {
 // 실제 부스 리스트 컴포넌트
 function BoothListContent() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedZone, setSelectedZone] = useState<Zone | 'all'>('all');
   const [selectedBoothNumber, setSelectedBoothNumber] = useState<string | null>(null);
   const { data: boothsResponse } = useBooths();
   const booths = boothsResponse.data;
@@ -47,10 +46,7 @@ function BoothListContent() {
 
   const filteredBooths = useMemo(() => {
     return booths.filter((booth: Booth) => {
-      // Zone 필터
-      const zoneMatch = selectedZone === 'all' || booth.zone === selectedZone;
-
-      // 검색어 필터
+      // 검색어 필터만 적용
       const searchMatch =
         !searchQuery ||
         booth.titleKo.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -58,9 +54,9 @@ function BoothListContent() {
         booth.descriptionKo.toLowerCase().includes(searchQuery.toLowerCase()) ||
         booth.descriptionEn.toLowerCase().includes(searchQuery.toLowerCase());
 
-      return zoneMatch && searchMatch;
+      return searchMatch;
     });
-  }, [booths, searchQuery, selectedZone]);
+  }, [booths, searchQuery]);
 
   // 헤더 높이를 계산하는 함수
   const getHeaderHeight = () => {
@@ -159,14 +155,9 @@ function BoothListContent() {
           </div>
         </div>
 
-        {/* 검색 및 필터 */}
+        {/* 검색 */}
         <div className="mb-8">
-          <SearchBar
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            selectedZone={selectedZone}
-            onZoneChange={setSelectedZone}
-          />
+          <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
         </div>
 
         {/* 결과 수 표시 */}
