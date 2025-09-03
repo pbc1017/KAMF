@@ -30,6 +30,7 @@ export type Time = string;
  */
 export interface Booth {
   id: number;
+  boothNumber: string;
   titleKo: string;
   titleEn: string;
   zone: Zone;

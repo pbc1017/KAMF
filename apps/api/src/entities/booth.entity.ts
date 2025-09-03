@@ -10,6 +10,10 @@ export class Booth extends BaseEntity {
   @ApiProperty({ description: '부스 ID' })
   id: number;
 
+  @Column({ type: 'varchar', length: 10, unique: true })
+  @ApiProperty({ description: '부스 번호 (F1, A01 등)' })
+  boothNumber: string;
+
   @Column({ type: 'varchar', length: 255 })
   @ApiProperty({ description: '부스 이름 (한국어)' })
   titleKo: string;
