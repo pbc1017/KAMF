@@ -40,15 +40,11 @@ const operatingHours = [
 export default function Home() {
   const mainNavigation = [
     {
-      title: '지도',
-      url: '/map',
-    },
-    {
-      title: '부스',
+      title: '부스 배치도',
       url: '/booth',
     },
     {
-      title: '무대',
+      title: '무대 시간표',
       url: getTodayStagesUrl(),
     },
   ];
