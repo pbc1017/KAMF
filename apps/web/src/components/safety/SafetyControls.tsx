@@ -8,9 +8,49 @@ import CountButton from './CountButton';
 
 import { useSafetyStats, useUpdateSafetyCount } from '@/hooks/useSafety';
 
-// 로컬스토리지 키 상수
-const SAFETY_COUNT_KEY = 'kamf_safety_count';
-const SAFETY_LAST_SYNC_KEY = 'kamf_safety_last_sync';
+/**
+ * 현재 도메인에서 환경을 추출
+ * dev.kamf.site -> 'dev'
+ * kamf.site -> 'prod'
+ * localhost -> 'dev'
+ */
+function getEnvironmentFromDomain(): 'dev' | 'prod' {
+  if (typeof window === 'undefined') return 'dev'; // SSR 처리
+
+  const hostname = window.location.hostname;
+
+  // 프로덕션 도메인
+  if (hostname === 'kamf.site') {
+    return 'prod';
+  }
+
+  // 개발 도메인 또는 기타 (localhost 포함)
+  return 'dev';
+}
+
+/**
+ * 환경별 로컬스토리지 키 생성
+ */
+function getEnvironmentKey(baseKey: string): string {
+  const env = getEnvironmentFromDomain();
+  return `${baseKey}_${env}`;
+}
+
+/**
+ * 주어진 날짜가 오늘보다 이전인지 확인
+ */
+function isBeforeToday(date: Date): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const compareDate = new Date(date);
+  compareDate.setHours(0, 0, 0, 0);
+
+  return compareDate < today;
+}
+
+const SAFETY_COUNT_KEY = getEnvironmentKey('kamf_safety_count');
+const SAFETY_LAST_SYNC_KEY = getEnvironmentKey('kamf_safety_last_sync');
 
 interface LocalSafetyCount {
   increment: number;
@@ -47,21 +87,54 @@ export default function SafetyControls({ onStatsUpdate }: SafetyControlsProps) {
     localCountsRef.current = localCounts;
   }, [localCounts]);
 
-  // 로컬스토리지에서 데이터 로드
+  // 로컬스토리지에서 데이터 로드 (날짜 검증 포함)
   const loadFromLocalStorage = useCallback(() => {
     try {
+      const currentEnv = getEnvironmentFromDomain();
+      console.log(`🔍 Loading data from localStorage (${currentEnv} environment)`);
+
       const storedCounts = localStorage.getItem(SAFETY_COUNT_KEY);
       const storedLastSync = localStorage.getItem(SAFETY_LAST_SYNC_KEY);
 
       if (storedCounts) {
         const parsed: LocalSafetyCount = JSON.parse(storedCounts);
-        setLocalCounts(parsed);
-        localCountsRef.current = parsed;
-        console.log('Loaded from localStorage:', parsed);
-      }
+        const lastUpdatedDate = new Date(parsed.lastUpdated);
 
-      if (storedLastSync) {
-        setLastSyncTime(storedLastSync);
+        // 날짜 검증: 어제 또는 그 이전 데이터라면 제거하고 불러오지 않음
+        if (isBeforeToday(lastUpdatedDate)) {
+          console.log('🗑️  Removing expired data from localStorage:', {
+            lastUpdated: parsed.lastUpdated,
+            data: parsed,
+            environment: currentEnv,
+          });
+
+          // 만료된 데이터 제거
+          localStorage.removeItem(SAFETY_COUNT_KEY);
+          localStorage.removeItem(SAFETY_LAST_SYNC_KEY);
+
+          // 초기값으로 설정
+          const initialCounts: LocalSafetyCount = {
+            increment: 0,
+            decrement: 0,
+            lastUpdated: new Date().toISOString(),
+          };
+          setLocalCounts(initialCounts);
+          localCountsRef.current = initialCounts;
+          setLastSyncTime(null);
+
+          console.log('✨ Initialized with fresh data for today');
+        } else {
+          // 오늘 데이터라면 정상 로드
+          setLocalCounts(parsed);
+          localCountsRef.current = parsed;
+          console.log(`✅ Loaded valid data from localStorage (${currentEnv}):`, parsed);
+
+          if (storedLastSync) {
+            setLastSyncTime(storedLastSync);
+          }
+        }
+      } else {
+        console.log(`💫 No existing data found in localStorage (${currentEnv} environment)`);
       }
 
       setIsInitialized(true);
@@ -74,7 +147,9 @@ export default function SafetyControls({ onStatsUpdate }: SafetyControlsProps) {
   // 로컬스토리지에 데이터 저장
   const saveToLocalStorage = useCallback((counts: LocalSafetyCount) => {
     try {
+      const currentEnv = getEnvironmentFromDomain();
       localStorage.setItem(SAFETY_COUNT_KEY, JSON.stringify(counts));
+      console.log(`💾 Saved to localStorage (${currentEnv}):`, counts);
     } catch (error) {
       console.error('Failed to save to localStorage:', error);
     }
@@ -87,9 +162,9 @@ export default function SafetyControls({ onStatsUpdate }: SafetyControlsProps) {
     setIsSyncing(true);
 
     const currentCounts = localCountsRef.current;
+    const currentEnv = getEnvironmentFromDomain();
     console.log(
-      '📡 Starting sync with server at:',
-      new Date().toLocaleTimeString('ko-KR'),
+      `📡 Starting sync with server at: ${new Date().toLocaleTimeString('ko-KR')} (${currentEnv} environment)`,
       'Counts:',
       currentCounts
     );
@@ -107,8 +182,7 @@ export default function SafetyControls({ onStatsUpdate }: SafetyControlsProps) {
       localStorage.setItem(SAFETY_LAST_SYNC_KEY, syncTime);
 
       console.log(
-        '✅ Sync successful at:',
-        new Date().toLocaleTimeString('ko-KR'),
+        `✅ Sync successful at: ${new Date().toLocaleTimeString('ko-KR')} (${currentEnv} environment)`,
         'Server response:',
         response
       );
@@ -154,9 +228,12 @@ export default function SafetyControls({ onStatsUpdate }: SafetyControlsProps) {
     if (!isInitialized) return;
 
     // 5초 간격 동기화 설정 - syncWithServer 의존성 제거
-    console.log('🔄 Setting up sync interval - every 5 seconds');
+    const currentEnv = getEnvironmentFromDomain();
+    console.log(`🔄 Setting up sync interval - every 5 seconds (${currentEnv} environment)`);
     syncIntervalRef.current = window.setInterval(() => {
-      console.log('⏰ Sync interval triggered at:', new Date().toLocaleTimeString('ko-KR'));
+      console.log(
+        `⏰ Sync interval triggered at: ${new Date().toLocaleTimeString('ko-KR')} (${currentEnv})`
+      );
       syncWithServer(); // 현재 시점의 최신 syncWithServer 함수 호출
     }, 5000);
 
@@ -177,7 +254,8 @@ export default function SafetyControls({ onStatsUpdate }: SafetyControlsProps) {
       (stats.userStats.increment > 0 || stats.userStats.decrement > 0)
     ) {
       // 로컬스토리지가 비어있고 서버에 데이터가 있는 경우에만 서버 데이터로 초기화
-      console.log('Initializing from server data:', stats.userStats);
+      const currentEnv = getEnvironmentFromDomain();
+      console.log(`🔄 Initializing from server data (${currentEnv} environment):`, stats.userStats);
       const newCounts: LocalSafetyCount = {
         increment: stats.userStats.increment,
         decrement: stats.userStats.decrement,
@@ -203,9 +281,9 @@ export default function SafetyControls({ onStatsUpdate }: SafetyControlsProps) {
       lastUpdated: new Date().toISOString(),
     };
 
+    const currentEnv = getEnvironmentFromDomain();
     console.log(
-      '🔴 IN button clicked at:',
-      new Date().toLocaleTimeString('ko-KR'),
+      `🔴 IN button clicked at: ${new Date().toLocaleTimeString('ko-KR')} (${currentEnv} environment)`,
       'New counts:',
       newCounts
     );
@@ -224,9 +302,9 @@ export default function SafetyControls({ onStatsUpdate }: SafetyControlsProps) {
       lastUpdated: new Date().toISOString(),
     };
 
+    const currentEnv = getEnvironmentFromDomain();
     console.log(
-      '🟢 OUT button clicked at:',
-      new Date().toLocaleTimeString('ko-KR'),
+      `🟢 OUT button clicked at: ${new Date().toLocaleTimeString('ko-KR')} (${currentEnv} environment)`,
       'New counts:',
       newCounts
     );

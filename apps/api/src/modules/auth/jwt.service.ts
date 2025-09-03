@@ -8,7 +8,7 @@ export interface TokenPayload {
   iat?: number;
   exp?: number;
   userId: string;
-  phoneNumber: string;
+  email: string;
   roles: string[];
 }
 
@@ -30,7 +30,7 @@ export class JwtAuthService {
   generateTokens(user: User): AuthTokens {
     const payload: Omit<TokenPayload, 'iat' | 'exp'> = {
       userId: user.id,
-      phoneNumber: user.phoneNumber,
+      email: user.email,
       roles: user.roles.map(role => role.name),
     };
 

@@ -17,13 +17,13 @@ export class UserService {
   ) {}
 
   /**
-   * 전화번호로 사용자 조회
-   * @param phoneNumber 전화번호
+   * 이메일로 사용자 조회
+   * @param email 이메일 주소
    * @returns 사용자 또는 null
    */
-  async findByPhoneNumber(phoneNumber: string): Promise<User | null> {
+  async findByEmail(email: string): Promise<User | null> {
     return await this.userRepository.findOne({
-      where: { phoneNumber },
+      where: { email },
       relations: ['roles'],
     });
   }
@@ -46,10 +46,10 @@ export class UserService {
    * @returns 생성된 사용자
    */
   async createUser(data: CreateUserRequest): Promise<User> {
-    // 전화번호 중복 확인
-    const existingUser = await this.findByPhoneNumber(data.phoneNumber);
+    // 이메일 중복 확인
+    const existingUser = await this.findByEmail(data.email);
     if (existingUser) {
-      throw new ConflictException('이미 등록된 전화번호입니다');
+      throw new ConflictException('이미 등록된 이메일입니다');
     }
 
     // 역할 조회 (기본값: USER)
@@ -64,7 +64,7 @@ export class UserService {
 
     // 사용자 생성
     const user = this.userRepository.create({
-      phoneNumber: data.phoneNumber,
+      email: data.email,
       displayName: data.displayName || NicknameGenerator.generate(),
       roles,
     });

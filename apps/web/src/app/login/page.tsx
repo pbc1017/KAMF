@@ -3,18 +3,18 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import PhoneNumberForm from '@/components/auth/PhoneNumberForm';
+import EmailForm from '@/components/auth/EmailForm';
 import VerificationCodeForm from '@/components/auth/VerificationCodeForm';
 import { FullScreenLoading } from '@/components/ui/LoadingSpinner';
 import { useRequestCode, useVerifyCode } from '@/hooks/useAuth';
 import { useRedirectIfAuthenticated } from '@/hooks/useAuthGuard';
 import { useAuth } from '@/providers/AuthProvider';
 
-type LoginStep = 'phone' | 'code';
+type LoginStep = 'email' | 'code';
 
 export default function LoginPage() {
-  const [step, setStep] = useState<LoginStep>('phone');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [step, setStep] = useState<LoginStep>('email');
+  const [email, setEmail] = useState('');
   const router = useRouter();
   const { login } = useAuth();
 
@@ -31,13 +31,13 @@ export default function LoginPage() {
   const verifyCodeMutation = useVerifyCode();
 
   const handleRequestCode = () => {
-    if (!phoneNumber.trim()) {
-      alert('전화번호를 입력해주세요.');
+    if (!email.trim()) {
+      alert('이메일 주소를 입력해주세요.');
       return;
     }
 
     requestCodeMutation.mutate(
-      { phoneNumber },
+      { email },
       {
         onSuccess: () => {
           setStep('code');
@@ -55,7 +55,7 @@ export default function LoginPage() {
             'message' in error.response.data &&
             typeof error.response.data.message === 'string'
               ? error.response.data.message
-              : '인증번호 요청에 실패했습니다.';
+              : '인증번호 발송에 실패했습니다.';
           alert(errorMessage);
         },
       }
@@ -64,7 +64,7 @@ export default function LoginPage() {
 
   const handleResendCode = () => {
     resendCodeMutation.mutate(
-      { phoneNumber },
+      { email },
       {
         onSuccess: () => {
           // 재발송 성공 - alert 대신 자연스러운 UX
@@ -97,7 +97,7 @@ export default function LoginPage() {
     }
 
     verifyCodeMutation.mutate(
-      { phoneNumber, code },
+      { email, code },
       {
         onSuccess: response => {
           const { user, tokens } = response.data;
@@ -124,8 +124,8 @@ export default function LoginPage() {
     );
   };
 
-  const handleBackToPhone = () => {
-    setStep('phone');
+  const handleBackToEmail = () => {
+    setStep('email');
   };
 
   // 인증 확인 중에는 로딩 표시
@@ -158,23 +158,23 @@ export default function LoginPage() {
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">로그인</h1>
             <p className="text-gray-600">
-              {step === 'phone' ? '전화번호로 간편하게 로그인하세요' : '인증번호를 입력해주세요'}
+              {step === 'email' ? '이메일로 간편하게 로그인하세요' : '인증번호를 입력해주세요'}
             </p>
           </div>
 
           {/* 폼 컨테이너 */}
-          {step === 'phone' ? (
-            <PhoneNumberForm
-              phoneNumber={phoneNumber}
-              setPhoneNumber={setPhoneNumber}
+          {step === 'email' ? (
+            <EmailForm
+              email={email}
+              setEmail={setEmail}
               onRequestCode={handleRequestCode}
               isLoading={requestCodeMutation.isPending}
             />
           ) : (
             <VerificationCodeForm
-              phoneNumber={phoneNumber}
+              email={email}
               onVerifyCode={handleVerifyCode}
-              onBackToPhone={handleBackToPhone}
+              onBackToEmail={handleBackToEmail}
               onResendCode={handleResendCode}
               isLoading={verifyCodeMutation.isPending}
               isResending={resendCodeMutation.isPending}

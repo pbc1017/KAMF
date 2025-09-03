@@ -30,7 +30,7 @@ export class JwtAuthGuard implements CanActivate {
       // 사용자 정보를 request 객체에 첨부 (roles.guard.ts에서 사용)
       request.user = {
         id: String(payload.userId), // 명시적으로 문자열로 변환
-        phoneNumber: String(payload.phoneNumber),
+        email: String(payload.email),
         roles: payload.roles.map(roleName => ({ name: roleName })),
         userId: String(payload.userId), // 백업용 속성
       };

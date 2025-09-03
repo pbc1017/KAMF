@@ -3,18 +3,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import Button from '@/components/ui/Button';
 
 interface VerificationCodeFormProps {
-  phoneNumber: string;
+  email: string;
   onVerifyCode: (code: string) => void;
-  onBackToPhone: () => void;
+  onBackToEmail: () => void;
   onResendCode: () => void;
   isLoading: boolean;
   isResending?: boolean;
 }
 
 export default function VerificationCodeForm({
-  phoneNumber,
+  email,
   onVerifyCode,
-  onBackToPhone,
+  onBackToEmail,
   onResendCode,
   isLoading,
   isResending = false,
@@ -133,15 +133,25 @@ export default function VerificationCodeForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* 전화번호 표시 */}
+      {/* 이메일 표시 */}
       <div className="text-center">
         <div className="inline-flex items-center px-4 py-2 bg-blue-50 rounded-full">
-          <svg className="w-4 h-4 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+          <svg
+            className="w-4 h-4 text-blue-600 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+            />
           </svg>
-          <span className="text-sm font-medium text-blue-900">{phoneNumber}</span>
+          <span className="text-sm font-medium text-blue-900">{email}</span>
         </div>
-        <p className="text-sm text-gray-600 mt-2">위 번호로 인증번호를 발송했습니다</p>
+        <p className="text-sm text-gray-600 mt-2">위 이메일로 인증번호를 발송했습니다</p>
 
         {/* 타이머 표시 */}
         <div className="mt-3">
@@ -204,12 +214,12 @@ export default function VerificationCodeForm({
 
         <Button
           type="button"
-          onClick={onBackToPhone}
+          onClick={onBackToEmail}
           variant="secondary"
           fullWidth
           disabled={isLoading}
         >
-          전화번호 다시 입력
+          이메일 다시 입력
         </Button>
       </div>
 
@@ -229,14 +239,15 @@ export default function VerificationCodeForm({
           ) : (
             <button
               type="button"
-              onClick={onBackToPhone}
+              onClick={onBackToEmail}
               className="text-blue-600 hover:text-blue-700 font-medium"
               disabled={isLoading}
             >
-              전화번호 변경
+              이메일 변경
             </button>
           )}
         </p>
+        <p className="text-xs text-gray-400 mt-2">스팸함도 확인해보세요!</p>
       </div>
     </form>
   );

@@ -12,20 +12,47 @@ export class BoothService {
     private readonly boothRepository: Repository<Booth>
   ) {}
 
-  async findAll(): Promise<Booth[]> {
-    return this.boothRepository.find({
-      order: {
-        id: 'ASC',
-      },
+  private sortBooths(booths: Booth[]): Booth[] {
+    return booths.sort((a, b) => {
+      const aNum = this.parseBoothNumber(a.boothNumber);
+      const bNum = this.parseBoothNumber(b.boothNumber);
+
+      // 둘 다 숫자인 경우
+      if (aNum !== null && bNum !== null) {
+        return aNum - bNum;
+      }
+
+      // 하나만 숫자인 경우 (숫자가 먼저 오도록)
+      if (aNum !== null && bNum === null) {
+        return -1;
+      }
+      if (aNum === null && bNum !== null) {
+        return 1;
+      }
+
+      // 둘 다 문자열인 경우
+      return a.boothNumber.localeCompare(b.boothNumber);
     });
   }
 
+  private parseBoothNumber(boothNumber: string): number | null {
+    // 숫자로만 구성되어 있는지 확인
+    if (/^\d+$/.test(boothNumber)) {
+      const num = parseInt(boothNumber, 10);
+      return isNaN(num) ? null : num;
+    }
+    return null;
+  }
+
+  async findAll(): Promise<Booth[]> {
+    const booths = await this.boothRepository.find();
+    return this.sortBooths(booths);
+  }
+
   async findByZone(zone: Zone): Promise<Booth[]> {
-    return this.boothRepository.find({
+    const booths = await this.boothRepository.find({
       where: { zone },
-      order: {
-        id: 'ASC',
-      },
     });
+    return this.sortBooths(booths);
   }
 }

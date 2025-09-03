@@ -20,8 +20,8 @@ export class User extends ModifiableEntity {
   }
 
   @Column({ unique: true })
-  @ApiProperty({ description: '전화번호' })
-  phoneNumber: string;
+  @ApiProperty({ description: '이메일 주소' })
+  email: string;
 
   @Column({ nullable: true })
   @ApiProperty({ description: '표시 이름', nullable: true })

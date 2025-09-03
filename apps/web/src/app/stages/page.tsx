@@ -1,7 +1,8 @@
 'use client';
 
 import { FestivalDay, StageWithDay, Stage } from '@kamf/interface/types/festival.type.js';
-import { useState, useMemo, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useMemo, Suspense, useEffect } from 'react';
 
 import { SegmentControl } from '@/components/SegmentControl';
 import { StageCard } from '@/components/StageCard';
@@ -40,8 +41,24 @@ function StagesPageSkeleton() {
 }
 
 function StagesPageContent() {
-  const [selectedDay, setSelectedDay] = useState<FestivalDay>(FestivalDay.FRIDAY);
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const { data: stagesResponse } = useStages();
+
+  // 쿼리파라미터가 없거나 유효하지 않으면 FRI로 리다이렉트
+  useEffect(() => {
+    const dayParam = searchParams.get('day');
+    if (!dayParam || (dayParam !== 'FRI' && dayParam !== 'SAT')) {
+      router.replace('/stages?day=FRI', { scroll: false });
+    }
+  }, [searchParams, router]);
+
+  const selectedDay = searchParams.get('day') === 'SAT' ? FestivalDay.SATURDAY : FestivalDay.FRIDAY;
+
+  const handleDayChange = (day: FestivalDay) => {
+    const dayParam = day === FestivalDay.SATURDAY ? 'SAT' : 'FRI';
+    router.replace(`/stages?day=${dayParam}`, { scroll: false });
+  };
 
   // API 응답을 StageWithDay[] 형태로 변환
   const allStages = useMemo((): StageWithDay[] => {
@@ -70,7 +87,7 @@ function StagesPageContent() {
       <div className="max-w-4xl mx-auto px-4">
         {/* 헤더 */}
         <div className="text-center mb-12">
-          <div className="animate-float">
+          <div>
             <h1 className="text-6xl font-bold text-white mb-6">
               <span className="text-purple-gradient">무대</span> 프로그램
             </h1>
@@ -82,7 +99,7 @@ function StagesPageContent() {
 
         {/* 날짜 선택 */}
         <div className="mb-12">
-          <SegmentControl selectedDay={selectedDay} onDayChange={setSelectedDay} />
+          <SegmentControl selectedDay={selectedDay} onDayChange={handleDayChange} />
         </div>
 
         {/* 공연 목록 */}

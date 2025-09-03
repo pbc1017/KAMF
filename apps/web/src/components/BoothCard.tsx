@@ -1,10 +1,13 @@
 'use client';
 
 import { Booth, Zone } from '@kamf/interface/types/festival.type.js';
+import { forwardRef } from 'react';
 
 interface BoothCardProps {
   booth: Booth;
   searchQuery?: string;
+  isSelected?: boolean;
+  onClick?: (boothNumber: string) => void;
 }
 
 const zoneColors = {
@@ -41,12 +44,29 @@ function highlightText(text: string, query: string) {
   );
 }
 
-export function BoothCard({ booth, searchQuery = '' }: BoothCardProps) {
+export const BoothCard = forwardRef<HTMLDivElement, BoothCardProps>(function BoothCard(
+  { booth, searchQuery = '', isSelected = false, onClick },
+  ref
+) {
+  const handleClick = () => {
+    onClick?.(booth.boothNumber);
+  };
+
   return (
-    <div className="card-purple card-purple-hover p-8 group">
+    <div
+      ref={ref}
+      className={`relative card-purple card-purple-hover p-8 group cursor-pointer transition-all duration-300 ${
+        isSelected ? 'ring-2 ring-purple-400 bg-purple-800/40 scale-[1.02]' : 'hover:scale-[1.01]'
+      }`}
+      onClick={handleClick}
+    >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <h3 className="text-2xl font-semibold text-white mb-3 group-hover:text-purple-gradient transition-all duration-300">
+          <h3
+            className={`text-2xl font-semibold mb-3 transition-all duration-300 ${
+              isSelected ? 'text-purple-300' : 'text-white group-hover:text-purple-gradient'
+            }`}
+          >
             {highlightText(booth.titleKo, searchQuery)}
           </h3>
 
@@ -65,9 +85,22 @@ export function BoothCard({ booth, searchQuery = '' }: BoothCardProps) {
           >
             {zoneLabels[booth.zone]}
           </span>
-          <span className="text-purple-300 text-sm font-medium">#{booth.id}</span>
+          <span
+            className={`text-sm font-medium transition-colors ${
+              isSelected ? 'text-purple-200' : 'text-purple-300'
+            }`}
+          >
+            #{booth.boothNumber}
+          </span>
         </div>
       </div>
+
+      {/* 선택 표시 */}
+      {isSelected && (
+        <div className="absolute top-2 left-2">
+          <div className="w-3 h-3 bg-purple-400 rounded-full animate-pulse" />
+        </div>
+      )}
     </div>
   );
-}
+});

@@ -21,6 +21,14 @@ export enum FestivalDay {
 }
 
 /**
+ * 무대 타입
+ */
+export enum StageType {
+  OPEN_STAGE = 'OPEN_STAGE',
+  MAIN_STAGE = 'MAIN_STAGE',
+}
+
+/**
  * XX:XX 형태의 시간 문자열
  */
 export type Time = string;
@@ -30,6 +38,7 @@ export type Time = string;
  */
 export interface Booth {
   id: number;
+  boothNumber: string;
   titleKo: string;
   titleEn: string;
   zone: Zone;
@@ -48,6 +57,7 @@ export interface Stage {
   endTime: Time;
   descriptionKo: string; // 공연 소개 (한국어)
   descriptionEn: string; // 공연 소개 (영어)
+  stageType: StageType; // 무대 타입
 }
 
 /**
