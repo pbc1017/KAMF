@@ -36,6 +36,7 @@ function BoothListSkeleton() {
 function BoothListContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBoothNumber, setSelectedBoothNumber] = useState<string | null>(null);
+  const [showTrashCans, setShowTrashCans] = useState(false);
   const { data: boothsResponse } = useBooths();
   const booths = boothsResponse.data;
 
@@ -124,6 +125,9 @@ function BoothListContent() {
     const wasSelected = selectedBoothNumber === boothNumber;
     setSelectedBoothNumber(prev => (prev === boothNumber ? null : boothNumber));
 
+    // 부스 클릭 시 쓰레기통 표시 해제
+    setShowTrashCans(false);
+
     // 새로 선택된 경우에만 스크롤 (토글로 해제하는 경우는 스크롤 안함)
     if (!wasSelected) {
       setTimeout(() => scrollToBoothCard(boothNumber), 150);
@@ -133,6 +137,9 @@ function BoothListContent() {
   const handleBoothCardClick = (boothNumber: string) => {
     const wasSelected = selectedBoothNumber === boothNumber;
     setSelectedBoothNumber(prev => (prev === boothNumber ? null : boothNumber));
+
+    // 부스 클릭 시 쓰레기통 표시 해제
+    setShowTrashCans(false);
 
     // 새로 선택된 경우에만 지도로 스크롤
     if (!wasSelected) {
@@ -160,10 +167,10 @@ function BoothListContent() {
           <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
         </div>
 
-        {/* 결과 수 표시 */}
-        <div className="mb-8">
-          <div className="card-purple p-6 rounded-2xl inline-block">
-            <p className="text-purple-100 text-lg">
+        {/* 결과 수 표시 및 쓰레기통 위치 버튼 */}
+        <div className="mb-8 flex flex-row flex-wrap items-center gap-4">
+          <div className="card-purple p-6 rounded-2xl max-w-[80%] flex-shrink">
+            <p className="text-purple-100 text-lg break-keep ">
               총{' '}
               <span className="font-bold text-purple-gradient text-xl">
                 {filteredBooths.length}
@@ -171,6 +178,18 @@ function BoothListContent() {
               개의 부스가 있습니다
             </p>
           </div>
+
+          <button
+            onClick={() => setShowTrashCans(!showTrashCans)}
+            className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-all duration-300 flex items-center gap-1.5 ${
+              showTrashCans
+                ? 'bg-green-600/80 text-white shadow-md scale-105'
+                : 'bg-purple-600/60 text-purple-100 hover:bg-purple-500/70 hover:text-white'
+            }`}
+          >
+            쓰레기통 위치
+            {showTrashCans && <span className="text-xs">✓</span>}
+          </button>
         </div>
 
         {/* 메인 컨텐츠: 지도 + 부스 리스트 */}
@@ -181,6 +200,7 @@ function BoothListContent() {
               booths={booths}
               selectedBoothNumber={selectedBoothNumber}
               onBoothClick={handleMapBoothClick}
+              showTrashCans={showTrashCans}
             />
           </div>
 

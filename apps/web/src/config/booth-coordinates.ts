@@ -61,6 +61,12 @@ export const boothCoordinates: Record<string, BoothPosition> = {
   F11: { x: 76, y: 63 },
   F12: { x: 76, y: 76 },
   F13: { x: 76, y: 80 },
+
+  // 쓰레기통 위치 (g1~g4)
+  g1: { x: 62, y: 9 },
+  g2: { x: 58.5, y: 92 },
+  g3: { x: 18, y: 66 },
+  g4: { x: 27, y: 59 },
 };
 
 /**
@@ -83,4 +89,20 @@ export const defaultPosition: BoothPosition = { x: 50, y: 50 };
 // 부스 위치 반환 함수
 export const getBoothPosition = (boothNumber: string): BoothPosition => {
   return boothCoordinates[boothNumber] || defaultPosition;
+};
+
+// 쓰레기통 목록
+export const trashCanIds = ['g1', 'g2', 'g3', 'g4'];
+
+// 쓰레기통 위치 반환 함수
+export const getTrashCanPosition = (trashId: string): BoothPosition => {
+  return boothCoordinates[trashId] || defaultPosition;
+};
+
+// 모든 쓰레기통 위치 반환
+export const getAllTrashCanPositions = (): Array<{ id: string; position: BoothPosition }> => {
+  return trashCanIds.map(id => ({
+    id,
+    position: getTrashCanPosition(id),
+  }));
 };
