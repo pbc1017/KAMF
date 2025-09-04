@@ -2,6 +2,7 @@
 
 import { FestivalDay, StageWithDay, Stage } from '@kamf/interface/types/festival.type.js';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useMemo, Suspense, useEffect } from 'react';
 
 import { SegmentControl } from '@/components/SegmentControl';
@@ -41,6 +42,7 @@ function StagesPageSkeleton() {
 }
 
 function StagesPageContent() {
+  const t = useTranslations('stage');
   const searchParams = useSearchParams();
   const router = useRouter();
   const { data: stagesResponse } = useStages();
@@ -89,11 +91,9 @@ function StagesPageContent() {
         <div className="text-center mb-12">
           <div>
             <h1 className="text-6xl font-bold text-white mb-6">
-              <span className="text-purple-gradient">무대</span> 프로그램
+              <span className="text-purple-gradient">{t('title')}</span>
             </h1>
-            <p className="text-2xl text-purple-200 font-medium">
-              KAMF 2025의 다양한 공연 일정을 확인해보세요
-            </p>
+            <p className="text-2xl text-purple-200 font-medium">{t('subtitle')}</p>
           </div>
         </div>
 
@@ -110,8 +110,8 @@ function StagesPageContent() {
             <div className="text-center py-16">
               <div className="card-purple p-12 rounded-3xl max-w-md mx-auto">
                 <div className="text-6xl mb-6">🎭</div>
-                <h3 className="text-2xl font-bold text-white mb-3">예정된 공연이 없습니다</h3>
-                <p className="text-purple-200 text-lg">해당 날짜에 예정된 공연이 없습니다.</p>
+                <h3 className="text-2xl font-bold text-white mb-3">{t('noScheduled')}</h3>
+                <p className="text-purple-200 text-lg">{t('noScheduledDescription')}</p>
               </div>
             </div>
           )}
@@ -120,11 +120,11 @@ function StagesPageContent() {
         {/* 하단 정보 */}
         <div className="mt-16 text-center">
           <div className="card-purple p-8 rounded-3xl">
-            <h3 className="text-2xl font-bold text-white mb-4">🎪 공연 안내</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">🎪 {t('performanceInfo')}</h3>
             <p className="text-purple-100 leading-relaxed text-lg">
-              모든 공연은 날씨나 현장 상황에 따라 변경될 수 있습니다.
+              {t('performanceNotice')}
               <br />
-              최신 정보는 현장 안내데스크에서 확인해주세요.
+              {t('contactInfo')}
             </p>
           </div>
         </div>
