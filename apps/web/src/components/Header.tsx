@@ -4,6 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 
+import LanguageSwitcher from './LanguageSwitcher';
+
 import { useAuth } from '@/providers/AuthProvider';
 import { getTodayStagesUrl } from '@/utils/stages';
 
@@ -84,8 +86,9 @@ export default function Header() {
               />
             </Link>
 
-            {/* 햄버거 메뉴 버튼 */}
-            <div className="flex-1 flex justify-end">
+            {/* 언어 전환기 및 햄버거 메뉴 버튼 */}
+            <div className="flex-1 flex justify-end items-center space-x-4">
+              <LanguageSwitcher />
               <button
                 onClick={toggleMenu}
                 className="relative w-10 h-10 flex flex-col justify-center items-center space-y-1 bg-white hover:bg-violet-500 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg group"

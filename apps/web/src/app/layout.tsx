@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
 import { Inter } from 'next/font/google';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
 import { ReactNode } from 'react';
 
 import './globals.css';
@@ -40,49 +42,54 @@ export const metadata: Metadata = {
   description: 'KAMF official website',
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="ko">
+    <html lang={locale}>
       <body className={inter.className}>
-        <QueryProvider>
-          <AuthProvider>
-            <Header />
-            <main className="pt-20">{children}</main>
-            <Toaster
-              position="top-center"
-              reverseOrder={false}
-              gutter={8}
-              containerStyle={{ zIndex: 9999 }}
-              toastOptions={{
-                duration: 3000,
-                style: {
-                  background: '#363636',
-                  color: '#fff',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  borderRadius: '12px',
-                  padding: '12px 16px',
-                  boxShadow:
-                    '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                },
-                success: {
+        <NextIntlClientProvider messages={messages}>
+          <QueryProvider>
+            <AuthProvider>
+              <Header />
+              <main className="pt-20">{children}</main>
+              <Toaster
+                position="top-center"
+                reverseOrder={false}
+                gutter={8}
+                containerStyle={{ zIndex: 9999 }}
+                toastOptions={{
                   duration: 3000,
                   style: {
-                    background: '#10b981',
+                    background: '#363636',
                     color: '#fff',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    borderRadius: '12px',
+                    padding: '12px 16px',
+                    boxShadow:
+                      '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
                   },
-                },
-                error: {
-                  duration: 4000,
-                  style: {
-                    background: '#ef4444',
-                    color: '#fff',
+                  success: {
+                    duration: 3000,
+                    style: {
+                      background: '#10b981',
+                      color: '#fff',
+                    },
                   },
-                },
-              }}
-            />
-          </AuthProvider>
-        </QueryProvider>
+                  error: {
+                    duration: 4000,
+                    style: {
+                      background: '#ef4444',
+                      color: '#fff',
+                    },
+                  },
+                }}
+              />
+            </AuthProvider>
+          </QueryProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
