@@ -78,10 +78,10 @@ export default async function Home() {
               className="object-contain mx-auto mb-8"
               draggable={false}
             />
-            <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 gap-6 max-w-md mx-auto">
               {mainNavigation.map((nav, index) => (
                 <Link key={index} href={nav.url}>
-                  <button className="py-4 px-8 bg-gradient-to-r from-purple-700/40 to-indigo-700/40 hover:from-purple-600/60 hover:to-indigo-600/60 backdrop-blur-sm border border-purple-400/30 hover:border-purple-300/50 rounded-xl transition-all duration-300 text-xl font-bold text-white hover:scale-105 min-w-fit whitespace-nowrap">
+                  <button className="w-full py-4 px-8 bg-gradient-to-r from-purple-700/40 to-indigo-700/40 hover:from-purple-600/60 hover:to-indigo-600/60 backdrop-blur-sm border border-purple-400/30 hover:border-purple-300/50 rounded-xl transition-all duration-300 text-xl font-bold text-white hover:scale-105 text-center">
                     {nav.title}
                   </button>
                 </Link>
