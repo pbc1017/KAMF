@@ -40,15 +40,11 @@ const operatingHours = [
 export default function Home() {
   const mainNavigation = [
     {
-      title: '지도',
-      url: '/map',
-    },
-    {
-      title: '부스',
+      title: '부스 배치도',
       url: '/booth',
     },
     {
-      title: '무대',
+      title: '무대 시간표',
       url: getTodayStagesUrl(),
     },
   ];
@@ -77,10 +73,10 @@ export default function Home() {
               className="object-contain mx-auto mb-8"
               draggable={false}
             />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex flex-col gap-6">
               {mainNavigation.map((nav, index) => (
                 <Link key={index} href={nav.url}>
-                  <button className="w-1/2 py-4 px-8 bg-gradient-to-r from-purple-700/40 to-indigo-700/40 hover:from-purple-600/60 hover:to-indigo-600/60 backdrop-blur-sm border border-purple-400/30 hover:border-purple-300/50 rounded-xl transition-all duration-300 text-xl font-bold text-white hover:scale-105">
+                  <button className="py-4 px-8 bg-gradient-to-r from-purple-700/40 to-indigo-700/40 hover:from-purple-600/60 hover:to-indigo-600/60 backdrop-blur-sm border border-purple-400/30 hover:border-purple-300/50 rounded-xl transition-all duration-300 text-xl font-bold text-white hover:scale-105 min-w-fit whitespace-nowrap">
                     {nav.title}
                   </button>
                 </Link>

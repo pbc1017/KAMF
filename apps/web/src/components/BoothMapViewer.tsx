@@ -3,18 +3,27 @@
 import { Booth } from '@kamf/interface/types/festival.type.js';
 import { useState } from 'react';
 
-import { getBoothPosition as getBoothCoordinates } from '@/config/booth-coordinates';
+import {
+  getBoothPosition as getBoothCoordinates,
+  getAllTrashCanPositions,
+} from '@/config/booth-coordinates';
 
 interface BoothMapViewerProps {
   booths: Booth[];
   selectedBoothNumber: string | null;
   onBoothClick?: (boothNumber: string) => void;
+  showTrashCans?: boolean;
 }
 
 // 부스 좌표는 @/config/booth-coordinates.ts 파일에서 관리됩니다
 // 좌표 수정이 필요한 경우 해당 파일을 편집해주세요
 
-export function BoothMapViewer({ booths, selectedBoothNumber, onBoothClick }: BoothMapViewerProps) {
+export function BoothMapViewer({
+  booths,
+  selectedBoothNumber,
+  onBoothClick,
+  showTrashCans = false,
+}: BoothMapViewerProps) {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
   const handleBoothMarkerClick = (boothNumber: string) => {
@@ -30,6 +39,9 @@ export function BoothMapViewer({ booths, selectedBoothNumber, onBoothClick }: Bo
       position,
     };
   });
+
+  // 쓰레기통 위치 가져오기
+  const trashCanPositions = getAllTrashCanPositions();
 
   return (
     <div className="relative w-full h-full">
@@ -60,7 +72,7 @@ export function BoothMapViewer({ booths, selectedBoothNumber, onBoothClick }: Bo
         {isImageLoaded &&
           boothPositions.map(({ booth, position }) => {
             const isSelected = selectedBoothNumber === booth.boothNumber;
-            const shouldShowVisually = !selectedBoothNumber || isSelected; // 시각적으로 보여줄지 결정
+            const shouldShowVisually = selectedBoothNumber && isSelected; // 선택된 부스가 있고, 해당 부스인 경우에만 표시
 
             return (
               <div
@@ -91,12 +103,44 @@ export function BoothMapViewer({ booths, selectedBoothNumber, onBoothClick }: Bo
               </div>
             );
           })}
+
+        {/* 쓰레기통 마커들 */}
+        {showTrashCans &&
+          trashCanPositions.map(({ id, position }) => (
+            <div
+              key={id}
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 z-30"
+              style={{
+                left: `${position.x}%`,
+                top: `${position.y}%`,
+              }}
+              title={`쓰레기통 ${id.toUpperCase()}`}
+            >
+              {/* 쓰레기통 마커 */}
+              <div className="relative">
+                {/* 깜빡이는 링 효과 */}
+                <div className="absolute inset-0 w-8 h-8 -m-2 rounded-full border-2 border-green-400/80 animate-ping" />
+                <div className="absolute inset-0 w-6 h-6 -m-1 rounded-full border-2 border-green-300/60 animate-pulse" />
+
+                {/* 쓰레기통 아이콘 */}
+                <div className="relative w-4 h-4 bg-green-500 rounded-sm shadow-lg flex items-center justify-center">
+                  <span className="text-xs text-white">🗑</span>
+                </div>
+              </div>
+            </div>
+          ))}
       </div>
 
       {/* 사용 안내 */}
       <div className="mt-4 p-4 card-purple rounded-xl">
         <p className="text-purple-200 text-sm text-center">
           💡 지도의 점을 클릭하거나 오른쪽 목록에서 부스를 선택하세요
+          {showTrashCans && (
+            <>
+              <br />
+              🗑️ 초록색 쓰레기통 아이콘이 쓰레기통 위치입니다
+            </>
+          )}
         </p>
       </div>
     </div>
