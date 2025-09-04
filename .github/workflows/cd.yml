@@ -179,6 +179,11 @@ jobs:
           TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}
           TWILIO_SERVICE_SID=${{ secrets.TWILIO_SERVICE_SID }}
 
+          # Mailgun Email Configuration
+          MAILGUN_API_KEY=${{ secrets.MAILGUN_API_KEY }}
+          MAILGUN_DOMAIN=${{ secrets.MAILGUN_DOMAIN }}
+          MAILGUN_FROM_EMAIL=${{ secrets.MAILGUN_FROM_EMAIL }}
+
           # Deployment Metadata
           DEPLOYMENT_TIME=${{ steps.vars.outputs.deployment_time }}
           DEPLOYED_BY=${{ github.actor }}
