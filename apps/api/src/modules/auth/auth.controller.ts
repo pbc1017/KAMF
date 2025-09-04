@@ -87,7 +87,7 @@ export class AuthController {
         data: {
           message:
             process.env.NODE_ENV === 'development'
-              ? `개발 모드: 인증 코드 "${code}"를 사용하세요`
+              ? `개발 모드: 인증 코드 123456을 사용하세요`
               : '인증 코드가 이메일로 발송되었습니다',
         },
       };
@@ -169,13 +169,7 @@ export class AuthController {
       const tokens = this.jwtService.generateTokens(user);
 
       // HTTP-only 쿠키로 refresh token 설정
-      res.cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
-        path: '/',
-      });
+      this.setRefreshTokenCookie(res, tokens.refreshToken);
 
       return {
         success: true,
