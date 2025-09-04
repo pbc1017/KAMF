@@ -1,6 +1,6 @@
 'use client';
 
-import type { TodayStats, UserStats } from '@kamf/interface';
+import type { TodayStats, UserStats } from '@kamf/interface/dtos/safety.dto.js';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
