@@ -52,7 +52,7 @@ export function logout(): void {
     // refreshToken localStorage 제거 로직 삭제 - 서버에서 쿠키 관리
 
     // 서버에 로그아웃 요청 (쿠키 클리어)
-    fetch('/api/auth/logout', {
+    apiClient('auth/logout', {
       method: 'POST',
       credentials: 'include',
     })
