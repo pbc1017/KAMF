@@ -1,8 +1,9 @@
 'use client';
 
 import { Booth } from '@kamf/interface/types/festival.type.js';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { useState, useMemo, Suspense, useRef } from 'react';
+import { useState, useMemo, Suspense, useRef, useEffect } from 'react';
 
 import { BoothCard } from '@/components/BoothCard';
 import { BoothMapViewer } from '@/components/BoothMapViewer';
@@ -37,6 +38,8 @@ function BoothListSkeleton() {
 function BoothListContent() {
   const locale = useLocale();
   const t = useTranslations('booth');
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const isEnglish = locale === 'en';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBoothNumber, setSelectedBoothNumber] = useState<string | null>(null);
@@ -78,6 +81,24 @@ function BoothListContent() {
     const header = document.querySelector('header') || document.querySelector('[role="banner"]');
     return header ? header.getBoundingClientRect().height : 80; // 기본값 80px
   };
+
+  // URL 파라미터로 특정 부스 자동 선택 및 스크롤
+  useEffect(() => {
+    const boothId = searchParams.get('id');
+    if (boothId && booths.length > 0) {
+      // 해당 부스 ID가 존재하는지 확인
+      const targetBooth = booths.find((booth: Booth) => booth.boothNumber === boothId);
+      if (targetBooth && selectedBoothNumber !== boothId) {
+        // 부스 선택
+        setSelectedBoothNumber(boothId);
+
+        // 약간의 딜레이 후 스크롤 (DOM 렌더링 완료 대기)
+        setTimeout(() => {
+          scrollToBoothCard(boothId);
+        }, 500);
+      }
+    }
+  }, [searchParams, booths, selectedBoothNumber]);
 
   // 스크롤 함수들
   const scrollToBoothCard = (boothNumber: string) => {
@@ -142,6 +163,11 @@ function BoothListContent() {
     // 부스 클릭 시 쓰레기통 표시 해제
     setShowTrashCans(false);
 
+    // URL 파라미터 초기화 (사용자 직접 선택이므로)
+    if (searchParams.get('id')) {
+      router.replace('/booth', { scroll: false });
+    }
+
     // 새로 선택된 경우에만 스크롤 (토글로 해제하는 경우는 스크롤 안함)
     if (!wasSelected) {
       setTimeout(() => scrollToBoothCard(boothNumber), 150);
@@ -154,6 +180,11 @@ function BoothListContent() {
 
     // 부스 클릭 시 쓰레기통 표시 해제
     setShowTrashCans(false);
+
+    // URL 파라미터 초기화 (사용자 직접 선택이므로)
+    if (searchParams.get('id')) {
+      router.replace('/booth', { scroll: false });
+    }
 
     // 새로 선택된 경우에만 지도로 스크롤
     if (!wasSelected) {
