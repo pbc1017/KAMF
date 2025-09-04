@@ -13,7 +13,7 @@
       "default": "./dist/types/*.js"
     },
     "./dtos/*": {
-      "types": "./dist/dtos/*.d.ts", 
+      "types": "./dist/dtos/*.d.ts",
       "default": "./dist/dtos/*.js"
     }
   },
