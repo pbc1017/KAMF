@@ -12,13 +12,13 @@ export enum UserRole {
 }
 
 export interface User extends BaseEntity {
-  email: string;
+  phoneNumber: string;
   displayName: string | null;
   roles: UserRole[];
 }
 
 export interface CreateUserRequest {
-  email: string;
+  phoneNumber: string;
   displayName?: string | null;
   roles?: UserRole[];
 }
@@ -30,7 +30,7 @@ export interface UpdateUserRequest {
 
 export interface UserSession {
   userId: string;
-  email: string;
+  phoneNumber: string;
   roles: UserRole[];
   expiresAt: Date;
 }

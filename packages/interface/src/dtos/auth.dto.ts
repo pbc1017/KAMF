@@ -5,18 +5,18 @@
 import { AuthTokens } from '../types/auth.type.js';
 
 export interface AuthRequest {
-  email: string;
+  phoneNumber: string;
 }
 
 export interface VerifyCodeRequest {
-  email: string;
+  phoneNumber: string;
   code: string;
 }
 
 export interface AuthResponse {
   user: {
     id: string;
-    email: string;
+    phoneNumber: string;
     displayName: string;
     roles: string[];
   };

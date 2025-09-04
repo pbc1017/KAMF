@@ -10,7 +10,7 @@ import { User as UserEntity } from '../../entities/user.entity.js';
 export function mapUserEntityToInterface(userEntity: UserEntity): UserInterface {
   return {
     id: userEntity.id,
-    email: userEntity.email,
+    phoneNumber: userEntity.phoneNumber,
     displayName: userEntity.displayName,
     roles: userEntity.roles.map(role => role.name),
     createdAt: userEntity.createdAt,

@@ -15,14 +15,14 @@ import { NicknameGenerator } from '../../common/utils/nickname-generator.js';
 import { UserService } from '../users/users.service.js';
 
 import { AuthRequestDto, VerifyCodeRequestDto, RefreshTokenRequestDto } from './auth.dto.js';
-import { EmailService } from './email.service.js';
 import { JwtAuthService } from './jwt.service.js';
+import { SmsService } from './sms.service.js';
 
 @ApiTags('인증 (Authentication)')
 @Controller('auth')
 export class AuthController {
   constructor(
-    private emailService: EmailService,
+    private smsService: SmsService,
     private jwtService: JwtAuthService,
     private userService: UserService
   ) {}
@@ -33,7 +33,7 @@ export class AuthController {
    */
   @ApiOperation({
     summary: '인증 코드 요청',
-    description: '이메일 주소로 인증 코드를 요청합니다.',
+    description: '휴대폰 번호로 SMS 인증 코드를 요청합니다.',
   })
   @ApiBody({ type: AuthRequestDto })
   @ApiOkResponse({
@@ -43,29 +43,24 @@ export class AuthController {
   @Post('request-code')
   async requestCode(@Body() body: AuthRequest): Promise<ApiResponse<RequestCodeResponse>> {
     try {
-      // 이메일 형식 기본 검증
-      if (!body.email || typeof body.email !== 'string') {
-        throw new BadRequestException('유효한 이메일 주소를 입력해주세요');
+      // 전화번호 형식 기본 검증
+      if (!body.phoneNumber || typeof body.phoneNumber !== 'string') {
+        throw new BadRequestException('유효한 전화번호를 입력해주세요');
       }
 
-      // 이메일 유효성 검증
-      if (!this.emailService.isValidEmail(body.email)) {
-        throw new BadRequestException('올바른 이메일 주소를 입력해주세요');
-      }
+      // 전화번호 정규화 (공백, 하이픈 제거)
+      const normalizedPhoneNumber = body.phoneNumber.replace(/[\s-]/g, '');
 
-      // 인증 코드 생성
-      const code = this.emailService.generateVerificationCode();
-
-      // 이메일로 인증 코드 발송
-      await this.emailService.sendVerificationCode(body.email, code);
+      // Twilio Verify API로 인증 시작
+      await this.smsService.startVerification(normalizedPhoneNumber);
 
       return {
         success: true,
         data: {
           message:
             process.env.NODE_ENV === 'development'
-              ? `개발 모드: 인증 코드 "${code}"를 사용하세요`
-              : '인증 코드가 이메일로 발송되었습니다',
+              ? '개발 모드: 인증 코드 "123456"을 사용하세요'
+              : '인증 코드가 발송되었습니다',
         },
       };
     } catch (error) {
@@ -80,7 +75,7 @@ export class AuthController {
    */
   @ApiOperation({
     summary: '인증 코드 검증 및 로그인',
-    description: '이메일로 받은 인증 코드를 검증하여 로그인을 진행합니다.',
+    description: 'SMS로 받은 인증 코드를 검증하여 로그인을 진행합니다.',
   })
   @ApiBody({ type: VerifyCodeRequestDto })
   @ApiOkResponse({
@@ -91,38 +86,36 @@ export class AuthController {
   async verifyCode(@Body() body: VerifyCodeRequest): Promise<ApiResponse<AuthResponse>> {
     try {
       // 입력값 기본 검증
-      if (!body.email || !body.code) {
-        throw new BadRequestException('이메일과 인증 코드를 모두 입력해주세요');
+      if (!body.phoneNumber || !body.code) {
+        throw new BadRequestException('전화번호와 인증 코드를 모두 입력해주세요');
       }
 
       if (body.code.length !== 6 || !/^\d{6}$/.test(body.code)) {
         throw new BadRequestException('인증 코드는 6자리 숫자여야 합니다');
       }
 
-      // 이메일 유효성 검증
-      if (!this.emailService.isValidEmail(body.email)) {
-        throw new BadRequestException('올바른 이메일 주소를 입력해주세요');
-      }
+      // 전화번호 정규화
+      const normalizedPhoneNumber = body.phoneNumber.replace(/[\s-]/g, '');
 
-      // 이메일 인증 코드 검증
-      const isValidCode = await this.emailService.checkVerificationCode(body.email, body.code);
+      // Twilio Verify API로 코드 검증
+      const isValidCode = await this.smsService.checkVerification(normalizedPhoneNumber, body.code);
 
       if (!isValidCode) {
         throw new UnauthorizedException('유효하지 않은 인증 코드입니다');
       }
 
       // 사용자 조회 또는 생성
-      let user = await this.userService.findByEmail(body.email);
+      let user = await this.userService.findByPhoneNumber(normalizedPhoneNumber);
 
       if (!user) {
         // 신규 사용자 생성 (기본 USER 역할)
         user = await this.userService.createUser({
-          email: body.email,
+          phoneNumber: normalizedPhoneNumber,
           roles: [UserRole.USER],
         });
-        console.log(`신규 사용자 생성: ${user.id}, 이메일: ${body.email}`);
+        console.log(`신규 사용자 생성: ${user.id}, 전화번호: ${normalizedPhoneNumber}`);
       } else {
-        console.log(`기존 사용자 로그인: ${user.id}, 이메일: ${body.email}`);
+        console.log(`기존 사용자 로그인: ${user.id}, 전화번호: ${normalizedPhoneNumber}`);
       }
 
       // displayName이 null인 경우 자동 생성
@@ -156,7 +149,7 @@ export class AuthController {
         data: {
           user: {
             id: user.id,
-            email: user.email,
+            phoneNumber: user.phoneNumber,
             displayName: user.displayName,
             roles: user.roles.map(role => role.name),
           },
@@ -212,7 +205,7 @@ export class AuthController {
         data: {
           user: {
             id: user.id,
-            email: user.email,
+            phoneNumber: user.phoneNumber,
             displayName: user.displayName,
             roles: user.roles.map(role => role.name),
           },

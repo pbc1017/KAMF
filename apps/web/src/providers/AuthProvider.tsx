@@ -8,7 +8,7 @@ import { apiClient, setTokens, clearTokens } from '@/lib/api';
 
 export interface AuthUser {
   id: string;
-  email: string;
+  phoneNumber: string;
   displayName: string | null;
   roles: string[];
 }

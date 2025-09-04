@@ -4,28 +4,26 @@ import {
   RefreshTokenRequest,
 } from '@kamf/interface/dtos/auth.dto.js';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, Length, Matches, IsEmail } from 'class-validator';
+import { IsString, IsNotEmpty, Length, Matches } from 'class-validator';
 
 export class AuthRequestDto implements AuthRequest {
   @ApiProperty({
-    description: '이메일 주소',
-    example: 'user@example.com',
+    description: '전화번호 (010-1234-5678 또는 01012345678 형식)',
+    example: '010-1234-5678',
   })
   @IsString()
-  @IsNotEmpty({ message: '이메일을 입력해주세요' })
-  @IsEmail({}, { message: '올바른 이메일 주소를 입력해주세요' })
-  email: string;
+  @IsNotEmpty({ message: '전화번호를 입력해주세요' })
+  phoneNumber: string;
 }
 
 export class VerifyCodeRequestDto implements VerifyCodeRequest {
   @ApiProperty({
-    description: '이메일 주소',
-    example: 'user@example.com',
+    description: '전화번호 (010-1234-5678 또는 01012345678 형식)',
+    example: '010-1234-5678',
   })
   @IsString()
-  @IsNotEmpty({ message: '이메일을 입력해주세요' })
-  @IsEmail({}, { message: '올바른 이메일 주소를 입력해주세요' })
-  email: string;
+  @IsNotEmpty({ message: '전화번호를 입력해주세요' })
+  phoneNumber: string;
 
   @ApiProperty({
     description: '6자리 인증 코드',
