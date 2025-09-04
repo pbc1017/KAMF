@@ -1,8 +1,4 @@
-import {
-  AuthRequest,
-  VerifyCodeRequest,
-  RefreshTokenRequest,
-} from '@kamf/interface/dtos/auth.dto.js';
+import { AuthRequest, VerifyCodeRequest } from '@kamf/interface/dtos/auth.dto.js';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, Length, Matches, IsEmail } from 'class-validator';
 
@@ -38,12 +34,4 @@ export class VerifyCodeRequestDto implements VerifyCodeRequest {
   code: string;
 }
 
-export class RefreshTokenRequestDto implements RefreshTokenRequest {
-  @ApiProperty({
-    description: 'Refresh Token',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-  })
-  @IsString()
-  @IsNotEmpty({ message: 'Refresh Token이 필요합니다' })
-  refreshToken: string;
-}
+// RefreshTokenRequestDto 제거됨 - HTTP-only 쿠키로 처리

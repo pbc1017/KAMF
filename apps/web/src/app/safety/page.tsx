@@ -1,6 +1,6 @@
 'use client';
 
-import type { TodayStats, UserStats } from '@kamf/interface';
+import type { TodayStats, UserStats } from '@kamf/interface/dtos/safety.dto.js';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';

@@ -1,6 +1,6 @@
 'use client';
 
-import type { MinuteStats } from '@kamf/interface';
+import type { MinuteStats } from '@kamf/interface/dtos/safety.dto.js';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState, useEffect } from 'react';
 import {

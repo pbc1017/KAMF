@@ -1,18 +1,11 @@
+import { isValidAuthResponse, AuthError } from '@kamf/interface/dtos/auth.dto.js';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 // 빌드 환경 감지
 const isBuildTime = typeof window === 'undefined' && process.env.NODE_ENV === 'production';
 
-export class ApiError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public statusText: string
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
+// ApiError 클래스는 @kamf/interface에서 AuthError로 대체됨
 
 // 빌드 타임용 mock 데이터 생성
 function getMockResponse(endpoint: string) {
@@ -40,74 +33,68 @@ function getAuthToken(): string | null {
   return localStorage.getItem('accessToken');
 }
 
-function getRefreshToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('refreshToken');
-}
+// getRefreshToken 제거 - 더 이상 필요 없음 (쿠키로 처리)
+// function getRefreshToken(): string | null {
+//   if (typeof window === 'undefined') return null;
+//   return localStorage.getItem('refreshToken');
+// }
 
-function setTokens(accessToken: string, refreshToken: string): void {
+function setTokens(accessToken: string): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem('accessToken', accessToken);
-  localStorage.setItem('refreshToken', refreshToken);
+  // refreshToken localStorage 저장 제거 - 쿠키로 처리
 }
 
 function clearTokens(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem('accessToken');
-  localStorage.removeItem('refreshToken');
+  // refreshToken localStorage 제거 로직 삭제 - 쿠키는 서버에서 관리
 }
 
 // 토큰 관리 함수들을 외부에서 사용할 수 있도록 export
-export { getAuthToken, getRefreshToken, setTokens, clearTokens };
+export { getAuthToken, setTokens, clearTokens };
 
 // 토큰 갱신을 위한 Promise 캐싱 (동시 요청 시 중복 방지)
-let refreshTokenPromise: Promise<{ accessToken: string; refreshToken: string } | null> | null =
-  null;
+let refreshTokenPromise: Promise<{ accessToken: string } | null> | null = null;
 
 // 토큰 갱신 함수
-async function refreshAccessToken(): Promise<{ accessToken: string; refreshToken: string } | null> {
+async function refreshAccessToken(): Promise<{ accessToken: string } | null> {
   // 이미 갱신 중인 경우 기존 Promise 반환 (중복 방지)
   if (refreshTokenPromise) {
     return refreshTokenPromise;
   }
 
-  const refreshToken = getRefreshToken();
-
-  if (!refreshToken) {
-    console.warn('No refresh token available');
-    return null;
-  }
-
   refreshTokenPromise = (async () => {
     try {
-      console.log('Attempting to refresh access token...');
+      console.log('🔄 Attempting to refresh access token using HTTP-only cookie...');
 
       const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ refreshToken }),
+        credentials: 'include', // HTTP-only 쿠키 자동 전송
       });
 
       if (!response.ok) {
-        throw new Error(`Token refresh failed: ${response.statusText}`);
+        throw new AuthError(`Token refresh failed: ${response.statusText}`, 'NETWORK_ERROR');
       }
 
       const data = await response.json();
 
-      if (data.success && data.tokens) {
-        const { accessToken, refreshToken: newRefreshToken } = data.tokens;
-        setTokens(accessToken, newRefreshToken);
-        console.log('Token refresh successful');
-        return { accessToken, refreshToken: newRefreshToken };
+      // 타입 가드를 사용한 응답 검증
+      if (isValidAuthResponse(data)) {
+        const { accessToken } = data.data!.tokens;
+        setTokens(accessToken); // localStorage에는 access token만 저장
+        console.log('✅ Token refresh successful');
+        return { accessToken };
       } else {
-        throw new Error('Invalid refresh response format');
+        throw new AuthError('Invalid refresh response format', 'PARSE_ERROR');
       }
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      console.error('❌ Token refresh failed:', error);
 
-      // 토큰 갱신 실패 시 모든 토큰 삭제
+      // 토큰 갱신 실패 시 localStorage의 access token 삭제
       clearTokens();
 
       // 로그아웃 이벤트 발생 (AuthProvider에서 처리하도록)
@@ -156,6 +143,7 @@ async function apiClientInternal<T>(
   try {
     const response = await fetch(url, {
       headers,
+      credentials: 'include', // HTTP-only 쿠키 자동 전송
       ...options,
     });
 
@@ -174,17 +162,16 @@ async function apiClientInternal<T>(
         return apiClientInternal<T>(endpoint, options, true);
       } else {
         // 토큰 갱신 실패 - 에러 던지기
-        throw new ApiError('Authentication failed - please login again', 401, 'Unauthorized');
+        throw new AuthError('Authentication failed - please login again', 'EXPIRED_TOKEN');
       }
     }
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('API Error Response:', errorText); // 디버깅용
-      throw new ApiError(
+      throw new AuthError(
         `API request failed: ${response.statusText} - ${errorText}`,
-        response.status,
-        response.statusText
+        'NETWORK_ERROR'
       );
     }
 
@@ -192,8 +179,8 @@ async function apiClientInternal<T>(
     console.log('API Response Data:', data); // 디버깅용
     return data;
   } catch (error) {
-    // ApiError는 그대로 재던지기
-    if (error instanceof ApiError) {
+    // AuthError는 그대로 재던지기
+    if (error instanceof AuthError) {
       throw error;
     }
 

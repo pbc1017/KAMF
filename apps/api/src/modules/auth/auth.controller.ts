@@ -3,18 +3,26 @@ import type {
   RequestCodeResponse,
   AuthRequest,
   VerifyCodeRequest,
-  RefreshTokenRequest,
 } from '@kamf/interface/dtos/auth.dto.js';
 import { ApiResponse } from '@kamf/interface/types/common.type.js';
 import { UserRole } from '@kamf/interface/types/user.type.js';
-import { Controller, Post, Body, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UnauthorizedException,
+  BadRequestException,
+  Res,
+  Req,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiOkResponse, ApiBody } from '@nestjs/swagger';
+import type { Request, Response } from 'express';
 
 import { MessageResponseDto, AuthResponseDto } from '../../common/dto/common.dto.js';
 import { NicknameGenerator } from '../../common/utils/nickname-generator.js';
 import { UserService } from '../users/users.service.js';
 
-import { AuthRequestDto, VerifyCodeRequestDto, RefreshTokenRequestDto } from './auth.dto.js';
+import { AuthRequestDto } from './auth.dto.js';
 import { EmailService } from './email.service.js';
 import { JwtAuthService } from './jwt.service.js';
 
@@ -26,6 +34,21 @@ export class AuthController {
     private jwtService: JwtAuthService,
     private userService: UserService
   ) {}
+
+  /**
+   * HTTP-only 쿠키 설정을 위한 헬퍼 메서드
+   */
+  private setRefreshTokenCookie(res: Response, refreshToken: string) {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: isProduction, // production에서만 HTTPS 필수
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+      path: '/',
+    });
+  }
 
   /**
    * 인증 코드 요청 API
@@ -64,7 +87,7 @@ export class AuthController {
         data: {
           message:
             process.env.NODE_ENV === 'development'
-              ? `개발 모드: 인증 코드 "${code}"를 사용하세요`
+              ? `개발 모드: 인증 코드 123456을 사용하세요`
               : '인증 코드가 이메일로 발송되었습니다',
         },
       };
@@ -78,17 +101,11 @@ export class AuthController {
    * 인증 코드 검증 및 로그인 API
    * POST /api/auth/verify
    */
-  @ApiOperation({
-    summary: '인증 코드 검증 및 로그인',
-    description: '이메일로 받은 인증 코드를 검증하여 로그인을 진행합니다.',
-  })
-  @ApiBody({ type: VerifyCodeRequestDto })
-  @ApiOkResponse({
-    description: '인증 성공 및 토큰 발급',
-    type: AuthResponseDto,
-  })
   @Post('verify')
-  async verifyCode(@Body() body: VerifyCodeRequest): Promise<ApiResponse<AuthResponse>> {
+  async verifyCode(
+    @Body() body: VerifyCodeRequest,
+    @Res({ passthrough: true }) res: Response
+  ): Promise<ApiResponse<AuthResponse>> {
     try {
       // 입력값 기본 검증
       if (!body.email || !body.code) {
@@ -151,6 +168,9 @@ export class AuthController {
       // JWT 토큰 생성
       const tokens = this.jwtService.generateTokens(user);
 
+      // HTTP-only 쿠키로 refresh token 설정
+      this.setRefreshTokenCookie(res, tokens.refreshToken);
+
       return {
         success: true,
         data: {
@@ -160,7 +180,11 @@ export class AuthController {
             displayName: user.displayName,
             roles: user.roles.map(role => role.name),
           },
-          tokens,
+          tokens: {
+            accessToken: tokens.accessToken,
+            expiresIn: tokens.expiresIn,
+            // refreshToken 제거 - 쿠키로 처리
+          },
         },
       };
     } catch (error) {
@@ -180,23 +204,31 @@ export class AuthController {
    */
   @ApiOperation({
     summary: '토큰 갱신',
-    description: 'Refresh Token을 사용하여 새로운 Access Token을 발급받습니다.',
+    description: 'HTTP-only 쿠키의 Refresh Token을 사용하여 새로운 Access Token을 발급받습니다.',
   })
-  @ApiBody({ type: RefreshTokenRequestDto })
   @ApiOkResponse({
     description: '토큰 갱신 성공',
     type: AuthResponseDto,
   })
   @Post('refresh')
-  async refreshToken(@Body() body: RefreshTokenRequest): Promise<ApiResponse<AuthResponse>> {
+  async refreshToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
+  ): Promise<
+    ApiResponse<
+      Omit<AuthResponse, 'tokens'> & { tokens: { accessToken: string; expiresIn: number } }
+    >
+  > {
     try {
-      // Refresh Token 검증
-      if (!body.refreshToken) {
+      // HTTP-only 쿠키에서 Refresh Token 추출
+      const refreshToken = req.cookies?.refreshToken;
+
+      if (!refreshToken) {
         throw new BadRequestException('Refresh Token이 필요합니다');
       }
 
       // 토큰 검증 및 페이로드 추출
-      const payload = this.jwtService.verifyRefreshToken(body.refreshToken);
+      const payload = this.jwtService.verifyRefreshToken(refreshToken);
 
       // 사용자 정보 조회 (최신 정보 반영)
       const user = await this.userService.findById(payload.userId);
@@ -207,6 +239,9 @@ export class AuthController {
       // 새로운 토큰 쌍 생성
       const tokens = this.jwtService.refreshTokens(user);
 
+      // 새로운 Refresh Token을 HTTP-only 쿠키로 설정
+      this.setRefreshTokenCookie(res, tokens.refreshToken);
+
       return {
         success: true,
         data: {
@@ -216,7 +251,10 @@ export class AuthController {
             displayName: user.displayName,
             roles: user.roles.map(role => role.name),
           },
-          tokens,
+          tokens: {
+            accessToken: tokens.accessToken,
+            expiresIn: tokens.expiresIn,
+          },
         },
       };
     } catch (error) {
@@ -227,6 +265,43 @@ export class AuthController {
       }
 
       throw new UnauthorizedException('토큰 갱신에 실패했습니다');
+    }
+  }
+
+  /**
+   * 로그아웃 API
+   * POST /api/auth/logout
+   */
+  @ApiOperation({
+    summary: '로그아웃',
+    description: 'HTTP-only 쿠키의 Refresh Token을 제거합니다.',
+  })
+  @ApiOkResponse({
+    description: '로그아웃 성공',
+    type: MessageResponseDto,
+  })
+  @Post('logout')
+  async logout(
+    @Res({ passthrough: true }) res: Response
+  ): Promise<ApiResponse<{ message: string }>> {
+    try {
+      // Refresh Token 쿠키 제거
+      res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/',
+      });
+
+      return {
+        success: true,
+        data: {
+          message: '성공적으로 로그아웃되었습니다',
+        },
+      };
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
+      throw new BadRequestException('로그아웃 처리 중 오류가 발생했습니다');
     }
   }
 }
