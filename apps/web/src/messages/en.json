@@ -157,6 +157,14 @@
     "performanceNotice": "All performances may be subject to change due to weather or on-site conditions.",
     "contactInfo": "Please check the information desk for the latest updates."
   },
+  "share": {
+    "shareButton": "Share",
+    "shareSuccess": "Link copied to clipboard!",
+    "shareError": "Failed to share. Please try again.",
+    "shareWith": "Share",
+    "copyLink": "Copy Link",
+    "shareVia": "Share via other apps"
+  },
   "metadata": {
     "title": "2025 KAMF",
     "description": "KAMF official website"
