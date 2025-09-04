@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class ReplacePhoneNumberWithEmail1757032000000 implements MigrationInterface {
-  name = 'ReplacePhoneNumberWithEmail1757032000000';
+export class ReplacePhoneNumberWithEmail1756812000000 implements MigrationInterface {
+  name = 'ReplacePhoneNumberWithEmail1756812000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // 1. email 컬럼 추가 (nullable로 시작)
