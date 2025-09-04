@@ -6,9 +6,8 @@ import {
   AuthRequest,
   VerifyCodeRequest,
   AuthResponse,
-  RefreshTokenRequest,
   RequestCodeResponse,
-} from '@kamf/interface';
+} from '@kamf/interface/dtos/auth.dto.js';
 import { useMutation } from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api';
@@ -35,13 +34,13 @@ export function useVerifyCode() {
   });
 }
 
-// 토큰 갱신 hook
+// 토큰 갱신 hook (HTTP-only 쿠키 사용)
 export function useRefreshToken() {
   return useMutation({
-    mutationFn: (data: RefreshTokenRequest) =>
+    mutationFn: () =>
       apiClient<{ data: AuthResponse }>('auth/refresh', {
         method: 'POST',
-        body: JSON.stringify(data),
+        credentials: 'include', // HTTP-only 쿠키 자동 전송
       }),
   });
 }
@@ -50,7 +49,18 @@ export function useRefreshToken() {
 export function logout(): void {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    window.location.href = '/';
+    // refreshToken localStorage 제거 로직 삭제 - 서버에서 쿠키 관리
+
+    // 서버에 로그아웃 요청 (쿠키 클리어)
+    fetch('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+    })
+      .catch(error => {
+        console.error('Logout request failed:', error);
+      })
+      .finally(() => {
+        window.location.href = '/';
+      });
   }
 }

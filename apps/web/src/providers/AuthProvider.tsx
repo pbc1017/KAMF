@@ -1,6 +1,7 @@
 'use client';
 
-import { AuthTokens, GetUserResponse } from '@kamf/interface';
+import { GetUserResponse } from '@kamf/interface/dtos/user.dto.js';
+import { AuthTokens } from '@kamf/interface/types/auth.type.js';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
@@ -79,8 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [isError, hasToken, mounted]);
 
   const handleLogin = (tokens: AuthTokens, userData: AuthUser) => {
-    // 토큰 저장 (api.ts의 토큰 관리 함수 사용)
-    setTokens(tokens.accessToken, tokens.refreshToken);
+    // 토큰 저장 (access token만 localStorage에 저장)
+    setTokens(tokens.accessToken);
 
     // 캐시 업데이트 - API 응답 구조에 맞게 설정
     queryClient.setQueryData(['user', 'me'], {
