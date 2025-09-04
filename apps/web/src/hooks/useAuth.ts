@@ -45,22 +45,5 @@ export function useRefreshToken() {
   });
 }
 
-// 로그아웃 유틸리티 함수 (hook이 필요 없는 간단한 작업)
-export function logout(): void {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('accessToken');
-    // refreshToken localStorage 제거 로직 삭제 - 서버에서 쿠키 관리
-
-    // 서버에 로그아웃 요청 (쿠키 클리어)
-    apiClient('auth/logout', {
-      method: 'POST',
-      credentials: 'include',
-    })
-      .catch(error => {
-        console.error('Logout request failed:', error);
-      })
-      .finally(() => {
-        window.location.href = '/';
-      });
-  }
-}
+// 로그아웃 함수는 AuthProvider에서 제공합니다.
+// useAuth 훅에서 로그아웃을 사용하려면: const { logout } = useAuth();
