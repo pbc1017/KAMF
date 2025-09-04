@@ -1,7 +1,7 @@
 'use client';
 
 import { Booth } from '@kamf/interface/types/festival.type.js';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState, useMemo, Suspense, useRef } from 'react';
 
 import { BoothCard } from '@/components/BoothCard';
@@ -35,7 +35,9 @@ function BoothListSkeleton() {
 
 // 실제 부스 리스트 컴포넌트
 function BoothListContent() {
+  const locale = useLocale();
   const t = useTranslations('booth');
+  const isEnglish = locale === 'en';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBoothNumber, setSelectedBoothNumber] = useState<string | null>(null);
   const [showTrashCans, setShowTrashCans] = useState(false);
@@ -49,17 +51,27 @@ function BoothListContent() {
 
   const filteredBooths = useMemo(() => {
     return booths.filter((booth: Booth) => {
-      // 검색어 필터만 적용
-      const searchMatch =
-        !searchQuery ||
-        booth.titleKo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booth.titleEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booth.descriptionKo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booth.descriptionEn.toLowerCase().includes(searchQuery.toLowerCase());
+      // 현재 화면에 표시되는 내용만 검색
+      if (!searchQuery) return true;
 
-      return searchMatch;
+      const query = searchQuery.toLowerCase();
+
+      if (isEnglish) {
+        // 영어 모드: 주제목(titleEn), 부제목(titleKo), 설명(descriptionEn)
+        return (
+          booth.titleEn.toLowerCase().includes(query) ||
+          booth.titleKo.toLowerCase().includes(query) ||
+          booth.descriptionEn.toLowerCase().includes(query)
+        );
+      } else {
+        // 한국어 모드: 주제목(titleKo), 부제목(titleKo는 중복), 설명(descriptionKo)
+        return (
+          booth.titleKo.toLowerCase().includes(query) ||
+          booth.descriptionKo.toLowerCase().includes(query)
+        );
+      }
     });
-  }, [booths, searchQuery]);
+  }, [booths, searchQuery, isEnglish]);
 
   // 헤더 높이를 계산하는 함수
   const getHeaderHeight = () => {
