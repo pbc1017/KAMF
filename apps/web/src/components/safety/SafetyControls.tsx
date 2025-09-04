@@ -1,6 +1,7 @@
 'use client';
 
-import type { TodayStats, UserStats } from '@kamf/interface';
+import type { TodayStats, UserStats } from '@kamf/interface/dtos/safety.dto.js';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
@@ -67,6 +68,12 @@ interface SafetyControlsProps {
 }
 
 export default function SafetyControls({ onStatsUpdate }: SafetyControlsProps) {
+  const locale = useLocale();
+  const t = useTranslations('safety.controls');
+  const toast_t = useTranslations('safety.toast');
+
+  // 언어별 로케일 설정
+  const timeLocale = locale === 'en' ? 'en-US' : 'ko-KR';
   // 로컬 상태 관리
   const [localCounts, setLocalCounts] = useState<LocalSafetyCount>({
     increment: 0,
@@ -199,7 +206,7 @@ export default function SafetyControls({ onStatsUpdate }: SafetyControlsProps) {
 
       // 카운트 동기화 성공 토스트 (값이 0이 아닐 때만)
       if (currentCounts.increment > 0 || currentCounts.decrement > 0) {
-        toast.success(`카운트 동기화 완료! 현재 총 인원: ${response.currentTotal}명`, {
+        toast.success(toast_t('syncSuccess', { count: response.currentTotal }), {
           icon: '🔄',
           duration: 2500,
           position: 'top-center',
@@ -207,7 +214,7 @@ export default function SafetyControls({ onStatsUpdate }: SafetyControlsProps) {
       }
     } catch (error) {
       console.error('Sync failed:', error);
-      toast.error('카운트 동기화에 실패했습니다. 다시 시도합니다...', {
+      toast.error(toast_t('syncError'), {
         icon: '⚠️',
         duration: 3500,
         position: 'top-center',
@@ -325,16 +332,17 @@ export default function SafetyControls({ onStatsUpdate }: SafetyControlsProps) {
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-700">인원 카운트</h3>
+        <h3 className="text-lg font-semibold text-gray-700">{t('title')}</h3>
         {/* 동기화 상태 및 순 기여도 표시 */}
         <div className="text-right text-sm">
           <div className="text-gray-500 mb-1">
-            순 기여도: <span className="font-bold text-blue-600">{displayStats.netCount}</span>
+            {t('netCount')}:{' '}
+            <span className="font-bold text-blue-600">{displayStats.netCount}</span>
           </div>
           {isSyncing && (
             <div className="text-orange-600 text-xs flex items-center">
               <div className="animate-spin rounded-full h-3 w-3 border-b border-orange-600 mr-1"></div>
-              카운트 동기화 중...
+              {t('syncing')}
             </div>
           )}
         </div>
@@ -348,8 +356,8 @@ export default function SafetyControls({ onStatsUpdate }: SafetyControlsProps) {
           isLoading={false} // 로컬 업데이트는 즉시 처리
           disabled={false}
         >
-          <div className="text-xl font-bold">IN</div>
-          <div className="text-sm mt-1">입장</div>
+          <div className="text-xl font-bold">{t('in')}</div>
+          <div className="text-sm mt-1">{t('enter')}</div>
         </CountButton>
 
         <CountButton
@@ -358,8 +366,8 @@ export default function SafetyControls({ onStatsUpdate }: SafetyControlsProps) {
           isLoading={false} // 로컬 업데이트는 즉시 처리
           disabled={false}
         >
-          <div className="text-xl font-bold">OUT</div>
-          <div className="text-sm mt-1">퇴장</div>
+          <div className="text-xl font-bold">{t('out')}</div>
+          <div className="text-sm mt-1">{t('exit')}</div>
         </CountButton>
       </div>
 
@@ -368,32 +376,30 @@ export default function SafetyControls({ onStatsUpdate }: SafetyControlsProps) {
         <div className="grid grid-cols-3 gap-2 text-center text-sm">
           <div>
             <div className="text-green-600 font-bold text-lg">{displayStats.increment}</div>
-            <div className="text-gray-500">내가 센 입장</div>
+            <div className="text-gray-500">{t('enter')}</div>
           </div>
           <div>
             <div className="text-red-600 font-bold text-lg">{displayStats.decrement}</div>
-            <div className="text-gray-500">내가 센 퇴장</div>
+            <div className="text-gray-500">{t('exit')}</div>
           </div>
           <div>
             <div className="text-blue-600 font-bold text-lg">{displayStats.netCount}</div>
-            <div className="text-gray-500">순 기여</div>
+            <div className="text-gray-500">{t('netCount')}</div>
           </div>
         </div>
       </div>
 
       {/* 마지막 동기화 시간 및 상태 */}
       <div className="mt-4 border-t pt-3">
-        <div className="text-xs text-gray-400 text-center">
-          💡 카운트는 즉시 반영되며 5초마다 서버로 동기화됩니다
-        </div>
+        <div className="text-xs text-gray-400 text-center">💡 {t('syncInfo')}</div>
         {lastSyncTime && (
           <div className="text-xs text-gray-500 text-center mt-2">
-            마지막 카운트 동기화: {new Date(lastSyncTime).toLocaleTimeString('ko-KR')}
+            {t('lastSync')}: {new Date(lastSyncTime).toLocaleTimeString(timeLocale)}
           </div>
         )}
         {localCounts.lastUpdated && (
           <div className="text-xs text-gray-400 text-center">
-            마지막 업데이트: {new Date(localCounts.lastUpdated).toLocaleTimeString('ko-KR')}
+            {t('lastUpdate')}: {new Date(localCounts.lastUpdated).toLocaleTimeString(timeLocale)}
           </div>
         )}
       </div>

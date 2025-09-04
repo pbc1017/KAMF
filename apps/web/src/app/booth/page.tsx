@@ -1,6 +1,7 @@
 'use client';
 
 import { Booth } from '@kamf/interface/types/festival.type.js';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState, useMemo, Suspense, useRef } from 'react';
 
 import { BoothCard } from '@/components/BoothCard';
@@ -34,6 +35,9 @@ function BoothListSkeleton() {
 
 // 실제 부스 리스트 컴포넌트
 function BoothListContent() {
+  const locale = useLocale();
+  const t = useTranslations('booth');
+  const isEnglish = locale === 'en';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBoothNumber, setSelectedBoothNumber] = useState<string | null>(null);
   const [showTrashCans, setShowTrashCans] = useState(false);
@@ -47,17 +51,27 @@ function BoothListContent() {
 
   const filteredBooths = useMemo(() => {
     return booths.filter((booth: Booth) => {
-      // 검색어 필터만 적용
-      const searchMatch =
-        !searchQuery ||
-        booth.titleKo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booth.titleEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booth.descriptionKo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booth.descriptionEn.toLowerCase().includes(searchQuery.toLowerCase());
+      // 현재 화면에 표시되는 내용만 검색
+      if (!searchQuery) return true;
 
-      return searchMatch;
+      const query = searchQuery.toLowerCase();
+
+      if (isEnglish) {
+        // 영어 모드: 주제목(titleEn), 부제목(titleKo), 설명(descriptionEn)
+        return (
+          booth.titleEn.toLowerCase().includes(query) ||
+          booth.titleKo.toLowerCase().includes(query) ||
+          booth.descriptionEn.toLowerCase().includes(query)
+        );
+      } else {
+        // 한국어 모드: 주제목(titleKo), 부제목(titleKo는 중복), 설명(descriptionKo)
+        return (
+          booth.titleKo.toLowerCase().includes(query) ||
+          booth.descriptionKo.toLowerCase().includes(query)
+        );
+      }
     });
-  }, [booths, searchQuery]);
+  }, [booths, searchQuery, isEnglish]);
 
   // 헤더 높이를 계산하는 함수
   const getHeaderHeight = () => {
@@ -154,11 +168,9 @@ function BoothListContent() {
         <div className="text-center mb-12">
           <div>
             <h1 className="text-6xl font-bold text-white mb-6">
-              KAMF <span className="text-purple-gradient">부스</span>
+              <span className="text-purple-gradient">{t('title')}</span>
             </h1>
-            <p className="text-2xl text-purple-200 font-medium">
-              다양한 부스와 음식, 체험존을 둘러보세요
-            </p>
+            <p className="text-2xl text-purple-200 font-medium">{t('subtitle')}</p>
           </div>
         </div>
 
@@ -167,15 +179,20 @@ function BoothListContent() {
           <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
         </div>
 
+        {/* 사용 가이드 */}
+        <div className="mb-6 text-center">
+          <p className="text-purple-200 text-lg">{t('guide')}</p>
+        </div>
+
         {/* 결과 수 표시 및 쓰레기통 위치 버튼 */}
         <div className="mb-8 flex flex-row flex-wrap items-center gap-4">
           <div className="card-purple p-6 rounded-2xl max-w-[80%] flex-shrink">
-            <p className="text-purple-100 text-lg break-keep ">
-              총{' '}
+            <p className="text-purple-100 text-lg break-keep">
+              {t('totalCount')}{' '}
               <span className="font-bold text-purple-gradient text-xl">
                 {filteredBooths.length}
-              </span>
-              개의 부스가 있습니다
+              </span>{' '}
+              {t('totalCountSuffix')}
             </p>
           </div>
 
@@ -187,7 +204,7 @@ function BoothListContent() {
                 : 'bg-purple-600/60 text-purple-100 hover:bg-purple-500/70 hover:text-white'
             }`}
           >
-            쓰레기통 위치
+            {t('trashCanLocation')}
             {showTrashCans && <span className="text-xs">✓</span>}
           </button>
         </div>
@@ -239,8 +256,8 @@ function BoothListContent() {
                       d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.071-2.33"
                     />
                   </svg>
-                  <h3 className="text-2xl font-bold text-white mb-3">검색 결과가 없습니다</h3>
-                  <p className="text-purple-200 text-lg">다른 검색어나 필터를 시도해보세요.</p>
+                  <h3 className="text-2xl font-bold text-white mb-3">{t('noResults')}</h3>
+                  <p className="text-purple-200 text-lg">{t('noResultsDescription')}</p>
                 </div>
               </div>
             )}

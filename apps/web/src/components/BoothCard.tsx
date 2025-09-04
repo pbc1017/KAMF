@@ -1,6 +1,7 @@
 'use client';
 
 import { Booth, Zone } from '@kamf/interface/types/festival.type.js';
+import { useLocale, useTranslations } from 'next-intl';
 import { forwardRef } from 'react';
 
 interface BoothCardProps {
@@ -15,13 +16,6 @@ const zoneColors = {
   [Zone.INFO]: 'from-purple-500 to-violet-600',
   [Zone.FOOD_TRUCK]: 'from-purple-500 to-pink-500',
   [Zone.NIGHT_MARKET]: 'from-violet-600 to-purple-600',
-};
-
-const zoneLabels = {
-  [Zone.BOOTH]: '부스',
-  [Zone.INFO]: '안내소',
-  [Zone.FOOD_TRUCK]: '푸드트럭',
-  [Zone.NIGHT_MARKET]: '야시장',
 };
 
 function highlightText(text: string, query: string) {
@@ -48,6 +42,30 @@ export const BoothCard = forwardRef<HTMLDivElement, BoothCardProps>(function Boo
   { booth, searchQuery = '', isSelected = false, onClick },
   ref
 ) {
+  const locale = useLocale();
+  const zones = useTranslations('zones');
+  const isEnglish = locale === 'en';
+
+  const mainTitle = isEnglish ? booth.titleEn : booth.titleKo;
+  const subTitle = booth.titleKo; // 부제목은 항상 한글
+  const description = isEnglish ? booth.descriptionEn : booth.descriptionKo;
+
+  // Zone 라벨 매핑
+  const getZoneLabel = (zone: Zone) => {
+    switch (zone) {
+      case Zone.BOOTH:
+        return zones('booth');
+      case Zone.INFO:
+        return zones('info');
+      case Zone.FOOD_TRUCK:
+        return zones('foodTruck');
+      case Zone.NIGHT_MARKET:
+        return zones('nightMarket');
+      default:
+        return zone;
+    }
+  };
+
   const handleClick = () => {
     onClick?.(booth.boothNumber);
   };
@@ -67,15 +85,15 @@ export const BoothCard = forwardRef<HTMLDivElement, BoothCardProps>(function Boo
               isSelected ? 'text-purple-300' : 'text-white group-hover:text-purple-gradient'
             }`}
           >
-            {highlightText(booth.titleKo, searchQuery)}
+            {highlightText(mainTitle, searchQuery)}
           </h3>
 
           <p className="text-lg text-purple-300 mb-4 font-medium">
-            {highlightText(booth.titleEn, searchQuery)}
+            {highlightText(subTitle, searchQuery)}
           </p>
 
           <p className="text-purple-100 leading-relaxed text-lg">
-            {highlightText(booth.descriptionKo, searchQuery)}
+            {highlightText(description, searchQuery)}
           </p>
         </div>
 
@@ -83,7 +101,7 @@ export const BoothCard = forwardRef<HTMLDivElement, BoothCardProps>(function Boo
           <span
             className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r ${zoneColors[booth.zone]} text-white shadow-lg`}
           >
-            {zoneLabels[booth.zone]}
+            {getZoneLabel(booth.zone)}
           </span>
           <span
             className={`text-sm font-medium transition-colors ${

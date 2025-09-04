@@ -1,6 +1,7 @@
 'use client';
 
-import { AuthTokens, GetUserResponse } from '@kamf/interface';
+import { GetUserResponse } from '@kamf/interface/dtos/user.dto.js';
+import { AuthTokens } from '@kamf/interface/types/auth.type.js';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
@@ -18,7 +19,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (tokens: AuthTokens, user: AuthUser) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -79,8 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [isError, hasToken, mounted]);
 
   const handleLogin = (tokens: AuthTokens, userData: AuthUser) => {
-    // 토큰 저장 (api.ts의 토큰 관리 함수 사용)
-    setTokens(tokens.accessToken, tokens.refreshToken);
+    // 토큰 저장 (access token만 localStorage에 저장)
+    setTokens(tokens.accessToken);
 
     // 캐시 업데이트 - API 응답 구조에 맞게 설정
     queryClient.setQueryData(['user', 'me'], {
@@ -91,7 +92,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAuthenticated(true);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    console.log('🚪 Starting logout process (AuthProvider)...');
+
+    try {
+      // 1. 서버에 로그아웃 요청 - HTTP-only 쿠키 클리어
+      console.log('🔄 Sending logout request to clear HTTP-only cookie...');
+      await apiClient('auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      console.log('✅ Server logout request completed');
+    } catch (error) {
+      console.error('❌ Server logout request failed:', error);
+      // 서버 요청 실패해도 클라이언트 정리는 계속 진행
+    }
+
+    // 2. 클라이언트 측 정리
+    console.log('🧹 Clearing client-side tokens and cache...');
+
     // 토큰 제거 (api.ts의 토큰 관리 함수 사용)
     clearTokens();
 
@@ -100,7 +119,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setIsAuthenticated(false);
 
-    // 홈으로 리다이렉트
+    // 3. 홈으로 리다이렉트
+    console.log('🏠 Redirecting to home...');
     if (typeof window !== 'undefined') {
       window.location.href = '/';
     }

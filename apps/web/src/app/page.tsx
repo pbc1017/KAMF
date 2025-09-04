@@ -1,50 +1,55 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 
 import { getTodayStagesUrl } from '@/utils/stages';
 
-// 부스별 운영 시간 정보
-const operatingHours = [
-  {
-    zone: '부스존',
-    hours: '10:00 - 18:00',
-    description: '학과별 체험 부스',
-    status: 'open',
-  },
-  {
-    zone: '안내소',
-    hours: '09:00 - 19:00',
-    description: '종합 안내 및 분실물',
-    status: 'open',
-  },
-  {
-    zone: '푸드트럭',
-    hours: '11:00 - 22:00',
-    description: '다양한 음식 판매',
-    status: 'open',
-  },
-  {
-    zone: '야시장',
-    hours: '17:00 - 24:00',
-    description: '주류 및 안주 판매',
-    status: 'open',
-  },
-  {
-    zone: '무대',
-    hours: '14:00 - 21:00',
-    description: '공연 및 이벤트',
-    status: 'open',
-  },
-];
+export default async function Home() {
+  const t = await getTranslations('home');
+  const common = await getTranslations('common');
+  const nav = await getTranslations('nav');
+  const operatingHoursT = await getTranslations('operatingHours');
 
-export default function Home() {
+  // 부스별 운영 시간 정보
+  const operatingHoursData = [
+    {
+      zone: operatingHoursT('boothZone'),
+      hours: '10:00 - 18:00',
+      description: operatingHoursT('descriptions.booth'),
+      status: 'open',
+    },
+    {
+      zone: operatingHoursT('infoDesk'),
+      hours: '09:00 - 19:00',
+      description: operatingHoursT('descriptions.info'),
+      status: 'open',
+    },
+    {
+      zone: operatingHoursT('foodTruck'),
+      hours: '11:00 - 22:00',
+      description: operatingHoursT('descriptions.foodTruck'),
+      status: 'open',
+    },
+    {
+      zone: operatingHoursT('nightMarket'),
+      hours: '17:00 - 24:00',
+      description: operatingHoursT('descriptions.nightMarket'),
+      status: 'open',
+    },
+    {
+      zone: operatingHoursT('stageZone'),
+      hours: '14:00 - 21:00',
+      description: operatingHoursT('descriptions.stage'),
+      status: 'open',
+    },
+  ];
   const mainNavigation = [
     {
-      title: '부스 배치도',
+      title: nav('boothMap'),
       url: '/booth',
     },
     {
-      title: '무대 시간표',
+      title: nav('stageSchedule'),
       url: getTodayStagesUrl(),
     },
   ];
@@ -57,7 +62,7 @@ export default function Home() {
           <h1 className="text-6xl font-bold text-white mb-6">
             <span className="text-purple-gradient">KAMF</span> 2025
           </h1>
-          <p className="text-2xl text-purple-200 font-medium">KAIST Art & Music Festival</p>
+          <p className="text-2xl text-purple-200 font-medium">{common('subtitle')}</p>
         </div>
       </div>
 
@@ -73,10 +78,10 @@ export default function Home() {
               className="object-contain mx-auto mb-8"
               draggable={false}
             />
-            <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 gap-6 max-w-md mx-auto">
               {mainNavigation.map((nav, index) => (
                 <Link key={index} href={nav.url}>
-                  <button className="py-4 px-8 bg-gradient-to-r from-purple-700/40 to-indigo-700/40 hover:from-purple-600/60 hover:to-indigo-600/60 backdrop-blur-sm border border-purple-400/30 hover:border-purple-300/50 rounded-xl transition-all duration-300 text-xl font-bold text-white hover:scale-105 min-w-fit whitespace-nowrap">
+                  <button className="w-full py-4 px-8 bg-gradient-to-r from-purple-700/40 to-indigo-700/40 hover:from-purple-600/60 hover:to-indigo-600/60 backdrop-blur-sm border border-purple-400/30 hover:border-purple-300/50 rounded-xl transition-all duration-300 text-xl font-bold text-white hover:scale-105 text-center">
                     {nav.title}
                   </button>
                 </Link>
@@ -87,9 +92,9 @@ export default function Home() {
 
         {/* 부스별 운영 시간 */}
         <div className="card-purple rounded-3xl shadow-2xl p-8 mb-16">
-          <h3 className="text-3xl font-bold text-white mb-8 text-center">부스별 운영 시간</h3>
+          <h3 className="text-3xl font-bold text-white mb-8 text-center">{t('operatingHours')}</h3>
           <div className="space-y-4">
-            {operatingHours.map((booth, index) => (
+            {operatingHoursData.map((booth, index) => (
               <div
                 key={index}
                 className="flex items-center justify-between p-6 bg-gradient-to-r from-purple-800/20 to-indigo-800/20 backdrop-blur-sm border border-purple-500/20 rounded-xl hover:border-purple-400/30 transition-all duration-300"
@@ -104,7 +109,7 @@ export default function Home() {
                           : 'bg-gradient-to-r from-yellow-500/30 to-orange-500/30 text-yellow-200 border border-yellow-400/30'
                       }`}
                     >
-                      {booth.status === 'open' ? '운영중' : '준비중'}
+                      {booth.status === 'open' ? common('open') : common('closed')}
                     </span>
                   </div>
                   <p className="text-purple-200 mt-2">{booth.description}</p>
@@ -118,9 +123,7 @@ export default function Home() {
 
           {/* 추가 안내 */}
           <div className="mt-8 p-6 bg-gradient-to-r from-purple-600/20 to-indigo-600/20 backdrop-blur-sm border border-purple-400/30 rounded-xl">
-            <p className="text-purple-100 text-center leading-relaxed">
-              💡 운영 시간은 상황에 따라 변경될 수 있습니다.
-            </p>
+            <p className="text-purple-100 text-center leading-relaxed">💡 {t('notice')}</p>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@
  * User data management hooks
  */
 
-import { GetUserResponse, UpdateUserResponse } from '@kamf/interface';
+import { GetUserResponse, UpdateUserResponse } from '@kamf/interface/dtos/user.dto.js';
 import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api';

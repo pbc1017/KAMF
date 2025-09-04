@@ -1,17 +1,20 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 interface SearchBarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
 }
 
 export function SearchBar({ searchQuery, onSearchChange }: SearchBarProps) {
+  const t = useTranslations('search');
   return (
     <div className="card-purple p-8 rounded-3xl shadow-2xl">
       {/* 검색창 */}
       <div>
         <label htmlFor="search" className="block text-lg font-medium text-white mb-3">
-          부스 검색
+          {t('title')}
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -33,7 +36,7 @@ export function SearchBar({ searchQuery, onSearchChange }: SearchBarProps) {
             type="text"
             id="search"
             className="block w-full pl-4 pr-4 py-4 bg-gradient-to-r from-purple-800/20 to-indigo-800/20 backdrop-blur-sm border border-purple-500/20 rounded-2xl text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400/50 focus:border-purple-400/50 transition-all duration-300 text-lg"
-            placeholder="부스명이나 설명으로 검색하세요"
+            placeholder={t('placeholder')}
             value={searchQuery}
             onChange={e => onSearchChange(e.target.value)}
           />

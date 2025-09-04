@@ -6,9 +6,8 @@ import {
   AuthRequest,
   VerifyCodeRequest,
   AuthResponse,
-  RefreshTokenRequest,
   RequestCodeResponse,
-} from '@kamf/interface';
+} from '@kamf/interface/dtos/auth.dto.js';
 import { useMutation } from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api';
@@ -35,22 +34,16 @@ export function useVerifyCode() {
   });
 }
 
-// 토큰 갱신 hook
+// 토큰 갱신 hook (HTTP-only 쿠키 사용)
 export function useRefreshToken() {
   return useMutation({
-    mutationFn: (data: RefreshTokenRequest) =>
+    mutationFn: () =>
       apiClient<{ data: AuthResponse }>('auth/refresh', {
         method: 'POST',
-        body: JSON.stringify(data),
+        credentials: 'include', // HTTP-only 쿠키 자동 전송
       }),
   });
 }
 
-// 로그아웃 유틸리티 함수 (hook이 필요 없는 간단한 작업)
-export function logout(): void {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    window.location.href = '/';
-  }
-}
+// 로그아웃 함수는 AuthProvider에서 제공합니다.
+// useAuth 훅에서 로그아웃을 사용하려면: const { logout } = useAuth();
