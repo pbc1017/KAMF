@@ -1,6 +1,7 @@
 'use client';
 
 import type { MinuteStats } from '@kamf/interface';
+import { useTranslations } from 'next-intl';
 import { useMemo, useState, useEffect } from 'react';
 import {
   CartesianGrid,
@@ -72,6 +73,7 @@ interface TooltipProps {
 }
 
 function CustomTooltip({ active, payload }: TooltipProps) {
+  const t = useTranslations('safety.chart');
   if (active && payload && payload.length) {
     const data = payload[0].payload as ChartDataPoint;
 
@@ -82,21 +84,21 @@ function CustomTooltip({ active, payload }: TooltipProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-              <span className="text-sm">현재 인원</span>
+              <span className="text-sm">{t('currentPeople')}</span>
             </div>
             <span className="font-semibold text-blue-600">{data.currentInside}명</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-              <span className="text-sm">분당 입장</span>
+              <span className="text-sm">{t('entriesPerMinute')}</span>
             </div>
             <span className="font-semibold text-green-600">+{data.incrementDelta}명</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-              <span className="text-sm">분당 퇴장</span>
+              <span className="text-sm">{t('exitsPerMinute')}</span>
             </div>
             <span className="font-semibold text-red-600">-{data.decrementDelta}명</span>
           </div>
@@ -112,6 +114,7 @@ function CustomTooltip({ active, payload }: TooltipProps) {
  * 시간대별 통계 차트 컴포넌트
  */
 export default function HourlyChart({ minuteStats, isLoading }: HourlyChartProps) {
+  const t = useTranslations('safety.chart');
   // 화면 너비 상태 관리
   const [containerWidth, setContainerWidth] = useState<number>(0);
 
@@ -160,7 +163,7 @@ export default function HourlyChart({ minuteStats, isLoading }: HourlyChartProps
       <div className="h-80 flex items-center justify-center">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-gray-500">차트 데이터 로딩 중...</p>
+          <p className="text-gray-500">{t('loadingChart')}</p>
         </div>
       </div>
     );
@@ -184,8 +187,8 @@ export default function HourlyChart({ minuteStats, isLoading }: HourlyChartProps
               d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
             />
           </svg>
-          <p className="text-gray-500 text-lg mb-2">차트 데이터가 없습니다</p>
-          <p className="text-gray-400 text-sm">통계 데이터가 수집되면 차트가 표시됩니다</p>
+          <p className="text-gray-500 text-lg mb-2">{t('noData')}</p>
+          <p className="text-gray-400 text-sm">{t('noDataDescription')}</p>
         </div>
       </div>
     );
@@ -197,15 +200,15 @@ export default function HourlyChart({ minuteStats, isLoading }: HourlyChartProps
       <div className="flex flex-wrap items-center justify-center gap-6 mb-4">
         <div className="flex items-center">
           <div className="w-4 h-1 bg-blue-500 rounded-full mr-2"></div>
-          <span className="text-sm font-medium text-gray-700">현재 인원</span>
+          <span className="text-sm font-medium text-gray-700">{t('currentPeople')}</span>
         </div>
         <div className="flex items-center">
           <div className="w-4 h-1 bg-green-500 rounded-full mr-2"></div>
-          <span className="text-sm font-medium text-gray-700">분당 입장</span>
+          <span className="text-sm font-medium text-gray-700">{t('entriesPerMinute')}</span>
         </div>
         <div className="flex items-center">
           <div className="w-4 h-1 bg-red-500 rounded-full mr-2"></div>
-          <span className="text-sm font-medium text-gray-700">분당 퇴장</span>
+          <span className="text-sm font-medium text-gray-700">{t('exitsPerMinute')}</span>
         </div>
       </div>
 
@@ -234,7 +237,7 @@ export default function HourlyChart({ minuteStats, isLoading }: HourlyChartProps
               axisLine={{ stroke: '#e5e7eb' }}
               tickLine={{ stroke: '#e5e7eb' }}
               label={{
-                value: '인원 수',
+                value: t('peopleCount'),
                 angle: -90,
                 position: 'insideLeft',
                 style: { textAnchor: 'middle', fontSize: '12px', fill: '#6b7280' },
@@ -248,7 +251,7 @@ export default function HourlyChart({ minuteStats, isLoading }: HourlyChartProps
               dataKey="incrementDelta"
               stroke="#10b981"
               strokeWidth={2}
-              name="분당 입장"
+              name={t('entriesPerMinute')}
               dot={false} // 점 숨김 - 360개 점이 모바일에서 너무 조밀함
               activeDot={{ r: 4, stroke: '#10b981', strokeWidth: 2 }}
             />
@@ -259,7 +262,7 @@ export default function HourlyChart({ minuteStats, isLoading }: HourlyChartProps
               dataKey="decrementDelta"
               stroke="#ef4444"
               strokeWidth={2}
-              name="분당 퇴장"
+              name={t('exitsPerMinute')}
               dot={false} // 점 숨김 - 360개 점이 모바일에서 너무 조밀함
               activeDot={{ r: 4, stroke: '#ef4444', strokeWidth: 2 }}
             />
@@ -270,7 +273,7 @@ export default function HourlyChart({ minuteStats, isLoading }: HourlyChartProps
               dataKey="currentInside"
               stroke="#3b82f6"
               strokeWidth={3}
-              name="현재 인원"
+              name={t('currentPeople')}
               dot={false} // 점 숨김 - 360개 점이 모바일에서 너무 조밀함
               activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
             />
@@ -280,9 +283,7 @@ export default function HourlyChart({ minuteStats, isLoading }: HourlyChartProps
 
       {/* 차트 정보 */}
       <div className="mt-4 text-center">
-        <p className="text-xs text-gray-400">
-          최근 6시간 분단위 통계 • 화면 크기에 따라 시간 라벨 조정
-        </p>
+        <p className="text-xs text-gray-400">{t('chartInfo')}</p>
       </div>
     </div>
   );

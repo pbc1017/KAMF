@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 import EmailForm from '@/components/auth/EmailForm';
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const router = useRouter();
   const { login } = useAuth();
+  const t = useTranslations('auth');
 
   // 이미 로그인된 사용자는 홈으로 리다이렉트
   const { isLoading } = useRedirectIfAuthenticated();
@@ -32,7 +34,7 @@ export default function LoginPage() {
 
   const handleRequestCode = () => {
     if (!email.trim()) {
-      alert('이메일 주소를 입력해주세요.');
+      alert(t('errors.emailRequired'));
       return;
     }
 
@@ -55,7 +57,7 @@ export default function LoginPage() {
             'message' in error.response.data &&
             typeof error.response.data.message === 'string'
               ? error.response.data.message
-              : '인증번호 발송에 실패했습니다.';
+              : t('errors.sendCodeFailed');
           alert(errorMessage);
         },
       }
@@ -83,7 +85,7 @@ export default function LoginPage() {
             'message' in error.response.data &&
             typeof error.response.data.message === 'string'
               ? error.response.data.message
-              : '인증번호 재발송에 실패했습니다.';
+              : t('errors.resendFailed');
           alert(errorMessage);
         },
       }
@@ -92,7 +94,7 @@ export default function LoginPage() {
 
   const handleVerifyCode = (code: string) => {
     if (!code.trim()) {
-      alert('인증번호를 입력해주세요.');
+      alert(t('errors.codeRequired'));
       return;
     }
 
@@ -117,7 +119,7 @@ export default function LoginPage() {
             'message' in error.response.data &&
             typeof error.response.data.message === 'string'
               ? error.response.data.message
-              : '인증번호가 올바르지 않습니다.';
+              : t('errors.invalidCode');
           alert(errorMessage);
         },
       }
@@ -156,9 +158,9 @@ export default function LoginPage() {
                 </svg>
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">로그인</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('login')}</h1>
             <p className="text-gray-600">
-              {step === 'email' ? '이메일로 간편하게 로그인하세요' : '인증번호를 입력해주세요'}
+              {step === 'email' ? t('emailLogin') : t('enterVerificationCode')}
             </p>
           </div>
 

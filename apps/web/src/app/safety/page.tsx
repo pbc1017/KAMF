@@ -2,6 +2,7 @@
 
 import type { TodayStats, UserStats } from '@kamf/interface';
 import { useRouter } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 import HourlyChart from '@/components/safety/HourlyChart';
@@ -13,6 +14,11 @@ import { useAuth } from '@/providers/AuthProvider';
 
 export default function SafetyPage() {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('safety');
+
+  // 언어별 로케일 설정
+  const timeLocale = locale === 'en' ? 'en-US' : 'ko-KR';
 
   // 기본 인증 가드
   const { isLoading: authGuardLoading } = useRequireAuth();
@@ -82,8 +88,8 @@ export default function SafetyPage() {
               />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">안전 관리</h1>
-          <p className="text-gray-600">실시간 인원 현황 및 안전 통계를 관리합니다</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('title')}</h1>
+          <p className="text-gray-600">{t('subtitle')}</p>
         </div>
 
         {/* 통계 오류 표시 */}
@@ -103,9 +109,7 @@ export default function SafetyPage() {
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 15.5c-.77.833.192 2.5 1.732 2.5z"
                 />
               </svg>
-              <p className="text-red-700 font-medium">
-                통계 데이터를 불러오는 중 오류가 발생했습니다.
-              </p>
+              <p className="text-red-700 font-medium">{t('statsError')}</p>
             </div>
           </div>
         )}
@@ -115,27 +119,29 @@ export default function SafetyPage() {
           {/* 현재 인원수 카드 */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-              <h2 className="text-xl font-semibold text-gray-700 mb-4">현재 인원수</h2>
+              <h2 className="text-xl font-semibold text-gray-700 mb-4">{t('currentTotal')}</h2>
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                  <span className="ml-3 text-gray-600">로딩 중...</span>
+                  <span className="ml-3 text-gray-600">{t('loading')}</span>
                 </div>
               ) : (
                 <>
                   <div className="text-6xl font-bold text-blue-600 mb-2">
                     {displayStats?.currentTotal ?? 0}
                   </div>
-                  <p className="text-gray-500 text-lg">명</p>
+                  <p className="text-gray-500 text-lg">{t('people')}</p>
                   {displayStats && (
                     <div className="mt-4 text-sm text-gray-400">
                       {countStats ? (
                         <>
-                          <span className="text-green-600 font-medium">● 실시간</span>
-                          <span className="ml-2">카운트 동기화 완료</span>
+                          <span className="text-green-600 font-medium">● {t('realtime')}</span>
+                          <span className="ml-2">{t('syncCompleted')}</span>
                         </>
                       ) : (
-                        <>마지막 업데이트: {new Date().toLocaleTimeString('ko-KR')}</>
+                        <>
+                          {t('lastUpdate')}: {new Date().toLocaleTimeString(timeLocale)}
+                        </>
                       )}
                     </div>
                   )}
@@ -149,7 +155,7 @@ export default function SafetyPage() {
 
           {/* 오늘 통계 카드 */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">오늘 통계</h3>
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">{t('todayStats')}</h3>
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-300"></div>
@@ -158,20 +164,20 @@ export default function SafetyPage() {
             ) : (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">총 입장</span>
+                  <span className="text-gray-600">{t('totalEntries')}</span>
                   <span className="text-2xl font-bold text-green-600">
                     {displayStats?.todayStats.totalIncrement ?? 0}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">총 퇴장</span>
+                  <span className="text-gray-600">{t('totalExits')}</span>
                   <span className="text-2xl font-bold text-red-600">
                     {displayStats?.todayStats.totalDecrement ?? 0}
                   </span>
                 </div>
                 <div className="border-t pt-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600 font-medium">현재 내부 인원</span>
+                    <span className="text-gray-600 font-medium">{t('currentInside')}</span>
                     <span className="text-2xl font-bold text-blue-600">
                       {displayStats?.todayStats.currentInside ?? 0}
                     </span>
@@ -184,11 +190,11 @@ export default function SafetyPage() {
           {/* 사용자 기여 통계 카드 */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4">내 기여 통계</h3>
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">{t('myContributions')}</h3>
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-300"></div>
-                  <span className="ml-2 text-gray-500">로딩 중...</span>
+                  <span className="ml-2 text-gray-500">{t('loading')}</span>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -196,19 +202,19 @@ export default function SafetyPage() {
                     <div className="text-3xl font-bold text-green-600 mb-2">
                       {displayStats?.userStats.increment ?? 0}
                     </div>
-                    <p className="text-gray-600">내가 센 입장</p>
+                    <p className="text-gray-600">{t('myEntries')}</p>
                   </div>
                   <div className="text-center">
                     <div className="text-3xl font-bold text-red-600 mb-2">
                       {displayStats?.userStats.decrement ?? 0}
                     </div>
-                    <p className="text-gray-600">내가 센 퇴장</p>
+                    <p className="text-gray-600">{t('myExits')}</p>
                   </div>
                   <div className="text-center">
                     <div className="text-3xl font-bold text-blue-600 mb-2">
                       {displayStats?.userStats.netCount ?? 0}
                     </div>
-                    <p className="text-gray-600">순 기여도</p>
+                    <p className="text-gray-600">{t('netContribution')}</p>
                   </div>
                 </div>
               )}
@@ -218,7 +224,7 @@ export default function SafetyPage() {
           {/* 시간대별 차트 영역 */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4">시간대별 통계</h3>
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">{t('hourlyStats')}</h3>
               <HourlyChart minuteStats={stats?.minuteStats || []} isLoading={isLoading} />
             </div>
           </div>
