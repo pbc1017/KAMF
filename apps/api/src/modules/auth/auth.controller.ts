@@ -16,7 +16,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiOkResponse, ApiBody } from '@nestjs/swagger';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 
 import { MessageResponseDto, AuthResponseDto } from '../../common/dto/common.dto.js';
 import { NicknameGenerator } from '../../common/utils/nickname-generator.js';
