@@ -2,7 +2,9 @@
 
 import { Booth, Zone } from '@kamf/interface/types/festival.type.js';
 import { useLocale, useTranslations } from 'next-intl';
-import { forwardRef } from 'react';
+import { forwardRef, useMemo } from 'react';
+
+import { ShareButton } from '@/components/ui/ShareButton';
 
 interface BoothCardProps {
   booth: Booth;
@@ -44,6 +46,7 @@ export const BoothCard = forwardRef<HTMLDivElement, BoothCardProps>(function Boo
 ) {
   const locale = useLocale();
   const zones = useTranslations('zones');
+  const shareTranslations = useTranslations('share');
   const isEnglish = locale === 'en';
 
   const mainTitle = isEnglish ? booth.titleEn : booth.titleKo;
@@ -69,6 +72,16 @@ export const BoothCard = forwardRef<HTMLDivElement, BoothCardProps>(function Boo
   const handleClick = () => {
     onClick?.(booth.boothNumber);
   };
+
+  // 공유 URL 및 콘텐츠 생성 (클라이언트 사이드에서만)
+  const shareData = useMemo(() => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const url = `${origin}/booth?id=${booth.boothNumber}`;
+    const title = `${mainTitle} - KAMF 2025`;
+    const text = `${shareTranslations('boothShareText')} ${mainTitle}: ${description.slice(0, 100)}${description.length > 100 ? '...' : ''}`;
+
+    return { url, title, text };
+  }, [booth.boothNumber, mainTitle, description, shareTranslations]);
 
   return (
     <div
@@ -111,6 +124,14 @@ export const BoothCard = forwardRef<HTMLDivElement, BoothCardProps>(function Boo
             #{booth.boothNumber}
           </span>
         </div>
+      </div>
+
+      {/* 공유 버튼 */}
+      <div
+        className="absolute top-2 right-2 z-10"
+        onClick={e => e.stopPropagation()} // 부모 카드 클릭 이벤트 전파 방지
+      >
+        <ShareButton title={shareData.title} text={shareData.text} url={shareData.url} />
       </div>
 
       {/* 선택 표시 */}

@@ -163,7 +163,8 @@
     "shareError": "공유에 실패했습니다. 다시 시도해주세요.",
     "shareWith": "공유하기",
     "copyLink": "링크 복사",
-    "shareVia": "다른 앱으로 공유"
+    "shareVia": "다른 앱으로 공유",
+    "boothShareText": "KAMF 2025 부스를 확인해보세요!"
   },
   "metadata": {
     "title": "2025 KAMF",
