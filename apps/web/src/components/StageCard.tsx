@@ -30,7 +30,7 @@ export const StageCard = forwardRef<HTMLDivElement, StageCardProps>(function Sta
 
   // 언어에 따른 필드 선택
   const mainTitle = isEnglish ? stage.titleEn : stage.titleKo;
-  const subTitle = stage.titleKo; // 부제목은 항상 한글
+  const subTitle = isEnglish ? stage.titleKo : stage.titleEn;
   const description = isEnglish ? stage.descriptionEn : stage.descriptionKo;
 
   // Stage type 라벨 매핑
