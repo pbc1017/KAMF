@@ -179,11 +179,6 @@ function BoothListContent() {
           <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
         </div>
 
-        {/* 사용 가이드 */}
-        <div className="mb-6 text-center">
-          <p className="text-purple-200 text-lg">{t('guide')}</p>
-        </div>
-
         {/* 결과 수 표시 및 쓰레기통 위치 버튼 */}
         <div className="mb-8 flex flex-row flex-wrap items-center gap-4">
           <div className="card-purple p-6 rounded-2xl max-w-[80%] flex-shrink">

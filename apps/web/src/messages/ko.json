@@ -144,6 +144,7 @@
     "totalCount": "총",
     "totalCountSuffix": "개의 부스가 있습니다",
     "trashCanLocation": "쓰레기통 위치",
+    "trashCanGuide": "🗑️ 초록색 쓰레기통 아이콘이 쓰레기통 위치입니다",
     "noResults": "검색 결과가 없습니다",
     "noResultsDescription": "다른 검색어나 필터를 시도해보세요.",
     "guide": "💡 지도의 점을 클릭하거나 아래 목록에서 부스를 선택하세요"

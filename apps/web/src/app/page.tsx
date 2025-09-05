@@ -49,7 +49,7 @@ export default async function Home() {
       zone: operatingHoursT('boothZone'),
       hours: '13:00 - 18:00',
       description: operatingHoursT('descriptions.booth'),
-      status: isCurrentlyOpen('13:00 - 22:30') ? 'open' : 'closed',
+      status: isCurrentlyOpen('13:00 - 18:00') ? 'open' : 'closed',
     },
     {
       zone: operatingHoursT('infoDesk'),

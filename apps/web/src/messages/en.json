@@ -144,6 +144,7 @@
     "totalCount": "Total of",
     "totalCountSuffix": "booths available",
     "trashCanLocation": "Trash Can Locations",
+    "trashCanGuide": "🗑️ Green trash can icons show trash can locations",
     "noResults": "No search results found",
     "noResultsDescription": "Please try different search terms or filters.",
     "guide": "💡 Click on map points or select from the list below"
