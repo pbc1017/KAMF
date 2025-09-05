@@ -144,6 +144,7 @@
     "totalCount": "Total of",
     "totalCountSuffix": "booths available",
     "trashCanLocation": "Trash Can Locations",
+    "trashCanGuide": "🗑️ Green trash can icons show trash can locations",
     "noResults": "No search results found",
     "noResultsDescription": "Please try different search terms or filters.",
     "guide": "💡 Click on map points or select from the list below"
@@ -156,6 +157,17 @@
     "performanceInfo": "Performance Information",
     "performanceNotice": "All performances may be subject to change due to weather or on-site conditions.",
     "contactInfo": "Please check the information desk for the latest updates."
+  },
+  "share": {
+    "shareButton": "Share",
+    "shareSuccess": "Link copied to clipboard!",
+    "shareError": "Failed to share. Please try again.",
+    "shareWith": "Share",
+    "copyLink": "Copy Link",
+    "shareVia": "Share via other apps",
+    "boothShareText": "Check out this KAMF 2025 booth!",
+    "stageShareText": "Check out this KAMF 2025 performance!",
+    "stageShareText": "Check out this KAMF 2025 stage performance!"
   },
   "metadata": {
     "title": "2025 KAMF",

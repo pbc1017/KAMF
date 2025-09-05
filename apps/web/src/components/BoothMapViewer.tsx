@@ -1,6 +1,7 @@
 'use client';
 
 import { Booth } from '@kamf/interface/types/festival.type.js';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 import {
@@ -25,7 +26,7 @@ export function BoothMapViewer({
   showTrashCans = false,
 }: BoothMapViewerProps) {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
-
+  const t = useTranslations('booth');
   const handleBoothMarkerClick = (boothNumber: string) => {
     onBoothClick?.(boothNumber);
   };
@@ -134,11 +135,11 @@ export function BoothMapViewer({
       {/* 사용 안내 */}
       <div className="mt-4 p-4 card-purple rounded-xl">
         <p className="text-purple-200 text-sm text-center">
-          💡 지도의 점을 클릭하거나 오른쪽 목록에서 부스를 선택하세요
+          {t('guide')}
           {showTrashCans && (
             <>
               <br />
-              🗑️ 초록색 쓰레기통 아이콘이 쓰레기통 위치입니다
+              {t('trashCanGuide')}
             </>
           )}
         </p>

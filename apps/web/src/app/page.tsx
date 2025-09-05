@@ -10,37 +10,70 @@ export default async function Home() {
   const nav = await getTranslations('nav');
   const operatingHoursT = await getTranslations('operatingHours');
 
-  // 부스별 운영 시간 정보
+  // 한국 시간 기준 현재 시간 구하기
+  const getCurrentKoreanTime = () => {
+    const now = new Date();
+    return new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+  };
+
+  // 현재 시간이 운영시간 내인지 확인
+  const isCurrentlyOpen = (operatingHours: string): boolean => {
+    const koreanTime = getCurrentKoreanTime();
+    const currentHour = koreanTime.getHours();
+    const currentMinute = koreanTime.getMinutes();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+
+    const [start, end] = operatingHours.split(' - ');
+    const [startHour, startMinute] = start.split(':').map(Number);
+    const [endHour, endMinute] = end.split(':').map(Number);
+
+    const startTimeInMinutes = startHour * 60 + startMinute;
+    let endTimeInMinutes = endHour * 60 + endMinute;
+
+    // 24:00 처리 (자정)
+    if (endHour === 24) {
+      endTimeInMinutes = 24 * 60;
+    }
+
+    // 자정을 넘어가는 경우 (예: 17:00 - 24:00)
+    if (endTimeInMinutes >= 24 * 60) {
+      return currentTimeInMinutes >= startTimeInMinutes;
+    }
+
+    return currentTimeInMinutes >= startTimeInMinutes && currentTimeInMinutes <= endTimeInMinutes;
+  };
+
+  // 부스별 운영 시간 정보 (실시간 상태 계산)
   const operatingHoursData = [
     {
       zone: operatingHoursT('boothZone'),
-      hours: '10:00 - 18:00',
+      hours: '13:00 - 18:00',
       description: operatingHoursT('descriptions.booth'),
-      status: 'open',
+      status: isCurrentlyOpen('13:00 - 18:00') ? 'open' : 'closed',
     },
     {
       zone: operatingHoursT('infoDesk'),
-      hours: '09:00 - 19:00',
+      hours: '13:00 - 22:30',
       description: operatingHoursT('descriptions.info'),
-      status: 'open',
+      status: isCurrentlyOpen('13:00 - 22:30') ? 'open' : 'closed',
     },
     {
       zone: operatingHoursT('foodTruck'),
-      hours: '11:00 - 22:00',
+      hours: '13:00 - 22:30',
       description: operatingHoursT('descriptions.foodTruck'),
-      status: 'open',
+      status: isCurrentlyOpen('13:00 - 22:30') ? 'open' : 'closed',
     },
     {
       zone: operatingHoursT('nightMarket'),
-      hours: '17:00 - 24:00',
+      hours: '18:00 - 22:30',
       description: operatingHoursT('descriptions.nightMarket'),
-      status: 'open',
+      status: isCurrentlyOpen('18:00 - 22:30') ? 'open' : 'closed',
     },
     {
       zone: operatingHoursT('stageZone'),
-      hours: '14:00 - 21:00',
+      hours: '15:00 - 22:00',
       description: operatingHoursT('descriptions.stage'),
-      status: 'open',
+      status: isCurrentlyOpen('15:00 - 22:00') ? 'open' : 'closed',
     },
   ];
   const mainNavigation = [
@@ -97,13 +130,15 @@ export default async function Home() {
             {operatingHoursData.map((booth, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-6 bg-gradient-to-r from-purple-800/20 to-indigo-800/20 backdrop-blur-sm border border-purple-500/20 rounded-xl hover:border-purple-400/30 transition-all duration-300"
+                className="flex flex-col md:flex-row md:items-center md:justify-between p-6 bg-gradient-to-r from-purple-800/20 to-indigo-800/20 backdrop-blur-sm border border-purple-500/20 rounded-xl hover:border-purple-400/30 transition-all duration-300"
               >
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3">
-                    <h4 className="text-xl font-semibold text-white">{booth.zone}</h4>
+                <div className="flex-1 mb-4 md:mb-0">
+                  <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
+                    <h4 className="text-lg md:text-xl font-semibold text-white break-words">
+                      {booth.zone}
+                    </h4>
                     <span
-                      className={`px-3 py-1 text-sm font-medium rounded-full ${
+                      className={`px-2 md:px-3 py-1 text-xs md:text-sm font-medium rounded-full ${
                         booth.status === 'open'
                           ? 'bg-gradient-to-r from-green-500/30 to-emerald-500/30 text-green-200 border border-green-400/30'
                           : 'bg-gradient-to-r from-yellow-500/30 to-orange-500/30 text-yellow-200 border border-yellow-400/30'
@@ -112,10 +147,12 @@ export default async function Home() {
                       {booth.status === 'open' ? common('open') : common('closed')}
                     </span>
                   </div>
-                  <p className="text-purple-200 mt-2">{booth.description}</p>
+                  <p className="text-purple-200 text-sm md:text-base break-words">
+                    {booth.description}
+                  </p>
                 </div>
-                <div className="text-right ml-6">
-                  <div className="text-xl font-bold text-white">{booth.hours}</div>
+                <div className="text-center md:text-right md:ml-6 mt-2 md:mt-0">
+                  <div className="text-lg md:text-xl font-bold text-white">{booth.hours}</div>
                 </div>
               </div>
             ))}
