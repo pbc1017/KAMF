@@ -97,13 +97,15 @@ export default async function Home() {
             {operatingHoursData.map((booth, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-6 bg-gradient-to-r from-purple-800/20 to-indigo-800/20 backdrop-blur-sm border border-purple-500/20 rounded-xl hover:border-purple-400/30 transition-all duration-300"
+                className="flex flex-col md:flex-row md:items-center md:justify-between p-6 bg-gradient-to-r from-purple-800/20 to-indigo-800/20 backdrop-blur-sm border border-purple-500/20 rounded-xl hover:border-purple-400/30 transition-all duration-300"
               >
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3">
-                    <h4 className="text-xl font-semibold text-white">{booth.zone}</h4>
+                <div className="flex-1 mb-4 md:mb-0">
+                  <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
+                    <h4 className="text-lg md:text-xl font-semibold text-white break-words">
+                      {booth.zone}
+                    </h4>
                     <span
-                      className={`px-3 py-1 text-sm font-medium rounded-full ${
+                      className={`px-2 md:px-3 py-1 text-xs md:text-sm font-medium rounded-full ${
                         booth.status === 'open'
                           ? 'bg-gradient-to-r from-green-500/30 to-emerald-500/30 text-green-200 border border-green-400/30'
                           : 'bg-gradient-to-r from-yellow-500/30 to-orange-500/30 text-yellow-200 border border-yellow-400/30'
@@ -112,10 +114,12 @@ export default async function Home() {
                       {booth.status === 'open' ? common('open') : common('closed')}
                     </span>
                   </div>
-                  <p className="text-purple-200 mt-2">{booth.description}</p>
+                  <p className="text-purple-200 text-sm md:text-base break-words">
+                    {booth.description}
+                  </p>
                 </div>
-                <div className="text-right ml-6">
-                  <div className="text-xl font-bold text-white">{booth.hours}</div>
+                <div className="text-center md:text-right md:ml-6 mt-2 md:mt-0">
+                  <div className="text-lg md:text-xl font-bold text-white">{booth.hours}</div>
                 </div>
               </div>
             ))}
