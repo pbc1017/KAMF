@@ -164,7 +164,9 @@
     "shareWith": "Share",
     "copyLink": "Copy Link",
     "shareVia": "Share via other apps",
-    "boothShareText": "Check out this KAMF 2025 booth!"
+    "boothShareText": "Check out this KAMF 2025 booth!",
+    "stageShareText": "Check out this KAMF 2025 performance!",
+    "stageShareText": "Check out this KAMF 2025 stage performance!"
   },
   "metadata": {
     "title": "2025 KAMF",

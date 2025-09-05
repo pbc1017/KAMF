@@ -164,7 +164,9 @@
     "shareWith": "공유하기",
     "copyLink": "링크 복사",
     "shareVia": "다른 앱으로 공유",
-    "boothShareText": "KAMF 2025 부스를 확인해보세요!"
+    "boothShareText": "KAMF 2025 부스를 확인해보세요!",
+    "stageShareText": "KAMF 2025 공연을 확인해보세요!",
+    "stageShareText": "KAMF 2025 무대 공연을 확인해보세요!"
   },
   "metadata": {
     "title": "2025 KAMF",
