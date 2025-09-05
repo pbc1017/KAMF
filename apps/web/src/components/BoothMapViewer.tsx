@@ -80,7 +80,7 @@ export function BoothMapViewer({
                 key={booth.boothNumber}
                 className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300 ${
                   isSelected ? 'z-20' : 'z-10'
-                } ${!shouldShowVisually ? 'opacity-0 hover:opacity-30 pointer-events-auto' : 'opacity-100'}`}
+                } ${!shouldShowVisually ? 'opacity-0 pointer-events-auto' : 'opacity-100'}`}
                 style={{
                   left: `${position.x}%`,
                   top: `${position.y}%`,
@@ -93,7 +93,7 @@ export function BoothMapViewer({
                   className={`relative rounded-full border transition-all duration-300 ${
                     isSelected
                       ? `w-4 h-4 md:w-5 md:h-5 bg-purple-500 shadow-lg scale-150 border-white ring-2 ring-white/50`
-                      : `w-3 h-3 md:w-4 md:h-4 bg-purple-500 hover:scale-125 border-white shadow-md`
+                      : `w-3 h-3 md:w-4 md:h-4 bg-purple-500 border-white shadow-md`
                   }`}
                 />
 
