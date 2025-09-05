@@ -9,6 +9,7 @@ import './globals.css';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { QueryProvider } from '@/providers/queryProvider';
+import { VisitorTrackingProvider } from '@/providers/VisitorTrackingProvider';
 
 // Header를 클라이언트에서만 렌더링
 const Header = dynamic(() => import('@/components/Header'), {
@@ -52,8 +53,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <NextIntlClientProvider messages={messages}>
           <QueryProvider>
             <AuthProvider>
-              <Header />
-              <main className="pt-20">{children}</main>
+              <VisitorTrackingProvider>
+                <Header />
+                <main className="pt-20">{children}</main>
+              </VisitorTrackingProvider>
               <Toaster
                 position="top-center"
                 reverseOrder={false}
