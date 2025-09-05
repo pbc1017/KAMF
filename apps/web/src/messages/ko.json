@@ -30,14 +30,14 @@
   },
   "zones": {
     "booth": "부스",
-    "info": "안내소",
+    "info": "인포 부스",
     "foodTruck": "푸드트럭",
     "nightMarket": "야시장",
     "stage": "무대"
   },
   "operatingHours": {
     "boothZone": "부스존",
-    "infoDesk": "안내소",
+    "infoDesk": "인포 부스",
     "foodTruck": "푸드트럭",
     "nightMarket": "야시장",
     "stageZone": "무대",

@@ -47,33 +47,33 @@ export default async function Home() {
   const operatingHoursData = [
     {
       zone: operatingHoursT('boothZone'),
-      hours: '10:00 - 18:00',
+      hours: '13:00 - 18:00',
       description: operatingHoursT('descriptions.booth'),
-      status: isCurrentlyOpen('10:00 - 18:00') ? 'open' : 'closed',
+      status: isCurrentlyOpen('13:00 - 22:30') ? 'open' : 'closed',
     },
     {
       zone: operatingHoursT('infoDesk'),
-      hours: '09:00 - 19:00',
+      hours: '13:00 - 22:30',
       description: operatingHoursT('descriptions.info'),
-      status: isCurrentlyOpen('09:00 - 19:00') ? 'open' : 'closed',
+      status: isCurrentlyOpen('13:00 - 22:30') ? 'open' : 'closed',
     },
     {
       zone: operatingHoursT('foodTruck'),
-      hours: '11:00 - 22:00',
+      hours: '13:00 - 22:30',
       description: operatingHoursT('descriptions.foodTruck'),
-      status: isCurrentlyOpen('11:00 - 22:00') ? 'open' : 'closed',
+      status: isCurrentlyOpen('13:00 - 22:30') ? 'open' : 'closed',
     },
     {
       zone: operatingHoursT('nightMarket'),
-      hours: '17:00 - 24:00',
+      hours: '18:00 - 22:30',
       description: operatingHoursT('descriptions.nightMarket'),
-      status: isCurrentlyOpen('17:00 - 24:00') ? 'open' : 'closed',
+      status: isCurrentlyOpen('18:00 - 22:30') ? 'open' : 'closed',
     },
     {
       zone: operatingHoursT('stageZone'),
-      hours: '14:00 - 21:00',
+      hours: '15:00 - 22:00',
       description: operatingHoursT('descriptions.stage'),
-      status: isCurrentlyOpen('14:00 - 21:00') ? 'open' : 'closed',
+      status: isCurrentlyOpen('15:00 - 22:00') ? 'open' : 'closed',
     },
   ];
   const mainNavigation = [
