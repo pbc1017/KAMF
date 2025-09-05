@@ -5,7 +5,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import databaseConfig from './config/database.config.js';
-import { AnalyticsModule } from './modules/analytics/analytics.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { BoothModule } from './modules/booth/booth.module.js';
 import { SafetyModule } from './modules/safety/safety.module.js';
@@ -23,7 +22,6 @@ import { UsersModule } from './modules/users/users.module.js';
       useFactory: (configService: ConfigService) => configService.get('database'),
       inject: [ConfigService],
     }),
-    AnalyticsModule,
     AuthModule,
     UsersModule,
     BoothModule,

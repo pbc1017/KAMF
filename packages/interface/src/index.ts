@@ -5,7 +5,6 @@ export * from './types/festival.type.js';
 export * from './types/auth.type.js';
 
 // DTOs
-export * from './dtos/analytics.dto.js';
 export * from './dtos/auth.dto.js';
 export * from './dtos/festival.dto.js';
 export * from './dtos/user.dto.js';
