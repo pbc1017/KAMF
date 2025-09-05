@@ -10,37 +10,70 @@ export default async function Home() {
   const nav = await getTranslations('nav');
   const operatingHoursT = await getTranslations('operatingHours');
 
-  // 부스별 운영 시간 정보
+  // 한국 시간 기준 현재 시간 구하기
+  const getCurrentKoreanTime = () => {
+    const now = new Date();
+    return new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+  };
+
+  // 현재 시간이 운영시간 내인지 확인
+  const isCurrentlyOpen = (operatingHours: string): boolean => {
+    const koreanTime = getCurrentKoreanTime();
+    const currentHour = koreanTime.getHours();
+    const currentMinute = koreanTime.getMinutes();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+
+    const [start, end] = operatingHours.split(' - ');
+    const [startHour, startMinute] = start.split(':').map(Number);
+    const [endHour, endMinute] = end.split(':').map(Number);
+
+    const startTimeInMinutes = startHour * 60 + startMinute;
+    let endTimeInMinutes = endHour * 60 + endMinute;
+
+    // 24:00 처리 (자정)
+    if (endHour === 24) {
+      endTimeInMinutes = 24 * 60;
+    }
+
+    // 자정을 넘어가는 경우 (예: 17:00 - 24:00)
+    if (endTimeInMinutes >= 24 * 60) {
+      return currentTimeInMinutes >= startTimeInMinutes;
+    }
+
+    return currentTimeInMinutes >= startTimeInMinutes && currentTimeInMinutes <= endTimeInMinutes;
+  };
+
+  // 부스별 운영 시간 정보 (실시간 상태 계산)
   const operatingHoursData = [
     {
       zone: operatingHoursT('boothZone'),
       hours: '10:00 - 18:00',
       description: operatingHoursT('descriptions.booth'),
-      status: 'open',
+      status: isCurrentlyOpen('10:00 - 18:00') ? 'open' : 'closed',
     },
     {
       zone: operatingHoursT('infoDesk'),
       hours: '09:00 - 19:00',
       description: operatingHoursT('descriptions.info'),
-      status: 'open',
+      status: isCurrentlyOpen('09:00 - 19:00') ? 'open' : 'closed',
     },
     {
       zone: operatingHoursT('foodTruck'),
       hours: '11:00 - 22:00',
       description: operatingHoursT('descriptions.foodTruck'),
-      status: 'open',
+      status: isCurrentlyOpen('11:00 - 22:00') ? 'open' : 'closed',
     },
     {
       zone: operatingHoursT('nightMarket'),
       hours: '17:00 - 24:00',
       description: operatingHoursT('descriptions.nightMarket'),
-      status: 'open',
+      status: isCurrentlyOpen('17:00 - 24:00') ? 'open' : 'closed',
     },
     {
       zone: operatingHoursT('stageZone'),
       hours: '14:00 - 21:00',
       description: operatingHoursT('descriptions.stage'),
-      status: 'open',
+      status: isCurrentlyOpen('14:00 - 21:00') ? 'open' : 'closed',
     },
   ];
   const mainNavigation = [
