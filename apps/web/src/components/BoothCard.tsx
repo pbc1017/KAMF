@@ -47,7 +47,7 @@ export const BoothCard = forwardRef<HTMLDivElement, BoothCardProps>(function Boo
   const isEnglish = locale === 'en';
 
   const mainTitle = isEnglish ? booth.titleEn : booth.titleKo;
-  const subTitle = booth.titleKo; // 부제목은 항상 한글
+  const subTitle = isEnglish ? booth.titleKo : booth.titleEn;
   const description = isEnglish ? booth.descriptionEn : booth.descriptionKo;
 
   // Zone 라벨 매핑
