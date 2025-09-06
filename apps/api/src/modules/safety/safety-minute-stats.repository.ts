@@ -98,8 +98,19 @@ export class SafetyMinuteStatsRepository {
    * 현재 인원이 0보다 큰 시간만 조회 (성능 최적화)
    */
   async findActiveMinutesByDate(targetDate: string): Promise<SafetyMinuteStats[]> {
-    const startDate = new Date(`${targetDate}T00:00:00Z`);
-    const endDate = new Date(`${targetDate}T23:59:59Z`);
+    const today = new Date().toISOString().split('T')[0];
+    let endDate: Date;
+    let startDate: Date;
+
+    if (targetDate === today) {
+      // 오늘 날짜인 경우: 현재 시간 기준으로 6시간 이내
+      endDate = new Date();
+      startDate = new Date(endDate.getTime() - 6 * 60 * 60 * 1000); // 6시간 전
+    } else {
+      // 과거 날짜인 경우: 해당 날짜의 끝 시간 기준으로 6시간 이내
+      endDate = new Date(`${targetDate}T23:59:59Z`);
+      startDate = new Date(endDate.getTime() - 6 * 60 * 60 * 1000); // 6시간 전
+    }
 
     return await this.repository.find({
       where: [

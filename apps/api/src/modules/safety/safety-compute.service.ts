@@ -68,34 +68,32 @@ export class SafetyComputeService {
    */
   async computeSingleMinuteStats(minuteTime: Date): Promise<MinuteStatsData> {
     const targetDate = this.timeService.formatUTCDate(minuteTime);
-    const nextMinute = new Date(minuteTime.getTime() + 60 * 1000);
 
     try {
-      // 🎯 개선된 쿼리: 서브쿼리 대신 윈도우 함수 사용
+      // 🎯 개선된 쿼리: 해당 분까지 각 유저별 최신 레코드 기준으로 누적 계산
       const latestRecords = await this.safetyCountRepository.query(
         `
-        SELECT 
-          sc.userId, 
-          sc.increment, 
-          sc.decrement, 
-          sc.createdAt,
-          ROW_NUMBER() OVER (PARTITION BY sc.userId ORDER BY sc.createdAt DESC) as rn
+        SELECT sc.userId, sc.increment, sc.decrement
         FROM safety_counts sc
-        WHERE sc.createdAt < ? 
-          AND sc.createdAt >= ?
-          AND DATE(sc.createdAt) = ?
-      `,
-        [nextMinute, new Date(targetDate + 'T00:00:00Z'), targetDate]
+        WHERE DATE(sc.createdAt) = ?
+          AND sc.createdAt <= ?
+          AND sc.createdAt = (
+            SELECT MAX(sc2.createdAt) 
+            FROM safety_counts sc2 
+            WHERE sc2.userId = sc.userId 
+              AND DATE(sc2.createdAt) = ?
+              AND sc2.createdAt <= ?
+          )
+        GROUP BY sc.userId, sc.increment, sc.decrement
+        `,
+        [targetDate, minuteTime, targetDate, minuteTime]
       );
 
-      // 각 사용자별 최신 레코드만 필터링
-      const latestUserRecords = latestRecords.filter((record: any) => record.rn === 1);
-
-      // 집계 계산
+      // 집계 계산 (기존 getDailyTotalStats와 동일한 방식)
       let totalIncrement = 0;
       let totalDecrement = 0;
 
-      for (const record of latestUserRecords) {
+      for (const record of latestRecords) {
         totalIncrement += parseInt(record.increment) || 0;
         totalDecrement += parseInt(record.decrement) || 0;
       }
