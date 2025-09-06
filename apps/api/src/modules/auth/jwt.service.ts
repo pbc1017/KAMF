@@ -23,6 +23,36 @@ export class JwtAuthService {
   constructor(private configService: ConfigService) {}
 
   /**
+   * 시간 문자열을 초 단위로 변환
+   * @param timeString '30s', '5m', '1h', '7d' 형식의 문자열
+   * @returns 초 단위 숫자
+   */
+  private parseTimeToSeconds(timeString: string): number {
+    const units = {
+      s: 1,
+      m: 60,
+      h: 60 * 60,
+      d: 24 * 60 * 60,
+    };
+
+    const match = timeString.match(/^(\d+)([smhd])$/);
+    if (!match) {
+      throw new Error(
+        `Invalid time format: ${timeString}. Use format like '30s', '5m', '1h', '7d'`
+      );
+    }
+
+    const [, value, unit] = match;
+    const multiplier = units[unit as keyof typeof units];
+
+    if (!multiplier) {
+      throw new Error(`Invalid time unit: ${unit}. Use 's', 'm', 'h', or 'd'`);
+    }
+
+    return parseInt(value) * multiplier;
+  }
+
+  /**
    * Access Token과 Refresh Token 쌍 생성
    * @param user 사용자 엔티티 (roles 포함)
    * @returns 토큰 쌍과 만료 시간
@@ -36,23 +66,32 @@ export class JwtAuthService {
 
     const jwtSecret = this.configService.get<string>('JWT_SECRET');
     const jwtRefreshSecret = this.configService.get<string>('REFRESH_TOKEN_SECRET');
+    const jwtExpiresIn = this.configService.get<string>('JWT_EXPIRES_IN', '1h'); // 기본값: 1시간
+    const refreshTokenExpiresIn = this.configService.get<string>('REFRESH_TOKEN_EXPIRES_IN', '7d'); // 기본값: 7일
 
     if (!jwtSecret || !jwtRefreshSecret) {
       throw new Error('JWT secrets not configured');
     }
 
+    // 환경변수에서 읽어온 만료 시간을 초 단위로 변환하여 사용
+    const accessTokenExpiresInSeconds = this.parseTimeToSeconds(jwtExpiresIn);
+    const refreshTokenExpiresInSeconds = this.parseTimeToSeconds(refreshTokenExpiresIn);
+
     const accessToken = jwt.sign(payload, jwtSecret, {
-      expiresIn: '1h', // 1시간
+      expiresIn: accessTokenExpiresInSeconds,
     });
 
     const refreshToken = jwt.sign(payload, jwtRefreshSecret, {
-      expiresIn: '7d', // 7일
+      expiresIn: refreshTokenExpiresInSeconds,
     });
+
+    // Access Token 만료 시간을 초 단위로 계산
+    const expiresInSeconds = this.parseTimeToSeconds(jwtExpiresIn);
 
     return {
       accessToken,
       refreshToken,
-      expiresIn: 3600, // 1시간 = 3600초
+      expiresIn: expiresInSeconds,
     };
   }
 
