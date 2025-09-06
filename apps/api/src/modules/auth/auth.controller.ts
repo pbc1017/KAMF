@@ -41,13 +41,17 @@ export class AuthController {
   private setRefreshTokenCookie(res: Response, refreshToken: string) {
     const isProduction = process.env.NODE_ENV === 'production';
 
-    res.cookie('refreshToken', refreshToken, {
+    const cookieOptions = {
       httpOnly: true,
       secure: isProduction, // production에서만 HTTPS 필수
-      sameSite: 'strict',
+      sameSite: 'strict' as const,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
       path: '/',
-    });
+      // 개발환경에서는 localhost 전체에서 쿠키 공유, 프로덕션에서는 도메인 미지정
+      ...(isProduction ? {} : { domain: 'localhost' }),
+    };
+
+    res.cookie('refreshToken', refreshToken, cookieOptions);
   }
 
   /**
@@ -224,6 +228,8 @@ export class AuthController {
       const refreshToken = req.cookies?.refreshToken;
 
       if (!refreshToken) {
+        console.error('❌ No refresh token found in cookies');
+        console.error('🔍 Available cookie keys:', Object.keys(req.cookies || {}));
         throw new BadRequestException('Refresh Token이 필요합니다');
       }
 
