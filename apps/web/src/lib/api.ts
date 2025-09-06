@@ -130,8 +130,6 @@ async function apiClientInternal<T>(
     return getMockResponse(endpoint) as T;
   }
 
-  console.log(`API Request${isRetry ? ' (Retry)' : ''}:`, url); // 디버깅용
-
   // Authorization 헤더 준비
   const token = getAuthToken();
   const headers: Record<string, string> = {
@@ -147,8 +145,6 @@ async function apiClientInternal<T>(
       ...options,
     });
 
-    console.log('API Response:', response.status, response.statusText); // 디버깅용
-
     // 401 Unauthorized 처리
     if (response.status === 401 && !isRetry) {
       console.log('401 Unauthorized detected, attempting token refresh...');
@@ -158,7 +154,6 @@ async function apiClientInternal<T>(
 
       if (refreshResult) {
         // 토큰 갱신 성공 - 원래 요청을 새 토큰으로 재시도
-        console.log('Token refreshed successfully, retrying original request...');
         return apiClientInternal<T>(endpoint, options, true);
       } else {
         // 토큰 갱신 실패 - 에러 던지기
@@ -168,7 +163,6 @@ async function apiClientInternal<T>(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('API Error Response:', errorText); // 디버깅용
       throw new AuthError(
         `API request failed: ${response.statusText} - ${errorText}`,
         'NETWORK_ERROR'
@@ -176,15 +170,12 @@ async function apiClientInternal<T>(
     }
 
     const data = await response.json();
-    console.log('API Response Data:', data); // 디버깅용
     return data;
   } catch (error) {
     // AuthError는 그대로 재던지기
     if (error instanceof AuthError) {
       throw error;
     }
-
-    console.error('API Client Error:', error); // 디버깅용
 
     // 네트워크 오류 시 개발환경에서는 적절한 mock 응답 반환
     if (error instanceof TypeError && error.message.includes('fetch failed')) {

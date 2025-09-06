@@ -10,6 +10,7 @@ import { DataSource } from 'typeorm';
 
 import { TimeService } from '../../common/services/time.service.js';
 
+import { SafetyMinuteStatsRepository } from './safety-minute-stats.repository.js';
 import { SafetyRepository } from './safety.repository.js';
 
 @Injectable()
@@ -18,6 +19,7 @@ export class SafetyService {
 
   constructor(
     private readonly safetyRepository: SafetyRepository,
+    private readonly minuteStatsRepository: SafetyMinuteStatsRepository,
     private readonly timeService: TimeService,
     private readonly dataSource: DataSource
   ) {}
@@ -93,7 +95,7 @@ export class SafetyService {
       const [totalStats, userStats, minuteStats] = await Promise.all([
         this.safetyRepository.getDailyTotalStats(targetDate),
         this.getUserStats(userId, targetDate),
-        this.safetyRepository.getMinuteStats(targetDate),
+        this.getOptimizedMinuteStats(targetDate),
       ]);
 
       return {
@@ -176,6 +178,33 @@ export class SafetyService {
       decrement: userCount.decrement,
       netCount: userCount.netCount,
     };
+  }
+
+  /**
+   * 🎯 최적화된 분단위 통계 조회 (단순 SELECT)
+   * 기존 60초+ 복잡한 쿼리 → ~10ms 단순 조회
+   */
+  private async getOptimizedMinuteStats(
+    date?: string
+  ): Promise<{ minute: string; currentInside: number; increment: number; decrement: number }[]> {
+    const targetDate = date || this.timeService.getCurrentUTCDate();
+
+    try {
+      // 단순한 SELECT 쿼리로 사전 계산된 데이터 조회
+      const stats = await this.minuteStatsRepository.findActiveMinutesByDate(targetDate);
+
+      // API 호환을 위해 형식 변환
+      return stats.map(stat => ({
+        minute: stat.minute.toISOString().slice(0, 16), // YYYY-MM-DDTHH:mm
+        currentInside: stat.currentInside,
+        increment: stat.incrementCount,
+        decrement: stat.decrementCount,
+      }));
+    } catch (error) {
+      this.logger.error(`Failed to get optimized minute stats for ${targetDate}:`, error);
+      // 에러 발생 시 빈 배열 반환 (서비스 지속성 확보)
+      return [];
+    }
   }
 
   /**

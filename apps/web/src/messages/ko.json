@@ -119,7 +119,7 @@
       "enter": "입장",
       "exit": "퇴장",
       "netCount": "순 기여",
-      "syncInfo": "카운트는 즉시 반영되며 5초마다 서버로 동기화됩니다",
+      "syncInfo": "카운트는 즉시 반영되며 15초마다 서버로 동기화됩니다",
       "lastSync": "마지막 카운트 동기화",
       "lastUpdate": "마지막 업데이트"
     },
@@ -166,7 +166,6 @@
     "copyLink": "링크 복사",
     "shareVia": "다른 앱으로 공유",
     "boothShareText": "KAMF 2025 부스를 확인해보세요!",
-    "stageShareText": "KAMF 2025 공연을 확인해보세요!",
     "stageShareText": "KAMF 2025 무대 공연을 확인해보세요!"
   },
   "metadata": {

@@ -242,7 +242,7 @@ export default function SafetyControls({ onStatsUpdate }: SafetyControlsProps) {
         `⏰ Sync interval triggered at: ${new Date().toLocaleTimeString('ko-KR')} (${currentEnv})`
       );
       syncWithServer(); // 현재 시점의 최신 syncWithServer 함수 호출
-    }, 5000);
+    }, 15000);
 
     return () => {
       if (syncIntervalRef.current) {

@@ -72,6 +72,9 @@ importers:
       '@nestjs/platform-express':
         specifier: ^10.3.0
         version: 10.4.20(@nestjs/common@10.4.20)(@nestjs/core@10.4.20)
+      '@nestjs/schedule':
+        specifier: ^6.0.0
+        version: 6.0.0(@nestjs/common@10.4.20)(@nestjs/core@10.4.20)
       '@nestjs/swagger':
         specifier: ^7.2.0
         version: 7.4.2(@nestjs/common@10.4.20)(@nestjs/core@10.4.20)(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)
@@ -87,6 +90,9 @@ importers:
       class-validator:
         specifier: ^0.14.1
         version: 0.14.2
+      cookie-parser:
+        specifier: ^1.4.7
+        version: 1.4.7
       form-data:
         specifier: ^4.0.4
         version: 4.0.4
@@ -124,6 +130,9 @@ importers:
       '@nestjs/testing':
         specifier: ^10.3.0
         version: 10.4.20(@nestjs/common@10.4.20)(@nestjs/core@10.4.20)(@nestjs/platform-express@10.4.20)
+      '@types/cookie-parser':
+        specifier: ^1.4.9
+        version: 1.4.9(@types/express@4.17.23)
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.23
@@ -1192,6 +1201,17 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
+  /@nestjs/schedule@6.0.0(@nestjs/common@10.4.20)(@nestjs/core@10.4.20):
+    resolution: {integrity: sha512-aQySMw6tw2nhitELXd3EiRacQRgzUKD9mFcUZVOJ7jPLqIBvXOyvRWLsK9SdurGA+jjziAlMef7iB5ZEFFoQpw==}
+    peerDependencies:
+      '@nestjs/common': ^10.0.0 || ^11.0.0
+      '@nestjs/core': ^10.0.0 || ^11.0.0
+    dependencies:
+      '@nestjs/common': 10.4.20(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core': 10.4.20(@nestjs/common@10.4.20)(@nestjs/platform-express@10.4.20)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      cron: 4.3.0
+    dev: false
+
   /@nestjs/schematics@10.2.3(chokidar@3.6.0)(typescript@5.7.2):
     resolution: {integrity: sha512-4e8gxaCk7DhBxVUly2PjYL4xC2ifDFexCqq1/u4TtivLGXotVk0wHdYuPYe1tHTHuR1lsOkRbfOCpkdTnigLVg==}
     peerDependencies:
@@ -1592,6 +1612,14 @@ packages:
       '@types/node': 20.19.11
     dev: true
 
+  /@types/cookie-parser@1.4.9(@types/express@4.17.23):
+    resolution: {integrity: sha512-tGZiZ2Gtc4m3wIdLkZ8mkj1T6CEHb35+VApbL2T14Dew8HA7c+04dmKqsKRNC+8RJPm16JEK0tFSwdZqubfc4g==}
+    peerDependencies:
+      '@types/express': '*'
+    dependencies:
+      '@types/express': 4.17.23
+    dev: true
+
   /@types/cookiejar@2.1.5:
     resolution: {integrity: sha512-he+DHOWReW0nghN24E1WUqM0efK4kI9oTqDm6XmK8ZPe2djZ90BSNdGnIyCLzCPw7/pogPlGbzI2wHGGmi4O/Q==}
     dev: true
@@ -1721,6 +1749,10 @@ packages:
       '@types/ms': 2.1.0
       '@types/node': 20.19.11
     dev: true
+
+  /@types/luxon@3.6.2:
+    resolution: {integrity: sha512-R/BdP7OxEMc44l2Ex5lSXHoIXTB2JLNa3y2QISIbr58U/YcsffyQrYW//hZSdrfxrjRZj3GcUoxMPGdO8gSYuw==}
+    dev: false
 
   /@types/mailgun-js@0.22.18:
     resolution: {integrity: sha512-xp1QwOjlgvbV9MmKEEmmXN0PkfDxkVQjq0IU1c9DL7VBIQCPxnrqLTaCVm40Ig+YxUnt6e2dT/dNUhaKGQ+V6A==}
@@ -3068,12 +3100,25 @@ packages:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
     dev: true
 
+  /cookie-parser@1.4.7:
+    resolution: {integrity: sha512-nGUvgXnotP3BsjiLX2ypbQnWoGUPIIfHQNZkkC668ntrzGWEZVW70HDEB1qnNGMicPje6EttlIgzo51YSwNQGw==}
+    engines: {node: '>= 0.8.0'}
+    dependencies:
+      cookie: 0.7.2
+      cookie-signature: 1.0.6
+    dev: false
+
   /cookie-signature@1.0.6:
     resolution: {integrity: sha512-QADzlaHc8icV8I7vbaJXJwod9HWYp8uCqf1xa4OfNu1T7JVxQIrUgOWtHdNDtPiywmFbiS12VjotIXLrKM3orQ==}
 
   /cookie@0.7.1:
     resolution: {integrity: sha512-6DnInpx7SJ2AK3+CTUE/ZM0vWTUboZCegxhC2xiIydHR9jNuTAASBrfEpHhiGOZw/nX51bHt6YQl8jsGo4y/0w==}
     engines: {node: '>= 0.6'}
+
+  /cookie@0.7.2:
+    resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
+    engines: {node: '>= 0.6'}
+    dev: false
 
   /cookiejar@2.1.4:
     resolution: {integrity: sha512-LDx6oHrK+PhzLKJU9j5S7/Y3jM/mUHvD/DeI1WQmJn652iPC5Y4TBzC9l+5OMOXlyTTA+SmVUPm0HQUwpD5Jqw==}
@@ -3126,6 +3171,14 @@ packages:
 
   /create-require@1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
+
+  /cron@4.3.0:
+    resolution: {integrity: sha512-ciiYNLfSlF9MrDqnbMdRWFiA6oizSF7kA1osPP9lRzNu0Uu+AWog1UKy7SkckiDY2irrNjeO6qLyKnXC8oxmrw==}
+    engines: {node: '>=18.x'}
+    dependencies:
+      '@types/luxon': 3.6.2
+      luxon: 3.6.1
+    dev: false
 
   /cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -5868,6 +5921,11 @@ packages:
   /lru.min@1.1.2:
     resolution: {integrity: sha512-Nv9KddBcQSlQopmBHXSsZVY5xsdlZkdH/Iey0BlcBYggMd4two7cZnKOK9vmy3nY0O5RGH99z1PCeTpPqszUYg==}
     engines: {bun: '>=1.0.0', deno: '>=1.30.0', node: '>=8.0.0'}
+    dev: false
+
+  /luxon@3.6.1:
+    resolution: {integrity: sha512-tJLxrKJhO2ukZ5z0gyjY1zPh3Rh88Ej9P7jNrZiHMUXHae1yvI2imgOZtL1TO8TW6biMMKfTtAOoEJANgtWBMQ==}
+    engines: {node: '>=12'}
     dev: false
 
   /magic-string@0.30.8:

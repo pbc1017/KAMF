@@ -1,11 +1,15 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
 
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Cookie parser middleware - 쿠키 파싱을 위해 필요
+  app.use(cookieParser());
 
   // Global validation pipe
   app.useGlobalPipes(

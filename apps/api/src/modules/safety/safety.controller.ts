@@ -33,7 +33,6 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 
-import { SafetyCacheService } from './safety-cache.service.js';
 import { SafetyService } from './safety.service.js';
 
 @ApiTags('Safety')
@@ -41,10 +40,7 @@ import { SafetyService } from './safety.service.js';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class SafetyController {
-  constructor(
-    private readonly safetyService: SafetyService,
-    private readonly cacheService: SafetyCacheService
-  ) {}
+  constructor(private readonly safetyService: SafetyService) {}
 
   @Post('count')
   @HttpCode(HttpStatus.OK)
@@ -238,91 +234,5 @@ export class SafetyController {
   })
   async resetDateData(@Body('date') date: string) {
     return this.safetyService.resetDateData(date);
-  }
-
-  // ==================== 캐시 관리 API ====================
-
-  @Get('admin/cache/stats')
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({
-    summary: '캐시 통계 조회 (관리자용)',
-    description: '현재 메모리 캐시 상태 및 통계를 조회합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '캐시 통계 조회 성공',
-    schema: {
-      type: 'object',
-      properties: {
-        totalEntries: { type: 'number', example: 1440 },
-        memoryUsageEstimate: { type: 'string', example: '288 KB' },
-        oldestEntry: { type: 'string', format: 'date-time' },
-        newestEntry: { type: 'string', format: 'date-time' },
-      },
-    },
-  })
-  async getCacheStats() {
-    return this.cacheService.getCacheStats();
-  }
-
-  @Post('admin/cache/clear-date')
-  @HttpCode(HttpStatus.OK)
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({
-    summary: '특정 날짜 캐시 무효화 (관리자용)',
-    description: '특정 날짜의 분단위 캐시를 모두 삭제합니다.',
-  })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        date: { type: 'string', format: 'date', example: '2025-01-20' },
-      },
-      required: ['date'],
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: '캐시 삭제 성공',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', example: '2025-01-20 캐시가 삭제되었습니다' },
-        deletedCount: { type: 'number', example: 720 },
-      },
-    },
-  })
-  async clearDateCache(@Body('date') date: string) {
-    const deletedCount = await this.cacheService.invalidateDate(date);
-    return {
-      message: `${date} 캐시가 삭제되었습니다`,
-      deletedCount,
-    };
-  }
-
-  @Post('admin/cache/clear-all')
-  @HttpCode(HttpStatus.OK)
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({
-    summary: '전체 캐시 무효화 (관리자용)',
-    description: '모든 분단위 캐시를 삭제합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '전체 캐시 삭제 성공',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', example: '모든 캐시가 삭제되었습니다' },
-        deletedCount: { type: 'number', example: 2880 },
-      },
-    },
-  })
-  async clearAllCache() {
-    const deletedCount = await this.cacheService.invalidateAll();
-    return {
-      message: '모든 캐시가 삭제되었습니다',
-      deletedCount,
-    };
   }
 }

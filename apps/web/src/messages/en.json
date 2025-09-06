@@ -119,7 +119,7 @@
       "enter": "Enter",
       "exit": "Exit",
       "netCount": "Net Count",
-      "syncInfo": "Counts are reflected immediately and synchronized to server every 5 seconds",
+      "syncInfo": "Counts are reflected immediately and synchronized to server every 15 seconds",
       "lastSync": "Last count sync",
       "lastUpdate": "Last update"
     },
@@ -166,7 +166,6 @@
     "copyLink": "Copy Link",
     "shareVia": "Share via other apps",
     "boothShareText": "Check out this KAMF 2025 booth!",
-    "stageShareText": "Check out this KAMF 2025 performance!",
     "stageShareText": "Check out this KAMF 2025 stage performance!"
   },
   "metadata": {
