@@ -8,7 +8,6 @@ import { SafetyMinuteStats } from '../../entities/safety-minute-stats.entity.js'
 import { AuthModule } from '../auth/auth.module.js';
 
 import { SafetyBackfillService } from './safety-backfill.service.js';
-import { SafetyCacheService } from './safety-cache.service.js';
 import { SafetyComputeService } from './safety-compute.service.js';
 import { SafetyMinuteStatsRepository } from './safety-minute-stats.repository.js';
 import { SafetyController } from './safety.controller.js';
@@ -25,7 +24,6 @@ import { SafetyService } from './safety.service.js';
   providers: [
     SafetyService,
     SafetyRepository,
-    SafetyCacheService,
     SafetyMinuteStatsRepository,
     SafetyComputeService,
     SafetyBackfillService,
@@ -34,7 +32,6 @@ import { SafetyService } from './safety.service.js';
   exports: [
     SafetyService,
     SafetyRepository,
-    SafetyCacheService,
     SafetyMinuteStatsRepository,
     SafetyComputeService,
     SafetyBackfillService,

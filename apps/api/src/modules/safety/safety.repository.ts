@@ -6,8 +6,6 @@ import { Repository, QueryRunner, Between } from 'typeorm';
 import { TimeService } from '../../common/services/time.service.js';
 import { SafetyCount } from '../../entities/safety-count.entity.js';
 
-import { SafetyCacheService } from './safety-cache.service.js';
-
 @Injectable()
 export class SafetyRepository {
   private readonly logger = new Logger(SafetyRepository.name);
@@ -15,8 +13,7 @@ export class SafetyRepository {
   constructor(
     @InjectRepository(SafetyCount)
     private readonly safetyCountRepository: Repository<SafetyCount>,
-    private readonly timeService: TimeService,
-    private readonly cacheService: SafetyCacheService
+    private readonly timeService: TimeService
   ) {}
 
   /**
@@ -129,129 +126,8 @@ export class SafetyRepository {
   }
 
   /**
-   * 분단위 통계 조회 (최근 6시간의 완료된 분만) - 캐시 적용
-   */
-  async getMinuteStats(
-    date?: string
-  ): Promise<{ minute: string; currentInside: number; increment: number; decrement: number }[]> {
-    const targetDate = date || this.timeService.getCurrentUTCDate();
-    const now = new Date();
-    const currentMinute = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      now.getHours(),
-      now.getMinutes()
-    );
-
-    // 최근 6시간의 완료된 분들만 생성 (메모리 최적화)
-    const completedMinutes: Date[] = [];
-    const sixHoursAgo = new Date(currentMinute.getTime() - 6 * 60 * 60 * 1000); // 6시간 전
-    const startOfDay = new Date(`${targetDate}T00:00:00Z`);
-
-    // 6시간 전과 하루 시작 중 더 늦은 시간을 시작점으로 설정
-    const startTime = sixHoursAgo > startOfDay ? sixHoursAgo : startOfDay;
-
-    for (
-      let minute = new Date(startTime);
-      minute < currentMinute;
-      minute.setMinutes(minute.getMinutes() + 1)
-    ) {
-      completedMinutes.push(new Date(minute));
-    }
-
-    const results: {
-      minute: string;
-      currentInside: number;
-      increment: number;
-      decrement: number;
-    }[] = [];
-
-    // 각 완료된 분에 대해 캐시 확인 후 DB 조회
-    for (const minuteTime of completedMinutes) {
-      const minuteString = minuteTime.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
-
-      // 1. 캐시에서 조회 시도
-      const cached = await this.cacheService.getMinuteStats(targetDate, minuteString);
-
-      if (cached) {
-        // count가 0보다 큰 시간만 포함
-        if (cached.currentInside > 0 || cached.increment > 0) {
-          results.push({
-            minute: cached.minute,
-            currentInside: cached.currentInside,
-            increment: cached.increment,
-            decrement: cached.decrement,
-          });
-        }
-        continue;
-      }
-
-      // 2. 캐시 미스: DB에서 계산
-      const computedStats = await this.computeMinuteStats(targetDate, minuteTime);
-
-      // 3. 결과를 캐시에 저장
-      await this.cacheService.setMinuteStats(targetDate, minuteString, computedStats);
-
-      // count가 0보다 큰 시간만 포함
-      if (computedStats.currentInside > 0 || computedStats.increment > 0) {
-        results.push(computedStats);
-      }
-    }
-
-    return results;
-  }
-
-  /**
    * 특정 분의 통계를 DB에서 계산 (캐시용)
    */
-  private async computeMinuteStats(
-    targetDate: string,
-    minuteTime: Date
-  ): Promise<{ minute: string; currentInside: number; increment: number; decrement: number }> {
-    const minuteString = minuteTime.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
-
-    // 🔧 핵심 수정: 해당 분의 끝 시간 (다음 분 시작 직전)
-    const nextMinute = new Date(minuteTime);
-    nextMinute.setMinutes(nextMinute.getMinutes() + 1);
-
-    // 해당 분까지의 각 유저별 최신 레코드 조회
-    const latestRecords = await this.safetyCountRepository.query(
-      `
-      SELECT sc.userId, sc.increment, sc.decrement, sc.createdAt
-      FROM safety_counts sc
-      WHERE sc.createdAt < ? 
-        AND DATE(sc.createdAt) = ?
-        AND sc.createdAt = (
-          SELECT MAX(sc2.createdAt) 
-          FROM safety_counts sc2 
-          WHERE sc2.userId = sc.userId 
-            AND sc2.createdAt < ? 
-            AND DATE(sc2.createdAt) = ?
-        )
-      GROUP BY sc.userId, sc.increment, sc.decrement, sc.createdAt
-      `,
-      [nextMinute, targetDate, nextMinute, targetDate]
-    );
-
-    // 집계 계산
-    let totalIncrement = 0;
-    let totalDecrement = 0;
-
-    for (const record of latestRecords) {
-      totalIncrement += parseInt(record.increment) || 0;
-      totalDecrement += parseInt(record.decrement) || 0;
-    }
-
-    const currentInside = totalIncrement - totalDecrement;
-
-    return {
-      minute: minuteString,
-      currentInside: Math.max(0, currentInside), // 음수 방지
-      increment: totalIncrement,
-      decrement: totalDecrement,
-    };
-  }
 
   /**
    * 날짜 범위별 히스토리 조회
