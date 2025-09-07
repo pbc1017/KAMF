@@ -1,0 +1,3 @@
+[submodule "k8s"]
+	path = k8s
+	url = https://github.com/pbc1017/KAMF-k8s.git
