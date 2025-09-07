@@ -1,0 +1,503 @@
+name: GitOps CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  build-and-push:
+    name: Build & Push Docker Images
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+
+    strategy:
+      matrix:
+        service: [api, web]
+
+    outputs:
+      environment: ${{ steps.env.outputs.environment }}
+      image-tag-api: ${{ steps.meta.outputs.image-tag-api }}
+      image-tag-web: ${{ steps.meta.outputs.image-tag-web }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set environment variables
+        id: env
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+            echo "tag-prefix=latest" >> $GITHUB_OUTPUT
+          else
+            echo "environment=development" >> $GITHUB_OUTPUT
+            echo "tag-prefix=dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate image metadata
+        id: meta
+        run: |
+          SERVICE="${{ matrix.service }}"
+          REGISTRY="${{ secrets.DOCKERHUB_USERNAME }}"
+          TAG_PREFIX="${{ steps.env.outputs.tag-prefix }}"
+
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            TAGS="${REGISTRY}/kamf-${SERVICE}:latest,${REGISTRY}/kamf-${SERVICE}:latest-${{ github.sha }}"
+            SCAN_TAG="${REGISTRY}/kamf-${SERVICE}:latest-${{ github.sha }}"
+            IMAGE_TAG="latest-${{ github.sha }}"
+          else
+            TAGS="${REGISTRY}/kamf-${SERVICE}:dev,${REGISTRY}/kamf-${SERVICE}:dev-${{ github.sha }}"
+            SCAN_TAG="${REGISTRY}/kamf-${SERVICE}:dev-${{ github.sha }}"
+            IMAGE_TAG="dev-${{ github.sha }}"
+          fi
+
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "scan_tag=${SCAN_TAG}" >> $GITHUB_OUTPUT
+          echo "image-tag-${SERVICE}=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+
+      - name: Build and push API image
+        if: matrix.service == 'api'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/api/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha,scope=${{ github.ref_name }}-api,ignore-error=true
+          cache-to: type=gha,mode=max,scope=${{ github.ref_name }}-api,ignore-error=true
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
+
+      - name: Build and push Web image
+        if: matrix.service == 'web'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/web/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://${{ vars.DOMAIN }}/api
+            NEXT_PUBLIC_APP_URL=https://${{ vars.DOMAIN }}
+          cache-from: type=gha,scope=${{ github.ref_name }}-web,ignore-error=true
+          cache-to: type=gha,mode=max,scope=${{ github.ref_name }}-web,ignore-error=true
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
+
+      - name: Run security scan
+        uses: aquasecurity/trivy-action@master
+        if: success()
+        with:
+          image-ref: ${{ steps.meta.outputs.scan_tag }}
+          format: 'sarif'
+          output: 'trivy-results-${{ matrix.service }}.sarif'
+
+      - name: Upload security scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: success()
+        with:
+          sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
+          category: 'docker-${{ matrix.service }}'
+
+  update-k8s-secrets:
+    name: Update K8s Secrets
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+    needs: build-and-push
+    if: success()
+
+    steps:
+      - name: Checkout GitOps repository
+        uses: actions/checkout@v4
+        with:
+          repository: pbc1017/KAMF-k8s
+          token: ${{ secrets.GITOPS_TOKEN }}
+          path: gitops
+
+      - name: Update secrets for development
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          cd gitops
+          
+          # Create K8s secrets YAML from GitHub secrets
+          cat > environments/dev/secrets-updated.yaml << EOF
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: kamf-secrets
+            namespace: kamf-dev
+          type: Opaque
+          stringData:
+            DB_USERNAME: "${{ secrets.DB_USERNAME }}"
+            DB_PASSWORD: "${{ secrets.DB_PASSWORD }}"
+            MYSQL_ROOT_PASSWORD: "${{ secrets.MYSQL_ROOT_PASSWORD }}"
+            JWT_SECRET: "${{ secrets.JWT_SECRET }}"
+            REFRESH_TOKEN_SECRET: "${{ secrets.REFRESH_TOKEN_SECRET }}"
+            NEXTAUTH_SECRET: "${{ secrets.NEXTAUTH_SECRET }}"
+            TWILIO_ACCOUNT_SID: "${{ secrets.TWILIO_ACCOUNT_SID }}"
+            TWILIO_AUTH_TOKEN: "${{ secrets.TWILIO_AUTH_TOKEN }}"
+            TWILIO_SERVICE_SID: "${{ secrets.TWILIO_SERVICE_SID }}"
+            MAILGUN_API_KEY: "${{ secrets.MAILGUN_API_KEY }}"
+            MAILGUN_DOMAIN: "${{ secrets.MAILGUN_DOMAIN }}"
+            MAILGUN_FROM_EMAIL: "${{ secrets.MAILGUN_FROM_EMAIL }}"
+          ---
+          EOF
+          
+          # Replace the existing secrets file
+          mv environments/dev/secrets-updated.yaml environments/dev/secrets.yaml
+
+      - name: Update secrets for production
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cd gitops
+          
+          # Create K8s secrets YAML from GitHub secrets
+          cat > environments/prod/secrets-updated.yaml << EOF
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: kamf-secrets
+            namespace: kamf-prod
+          type: Opaque
+          stringData:
+            DB_USERNAME: "${{ secrets.DB_USERNAME }}"
+            DB_PASSWORD: "${{ secrets.DB_PASSWORD }}"
+            MYSQL_ROOT_PASSWORD: "${{ secrets.MYSQL_ROOT_PASSWORD }}"
+            JWT_SECRET: "${{ secrets.JWT_SECRET }}"
+            REFRESH_TOKEN_SECRET: "${{ secrets.REFRESH_TOKEN_SECRET }}"
+            NEXTAUTH_SECRET: "${{ secrets.NEXTAUTH_SECRET }}"
+            TWILIO_ACCOUNT_SID: "${{ secrets.TWILIO_ACCOUNT_SID }}"
+            TWILIO_AUTH_TOKEN: "${{ secrets.TWILIO_AUTH_TOKEN }}"
+            TWILIO_SERVICE_SID: "${{ secrets.TWILIO_SERVICE_SID }}"
+            MAILGUN_API_KEY: "${{ secrets.MAILGUN_API_KEY }}"
+            MAILGUN_DOMAIN: "${{ secrets.MAILGUN_DOMAIN }}"
+            MAILGUN_FROM_EMAIL: "${{ secrets.MAILGUN_FROM_EMAIL }}"
+          ---
+          EOF
+          
+          # Replace the existing secrets file
+          mv environments/prod/secrets-updated.yaml environments/prod/secrets.yaml
+
+  update-gitops-dev:
+    name: Update GitOps for Development
+    runs-on: ubuntu-latest
+    environment: development
+    needs: [build-and-push, update-k8s-secrets]
+    if: success() && github.ref == 'refs/heads/dev'
+
+    steps:
+      - name: Checkout GitOps repository
+        uses: actions/checkout@v4
+        with:
+          repository: pbc1017/KAMF-k8s
+          token: ${{ secrets.GITOPS_TOKEN }}
+          path: gitops
+
+      - name: Update development image tags
+        run: |
+          cd gitops
+          
+          # Get image tags from build job
+          API_TAG="dev-${{ github.sha }}"
+          WEB_TAG="dev-${{ github.sha }}"
+          REGISTRY="${{ secrets.DOCKERHUB_USERNAME }}"
+          
+          echo "Updating dev images:"
+          echo "API: ${REGISTRY}/kamf-api:${API_TAG}"
+          echo "Web: ${REGISTRY}/kamf-web:${WEB_TAG}"
+          
+          # Update kustomization.yaml with new image tags
+          cat > environments/dev/kustomization.yaml << EOF
+          apiVersion: kustomize.config.k8s.io/v1beta1
+          kind: Kustomization
+
+          resources:
+          - ../../base/api
+          - ../../base/web  
+          - ../../base/mysql
+          - namespace.yaml
+          - nodeport-services.yaml
+          - ingress-route.yaml
+          - secrets.yaml
+
+          patches:
+          - path: api-patch.yaml
+          - path: web-patch.yaml
+          - path: mysql-patch.yaml
+
+          images:
+          - name: chansparcs/kamf-api
+            newName: ${REGISTRY}/kamf-api
+            newTag: ${API_TAG}
+          - name: chansparcs/kamf-web  
+            newName: ${REGISTRY}/kamf-web
+            newTag: ${WEB_TAG}
+
+          namespace: kamf-dev
+          EOF
+
+      - name: Commit and push changes
+        run: |
+          cd gitops
+          
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "🚀 chore(dev): update images to dev-${{ github.sha }}
+            
+            - API: ${{ secrets.DOCKERHUB_USERNAME }}/kamf-api:dev-${{ github.sha }}
+            - Web: ${{ secrets.DOCKERHUB_USERNAME }}/kamf-web:dev-${{ github.sha }}
+            - Secrets: Updated from GitHub Actions
+            - Trigger: ${{ github.actor }} pushed to ${{ github.ref_name }}
+            - Commit: ${{ github.sha }}"
+            
+            git push origin main
+            echo "✅ Development GitOps repository updated successfully!"
+          fi
+
+  update-gitops-prod:
+    name: Update GitOps for Production (PR)
+    runs-on: ubuntu-latest
+    environment: production
+    needs: [build-and-push, update-k8s-secrets]
+    if: success() && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout GitOps repository
+        uses: actions/checkout@v4
+        with:
+          repository: pbc1017/KAMF-k8s
+          token: ${{ secrets.GITOPS_TOKEN }}
+          path: gitops
+
+      - name: Create production update branch
+        run: |
+          cd gitops
+          
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          BRANCH_NAME="update-prod-${{ github.sha }}"
+          git checkout -b "${BRANCH_NAME}"
+          
+          echo "branch_name=${BRANCH_NAME}" >> $GITHUB_ENV
+
+      - name: Update production image tags
+        run: |
+          cd gitops
+          
+          # Get image tags from build job
+          API_TAG="latest-${{ github.sha }}"
+          WEB_TAG="latest-${{ github.sha }}"
+          REGISTRY="${{ secrets.DOCKERHUB_USERNAME }}"
+          
+          echo "Updating prod images:"
+          echo "API: ${REGISTRY}/kamf-api:${API_TAG}"
+          echo "Web: ${REGISTRY}/kamf-web:${WEB_TAG}"
+          
+          # Update kustomization.yaml with new image tags
+          cat > environments/prod/kustomization.yaml << EOF
+          apiVersion: kustomize.config.k8s.io/v1beta1
+          kind: Kustomization
+
+          resources:
+          - ../../base/api
+          - ../../base/web  
+          - ../../base/mysql
+          - namespace.yaml
+          - nodeport-services.yaml
+          - ingress-route.yaml
+          - secrets.yaml
+
+          patches:
+          - path: api-patch.yaml
+          - path: web-patch.yaml
+          - path: mysql-patch.yaml
+
+          images:
+          - name: chansparcs/kamf-api
+            newName: ${REGISTRY}/kamf-api
+            newTag: ${API_TAG}
+          - name: chansparcs/kamf-web  
+            newName: ${REGISTRY}/kamf-web
+            newTag: ${WEB_TAG}
+
+          namespace: kamf-prod
+          EOF
+
+      - name: Commit changes and create PR
+        run: |
+          cd gitops
+          
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "🚀 chore(prod): update images to latest-${{ github.sha }}
+            
+            - API: ${{ secrets.DOCKERHUB_USERNAME }}/kamf-api:latest-${{ github.sha }}
+            - Web: ${{ secrets.DOCKERHUB_USERNAME }}/kamf-web:latest-${{ github.sha }}
+            - Secrets: Updated from GitHub Actions
+            - Trigger: ${{ github.actor }} pushed to ${{ github.ref_name }}
+            - Commit: ${{ github.sha }}"
+            
+            git push origin "${{ env.branch_name }}"
+            
+            # Install GitHub CLI if not available
+            if ! command -v gh &> /dev/null; then
+              curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+              echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+              sudo apt update
+              sudo apt install gh
+            fi
+            
+            # Create PR
+            export GH_TOKEN="${{ secrets.GITOPS_TOKEN }}"
+            gh pr create \
+              --title "🚀 Deploy to Production - ${{ github.sha }}" \
+              --body "## 🚀 Production Deployment Request
+
+            **Triggered by:** ${{ github.actor }}  
+            **Source:** ${{ github.ref_name }} → ${{ github.sha }}  
+            **Images:**
+            - \`${{ secrets.DOCKERHUB_USERNAME }}/kamf-api:latest-${{ github.sha }}\`
+            - \`${{ secrets.DOCKERHUB_USERNAME }}/kamf-web:latest-${{ github.sha }}\`
+
+            **Changes:**
+            - Updated Kubernetes manifests for production environment
+            - Updated secrets from GitHub Actions
+            - Ready for manual review and deployment
+
+            **Next Steps:**
+            1. ✅ Review changes in this PR
+            2. ✅ Merge this PR when ready to deploy
+            3. ✅ Manually sync in ArgoCD UI
+            4. ✅ Verify deployment in production
+
+            ---
+            *This PR was automatically created by GitHub Actions*" \
+              --head "${{ env.branch_name }}" \
+              --base main
+              
+            echo "✅ Production deployment PR created successfully!"
+          fi
+
+  trigger-argocd-sync:
+    name: Trigger ArgoCD Sync (Development)
+    runs-on: ubuntu-latest
+    needs: update-gitops-dev
+    if: success() && github.ref == 'refs/heads/dev' && vars.ARGOCD_SERVER != ''
+
+    steps:
+      - name: Trigger ArgoCD sync for development
+        run: |
+          # Only run if ARGOCD_TOKEN is available
+          if [ -n "${{ secrets.ARGOCD_TOKEN }}" ]; then
+            echo "🔄 Triggering ArgoCD sync for kamf-dev application..."
+            
+            curl -X POST \
+              -H "Authorization: Bearer ${{ secrets.ARGOCD_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d '{"revision": "HEAD", "prune": true}' \
+              "${{ vars.ARGOCD_SERVER }}/api/v1/applications/kamf-dev/sync"
+              
+            echo "✅ ArgoCD sync triggered for development environment"
+          else
+            echo "⚠️ ARGOCD_TOKEN not configured, skipping automatic sync"
+            echo "📝 Please manually sync kamf-dev application in ArgoCD UI"
+          fi
+
+  notify:
+    name: Notify GitOps Pipeline Result
+    runs-on: ubuntu-latest
+    needs: [build-and-push, update-gitops-dev, update-gitops-prod, trigger-argocd-sync]
+    if: always()
+
+    steps:
+      - name: Set notification variables
+        id: vars
+        run: |
+          OVERALL_STATUS="success"
+          
+          # Check each job status
+          if [ "${{ needs.build-and-push.result }}" != "success" ]; then
+            OVERALL_STATUS="failed"
+          elif [ "${{ github.ref }}" == "refs/heads/dev" ] && [ "${{ needs.update-gitops-dev.result }}" != "success" ]; then
+            OVERALL_STATUS="failed"
+          elif [ "${{ github.ref }}" == "refs/heads/main" ] && [ "${{ needs.update-gitops-prod.result }}" != "success" ]; then
+            OVERALL_STATUS="failed"
+          fi
+          
+          if [ "$OVERALL_STATUS" = "success" ]; then
+            STATUS_KR="성공"
+            STATUS_EMOJI="✅"
+            STATUS_COLOR="good"
+          else
+            STATUS_KR="실패"
+            STATUS_EMOJI="❌"
+            STATUS_COLOR="danger"
+          fi
+          
+          ENVIRONMENT="${{ github.ref == 'refs/heads/main' && '운영환경' || '개발환경' }}"
+          
+          echo "overall_status=${OVERALL_STATUS}" >> $GITHUB_OUTPUT
+          echo "status_kr=${STATUS_KR}" >> $GITHUB_OUTPUT
+          echo "status_emoji=${STATUS_EMOJI}" >> $GITHUB_OUTPUT
+          echo "status_color=${STATUS_COLOR}" >> $GITHUB_OUTPUT
+          echo "environment=${ENVIRONMENT}" >> $GITHUB_OUTPUT
+
+      - name: Notify Slack
+        if: vars.SLACK_WEBHOOK_URL != ''
+        run: |
+          # Build deployment message based on environment
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            DEPLOYMENT_MSG="📋 운영환경 배포를 위한 PR이 생성되었습니다"
+            ACTION_MSG="👤 담당자는 PR을 검토하고 ArgoCD에서 수동 배포해주세요"
+          else
+            DEPLOYMENT_MSG="🚀 개발환경에 자동 배포되었습니다"
+            ACTION_MSG="🔄 ArgoCD가 자동으로 동기화합니다"
+          fi
+          
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{
+              \"attachments\": [{
+                \"color\": \"${{ steps.vars.outputs.status_color }}\",
+                \"title\": \"${{ steps.vars.outputs.status_emoji }} GitOps CI/CD ${{ steps.vars.outputs.status_kr }}\",
+                \"fields\": [
+                  {\"title\": \"환경\", \"value\": \"${{ steps.vars.outputs.environment }}\", \"short\": true},
+                  {\"title\": \"브랜치\", \"value\": \"${{ github.ref_name }}\", \"short\": true},
+                  {\"title\": \"커밋\", \"value\": \"${{ github.sha }}\", \"short\": true},
+                  {\"title\": \"작성자\", \"value\": \"${{ github.actor }}\", \"short\": true},
+                  {\"title\": \"상태\", \"value\": \"${DEPLOYMENT_MSG}\", \"short\": false},
+                  {\"title\": \"다음 단계\", \"value\": \"${ACTION_MSG}\", \"short\": false}
+                ],
+                \"footer\": \"KAMF GitOps Pipeline\",
+                \"ts\": $(date +%s)
+              }]
+            }" \
+            "${{ vars.SLACK_WEBHOOK_URL }}"
