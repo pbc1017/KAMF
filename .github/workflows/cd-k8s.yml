@@ -121,83 +121,56 @@ jobs:
           category: 'docker-${{ matrix.service }}'
 
   update-k8s-secrets:
-    name: Update K8s Secrets
+    name: Apply K8s Secrets Directly
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
     needs: build-and-push
     if: success()
 
     steps:
-      - name: Checkout GitOps repository
-        uses: actions/checkout@v4
-        with:
-          repository: pbc1017/KAMF-k8s
-          token: ${{ secrets.GITOPS_TOKEN }}
-          path: gitops
-
-      - name: Update secrets for development
+      - name: Apply secrets directly to cluster (Development)
         if: github.ref == 'refs/heads/dev'
         run: |
-          cd gitops
-          
-          # Create K8s secrets YAML from GitHub secrets
-          cat > environments/dev/secrets-updated.yaml << EOF
-          apiVersion: v1
-          kind: Secret
-          metadata:
-            name: kamf-secrets
-            namespace: kamf-dev
-          type: Opaque
-          stringData:
-            DB_USERNAME: "${{ secrets.DB_USERNAME }}"
-            DB_PASSWORD: "${{ secrets.DB_PASSWORD }}"
-            MYSQL_ROOT_PASSWORD: "${{ secrets.MYSQL_ROOT_PASSWORD }}"
-            JWT_SECRET: "${{ secrets.JWT_SECRET }}"
-            REFRESH_TOKEN_SECRET: "${{ secrets.REFRESH_TOKEN_SECRET }}"
-            NEXTAUTH_SECRET: "${{ secrets.NEXTAUTH_SECRET }}"
-            TWILIO_ACCOUNT_SID: "${{ secrets.TWILIO_ACCOUNT_SID }}"
-            TWILIO_AUTH_TOKEN: "${{ secrets.TWILIO_AUTH_TOKEN }}"
-            TWILIO_SERVICE_SID: "${{ secrets.TWILIO_SERVICE_SID }}"
-            MAILGUN_API_KEY: "${{ secrets.MAILGUN_API_KEY }}"
-            MAILGUN_DOMAIN: "${{ secrets.MAILGUN_DOMAIN }}"
-            MAILGUN_FROM_EMAIL: "${{ secrets.MAILGUN_FROM_EMAIL }}"
-          ---
-          EOF
-          
-          # Replace the existing secrets file
-          mv environments/dev/secrets-updated.yaml environments/dev/secrets.yaml
+          echo "🔐 Applying secrets to kamf-dev namespace..."
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh -o StrictHostKeyChecking=no \
+            -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} \
+            "kubectl create secret generic kamf-secrets -n kamf-dev \
+             --from-literal=db-username='${{ secrets.DB_USERNAME }}' \
+             --from-literal=db-password='${{ secrets.DB_PASSWORD }}' \
+             --from-literal=mysql-root-password='${{ secrets.MYSQL_ROOT_PASSWORD }}' \
+             --from-literal=jwt-secret='${{ secrets.JWT_SECRET }}' \
+             --from-literal=refresh-token-secret='${{ secrets.REFRESH_TOKEN_SECRET }}' \
+             --from-literal=nextauth-secret='${{ secrets.NEXTAUTH_SECRET }}' \
+             --from-literal=twilio-account-sid='${{ secrets.TWILIO_ACCOUNT_SID }}' \
+             --from-literal=twilio-auth-token='${{ secrets.TWILIO_AUTH_TOKEN }}' \
+             --from-literal=twilio-service-sid='${{ secrets.TWILIO_SERVICE_SID }}' \
+             --from-literal=mailgun-api-key='${{ secrets.MAILGUN_API_KEY }}' \
+             --from-literal=mailgun-domain='${{ secrets.MAILGUN_DOMAIN }}' \
+             --from-literal=mailgun-from-email='${{ secrets.MAILGUN_FROM_EMAIL }}' \
+             --dry-run=client -o yaml | kubectl apply -f -"
+          echo "✅ Development secrets applied successfully!"
 
-      - name: Update secrets for production
+      - name: Apply secrets directly to cluster (Production)
         if: github.ref == 'refs/heads/main'
         run: |
-          cd gitops
-          
-          # Create K8s secrets YAML from GitHub secrets
-          cat > environments/prod/secrets-updated.yaml << EOF
-          apiVersion: v1
-          kind: Secret
-          metadata:
-            name: kamf-secrets
-            namespace: kamf-prod
-          type: Opaque
-          stringData:
-            DB_USERNAME: "${{ secrets.DB_USERNAME }}"
-            DB_PASSWORD: "${{ secrets.DB_PASSWORD }}"
-            MYSQL_ROOT_PASSWORD: "${{ secrets.MYSQL_ROOT_PASSWORD }}"
-            JWT_SECRET: "${{ secrets.JWT_SECRET }}"
-            REFRESH_TOKEN_SECRET: "${{ secrets.REFRESH_TOKEN_SECRET }}"
-            NEXTAUTH_SECRET: "${{ secrets.NEXTAUTH_SECRET }}"
-            TWILIO_ACCOUNT_SID: "${{ secrets.TWILIO_ACCOUNT_SID }}"
-            TWILIO_AUTH_TOKEN: "${{ secrets.TWILIO_AUTH_TOKEN }}"
-            TWILIO_SERVICE_SID: "${{ secrets.TWILIO_SERVICE_SID }}"
-            MAILGUN_API_KEY: "${{ secrets.MAILGUN_API_KEY }}"
-            MAILGUN_DOMAIN: "${{ secrets.MAILGUN_DOMAIN }}"
-            MAILGUN_FROM_EMAIL: "${{ secrets.MAILGUN_FROM_EMAIL }}"
-          ---
-          EOF
-          
-          # Replace the existing secrets file
-          mv environments/prod/secrets-updated.yaml environments/prod/secrets.yaml
+          echo "🔐 Applying secrets to kamf-prod namespace..."
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh -o StrictHostKeyChecking=no \
+            -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} \
+            "kubectl create secret generic kamf-secrets -n kamf-prod \
+             --from-literal=db-username='${{ secrets.DB_USERNAME }}' \
+             --from-literal=db-password='${{ secrets.DB_PASSWORD }}' \
+             --from-literal=mysql-root-password='${{ secrets.MYSQL_ROOT_PASSWORD }}' \
+             --from-literal=jwt-secret='${{ secrets.JWT_SECRET }}' \
+             --from-literal=refresh-token-secret='${{ secrets.REFRESH_TOKEN_SECRET }}' \
+             --from-literal=nextauth-secret='${{ secrets.NEXTAUTH_SECRET }}' \
+             --from-literal=twilio-account-sid='${{ secrets.TWILIO_ACCOUNT_SID }}' \
+             --from-literal=twilio-auth-token='${{ secrets.TWILIO_AUTH_TOKEN }}' \
+             --from-literal=twilio-service-sid='${{ secrets.TWILIO_SERVICE_SID }}' \
+             --from-literal=mailgun-api-key='${{ secrets.MAILGUN_API_KEY }}' \
+             --from-literal=mailgun-domain='${{ secrets.MAILGUN_DOMAIN }}' \
+             --from-literal=mailgun-from-email='${{ secrets.MAILGUN_FROM_EMAIL }}' \
+             --dry-run=client -o yaml | kubectl apply -f -"
+          echo "✅ Production secrets applied successfully!"
 
   update-gitops-dev:
     name: Update GitOps for Development
@@ -239,7 +212,7 @@ jobs:
           - namespace.yaml
           - nodeport-services.yaml
           - ingress-route.yaml
-          - secrets.yaml
+          # - secrets.yaml  # Removed: Secrets applied directly via SSH
 
           patches:
           - path: api-patch.yaml
@@ -332,7 +305,7 @@ jobs:
           - namespace.yaml
           - nodeport-services.yaml
           - ingress-route.yaml
-          - secrets.yaml
+          # - secrets.yaml  # Removed: Secrets applied directly via SSH
 
           patches:
           - path: api-patch.yaml
