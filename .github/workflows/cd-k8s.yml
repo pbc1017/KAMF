@@ -130,47 +130,55 @@ jobs:
     steps:
       - name: Apply secrets directly to cluster (Development)
         if: github.ref == 'refs/heads/dev'
-        run: |
-          echo "🔐 Applying secrets to kamf-dev namespace..."
-          sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh -o StrictHostKeyChecking=no \
-            -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} \
-            "kubectl create secret generic kamf-secrets -n kamf-dev \
-             --from-literal=db-username='${{ secrets.DB_USERNAME }}' \
-             --from-literal=db-password='${{ secrets.DB_PASSWORD }}' \
-             --from-literal=mysql-root-password='${{ secrets.MYSQL_ROOT_PASSWORD }}' \
-             --from-literal=jwt-secret='${{ secrets.JWT_SECRET }}' \
-             --from-literal=refresh-token-secret='${{ secrets.REFRESH_TOKEN_SECRET }}' \
-             --from-literal=nextauth-secret='${{ secrets.NEXTAUTH_SECRET }}' \
-             --from-literal=twilio-account-sid='${{ secrets.TWILIO_ACCOUNT_SID }}' \
-             --from-literal=twilio-auth-token='${{ secrets.TWILIO_AUTH_TOKEN }}' \
-             --from-literal=twilio-service-sid='${{ secrets.TWILIO_SERVICE_SID }}' \
-             --from-literal=mailgun-api-key='${{ secrets.MAILGUN_API_KEY }}' \
-             --from-literal=mailgun-domain='${{ secrets.MAILGUN_DOMAIN }}' \
-             --from-literal=mailgun-from-email='${{ secrets.MAILGUN_FROM_EMAIL }}' \
-             --dry-run=client -o yaml | kubectl apply -f -"
-          echo "✅ Development secrets applied successfully!"
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            echo "🔐 Applying secrets to kamf-dev namespace..."
+            kubectl create secret generic kamf-secrets -n kamf-dev \
+              --from-literal=db-username='${{ secrets.DB_USERNAME }}' \
+              --from-literal=db-password='${{ secrets.DB_PASSWORD }}' \
+              --from-literal=mysql-root-password='${{ secrets.MYSQL_ROOT_PASSWORD }}' \
+              --from-literal=jwt-secret='${{ secrets.JWT_SECRET }}' \
+              --from-literal=refresh-token-secret='${{ secrets.REFRESH_TOKEN_SECRET }}' \
+              --from-literal=nextauth-secret='${{ secrets.NEXTAUTH_SECRET }}' \
+              --from-literal=twilio-account-sid='${{ secrets.TWILIO_ACCOUNT_SID }}' \
+              --from-literal=twilio-auth-token='${{ secrets.TWILIO_AUTH_TOKEN }}' \
+              --from-literal=twilio-service-sid='${{ secrets.TWILIO_SERVICE_SID }}' \
+              --from-literal=mailgun-api-key='${{ secrets.MAILGUN_API_KEY }}' \
+              --from-literal=mailgun-domain='${{ secrets.MAILGUN_DOMAIN }}' \
+              --from-literal=mailgun-from-email='${{ secrets.MAILGUN_FROM_EMAIL }}' \
+              --dry-run=client -o yaml | kubectl apply -f -
+            echo "✅ Development secrets applied successfully!"
 
       - name: Apply secrets directly to cluster (Production)
         if: github.ref == 'refs/heads/main'
-        run: |
-          echo "🔐 Applying secrets to kamf-prod namespace..."
-          sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh -o StrictHostKeyChecking=no \
-            -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} \
-            "kubectl create secret generic kamf-secrets -n kamf-prod \
-             --from-literal=db-username='${{ secrets.DB_USERNAME }}' \
-             --from-literal=db-password='${{ secrets.DB_PASSWORD }}' \
-             --from-literal=mysql-root-password='${{ secrets.MYSQL_ROOT_PASSWORD }}' \
-             --from-literal=jwt-secret='${{ secrets.JWT_SECRET }}' \
-             --from-literal=refresh-token-secret='${{ secrets.REFRESH_TOKEN_SECRET }}' \
-             --from-literal=nextauth-secret='${{ secrets.NEXTAUTH_SECRET }}' \
-             --from-literal=twilio-account-sid='${{ secrets.TWILIO_ACCOUNT_SID }}' \
-             --from-literal=twilio-auth-token='${{ secrets.TWILIO_AUTH_TOKEN }}' \
-             --from-literal=twilio-service-sid='${{ secrets.TWILIO_SERVICE_SID }}' \
-             --from-literal=mailgun-api-key='${{ secrets.MAILGUN_API_KEY }}' \
-             --from-literal=mailgun-domain='${{ secrets.MAILGUN_DOMAIN }}' \
-             --from-literal=mailgun-from-email='${{ secrets.MAILGUN_FROM_EMAIL }}' \
-             --dry-run=client -o yaml | kubectl apply -f -"
-          echo "✅ Production secrets applied successfully!"
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            echo "🔐 Applying secrets to kamf-prod namespace..."
+            kubectl create secret generic kamf-secrets -n kamf-prod \
+              --from-literal=db-username='${{ secrets.DB_USERNAME }}' \
+              --from-literal=db-password='${{ secrets.DB_PASSWORD }}' \
+              --from-literal=mysql-root-password='${{ secrets.MYSQL_ROOT_PASSWORD }}' \
+              --from-literal=jwt-secret='${{ secrets.JWT_SECRET }}' \
+              --from-literal=refresh-token-secret='${{ secrets.REFRESH_TOKEN_SECRET }}' \
+              --from-literal=nextauth-secret='${{ secrets.NEXTAUTH_SECRET }}' \
+              --from-literal=twilio-account-sid='${{ secrets.TWILIO_ACCOUNT_SID }}' \
+              --from-literal=twilio-auth-token='${{ secrets.TWILIO_AUTH_TOKEN }}' \
+              --from-literal=twilio-service-sid='${{ secrets.TWILIO_SERVICE_SID }}' \
+              --from-literal=mailgun-api-key='${{ secrets.MAILGUN_API_KEY }}' \
+              --from-literal=mailgun-domain='${{ secrets.MAILGUN_DOMAIN }}' \
+              --from-literal=mailgun-from-email='${{ secrets.MAILGUN_FROM_EMAIL }}' \
+              --dry-run=client -o yaml | kubectl apply -f -
+            echo "✅ Production secrets applied successfully!"
 
   update-gitops-dev:
     name: Update GitOps for Development
