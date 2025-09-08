@@ -190,16 +190,16 @@ jobs:
       - name: Update development image tags
         run: |
           cd gitops
-          
+
           # Get image tags from build job
           API_TAG="dev-${{ github.sha }}"
           WEB_TAG="dev-${{ github.sha }}"
           REGISTRY="${{ secrets.DOCKERHUB_USERNAME }}"
-          
+
           echo "Updating dev images:"
           echo "API: ${REGISTRY}/kamf-api:${API_TAG}"
           echo "Web: ${REGISTRY}/kamf-web:${WEB_TAG}"
-          
+
           # Update kustomization.yaml with new image tags
           cat > environments/dev/kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
@@ -233,10 +233,10 @@ jobs:
       - name: Commit and push changes
         run: |
           cd gitops
-          
+
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          
+
           git add .
           if git diff --staged --quiet; then
             echo "No changes to commit"
@@ -271,28 +271,28 @@ jobs:
       - name: Create production update branch
         run: |
           cd gitops
-          
+
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          
+
           BRANCH_NAME="update-prod-${{ github.sha }}"
           git checkout -b "${BRANCH_NAME}"
-          
+
           echo "branch_name=${BRANCH_NAME}" >> $GITHUB_ENV
 
       - name: Update production image tags
         run: |
           cd gitops
-          
+
           # Get image tags from build job
           API_TAG="latest-${{ github.sha }}"
           WEB_TAG="latest-${{ github.sha }}"
           REGISTRY="${{ secrets.DOCKERHUB_USERNAME }}"
-          
+
           echo "Updating prod images:"
           echo "API: ${REGISTRY}/kamf-api:${API_TAG}"
           echo "Web: ${REGISTRY}/kamf-web:${WEB_TAG}"
-          
+
           # Update kustomization.yaml with new image tags
           cat > environments/prod/kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
@@ -326,7 +326,7 @@ jobs:
       - name: Commit changes and create PR
         run: |
           cd gitops
-          
+
           git add .
           if git diff --staged --quiet; then
             echo "No changes to commit"
@@ -391,7 +391,7 @@ jobs:
         id: vars
         run: |
           OVERALL_STATUS="success"
-          
+
           # Check each job status
           if [ "${{ needs.build-and-push.result }}" != "success" ]; then
             OVERALL_STATUS="failed"
@@ -400,7 +400,7 @@ jobs:
           elif [ "${{ github.ref }}" == "refs/heads/main" ] && [ "${{ needs.update-gitops-prod.result }}" != "success" ]; then
             OVERALL_STATUS="failed"
           fi
-          
+
           if [ "$OVERALL_STATUS" = "success" ]; then
             STATUS_KR="성공"
             STATUS_EMOJI="✅"
@@ -410,9 +410,9 @@ jobs:
             STATUS_EMOJI="❌"
             STATUS_COLOR="danger"
           fi
-          
+
           ENVIRONMENT="${{ github.ref == 'refs/heads/main' && '운영환경' || '개발환경' }}"
-          
+
           echo "overall_status=${OVERALL_STATUS}" >> $GITHUB_OUTPUT
           echo "status_kr=${STATUS_KR}" >> $GITHUB_OUTPUT
           echo "status_emoji=${STATUS_EMOJI}" >> $GITHUB_OUTPUT
@@ -430,7 +430,7 @@ jobs:
             DEPLOYMENT_MSG="🚀 개발환경에 자동 배포되었습니다"
             ACTION_MSG="🔄 ArgoCD가 자동으로 동기화합니다"
           fi
-          
+
           curl -X POST -H 'Content-type: application/json' \
             --data "{
               \"attachments\": [{
